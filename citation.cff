@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+title: atavide_light
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Robert
+    name-particle: Robert
+    family-names: Edwards
+    email: raedwards@gmail.com
+    affiliation: Flinders University
+    orcid: 'https://orcid.org/0000-0001-8383-8949'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.8221008
+    description: Zenodo repository of release 0.1
+repository-code: 'https://github.com/linsalrob/atavide_lite'
+abstract: >-
+  atavide_light is a series of steps for processing
+  metagenomics data. Each step is independent but you will
+  end up with a fully processed metagenome.
+keywords:
+  - metagenome
+  - DNA sequencing
+  - microbiome
+  - bacteria
+  - virus
+license: MIT
+

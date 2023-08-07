@@ -8,8 +8,6 @@
 # Also make sure that the reads are labeled /1 /2             #
 # (without a space)                                           #
 #                                                             #
-# sbatch mmseqs_easy_taxonomy.slurm                           #
-#                                                             #
 #                                                             #
 ###############################################################
 
@@ -19,12 +17,13 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=200G
-#SBATCH -o mmseqsLTE-%j.out
-#SBATCH -e mmseqsLTE-%j.err
+#SBATCH -o mmseqsET-%A_%a.out
+#SBATCH -e mmseqsET-%A_%a.err
 
 eval "$(conda shell.bash hook)"
 conda activate bioinformatics
 set -euo pipefail
+
 
 
 
@@ -33,54 +32,49 @@ set -euo pipefail
 
 echo "Start " `date` >&2;
 
-if [[ $# < 3 ]]; then echo `basename $0` "<database Uniref50|GTDB> <output file> <fasta files>" >&2;
+DB=UniRef50
+DBSOURCE=/scratch/user/edwa0468/Databases/mmseqs/$DB
+
+if [[ ! -e $DBSOURCE ]]; then
+	echo "Please edit $0 and correct the location of the $DB files" >&2;
+	exit 1;
+fi
+
+if [[ ! -e DEFINITIONS.sh ]]; then
+	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
 	exit 2;
 fi
 
-DB=$1
-shift
+source DEFINITIONS.sh
 
-if [[ $DB == "NR" ]]; then
-	echo "You need at least 1.5TB ram for the NR comparison. Please used the dedicated slurm script" >&2;
-	exit 3;
+OUTDIR=mmseqs
+mkdir --parents $BGFS/output
+
+R=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
+# convert fastq to fasta
+# this throws an unbound error if FAFILEEND is not in DEFINITIONS
+R1=${R/$FILEEND/$FAFILEEND}
+R2=${R1/R1/R2}
+OUTPUT=$OUTDIR/${R/$FILEEND/}
+TMPOUTPUT=${R/$FILEEND/}
+
+if [[ -e $OUTPUT ]]; then
+	echo "$OUTPUT exists. Nothing to do" >&2;
+	exit 0;
 fi
-
-if [[ $DB != "UniRef50" && $DB != "GTDB" ]]; then
-	echo "Please use one of UniRef50, NR, or GTDB for the current database" >&2; 
-	exit 2
-fi
-
-OUTPUT=$1
-shift
-
-TMPOUTPUT=`basename $OUTPUT`
-mkdir $BGFS/output
-echo "Temporary output is in $BGFS/output/$TMPOUTPUT*"
-
-FASTA="$@"
-
-
-SOURCE=/scratch/user/edwa0468/Databases/mmseqs/$DB
-
-if [[ ! -e $SOURCE ]]; then 
-	echo "FATAL: $SOURCE does not exist. Please check and try again";
-	exit 2;
-fi
-
-
 
 mkdir -p $BGFS/$DB
-rsync -a $SOURCE/ $BGFS/$DB
-
+rsync -a $DBSOURCE/ $BGFS/$DB/
+cp fasta/$R1 fasta/$R2 $BGFS
 echo "Copied " `date` >&2;
 
-echo "Running mmseqs easy-taxonomy $FASTA $BGFS/$DB/$DB $BGFS/output/$TMPOUTPUT tmp --start-sens 1 --sens-steps 3 -s 7 --threads 32" 2>&1;
+echo "Running mmseqs easy-taxonomy $BGFS/$R1 $BGFS/$R2 $BGFS/$DB/$DB $BGFS/output/$TMPOUTPUT tmp --start-sens 1 --sens-steps 3 -s 7 --threads 32" 2>&1;
 
-mmseqs easy-taxonomy $FASTA $BGFS/$DB/$DB $BGFS/output/$TMPOUTPUT $(mktemp -d -p $BGFS) --start-sens 1 --sens-steps 3 -s 7 --threads 32
+mmseqs easy-taxonomy $BGFS/$R1 $BGFS/$R2 $BGFS/$DB/$DB $BGFS/output/$TMPOUTPUT $(mktemp -d -p $BGFS) --start-sens 1 --sens-steps 3 -s 7 --threads 32
 
 find $BGFS/output -type f  | parallel -j 32 gzip
 
-echo "Copying results from $BGFS/output* to $OUTPUT";
+echo "Copying results from $BGFS/output* to $OUTPUT" >&2;
 
 mkdir -p $OUTPUT
 rsync -av $BGFS/output/ $OUTPUT/

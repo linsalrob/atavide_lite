@@ -25,5 +25,9 @@ Currently the pipeline depends on
 You can install all of these with:
 
 ```
-mamba install -y fastp samtools minimap2 megahit mmseqs vamb
+mamba install -y fastp samtools minimap2 megahit mmseqs2
+mamba create -n vamb vamb
 ```
+
+(Note: vamb has a couple of dependencies that may not work if you do them in your base repo).
+

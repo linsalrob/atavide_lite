@@ -104,7 +104,7 @@ export NUM_R1_READS=$(wc -l R1_Reads.txt | cut -f 1 -d ' ')
 JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 ~/GitHubs/EdwardsLab/process_metagenomes/fastp.slurm)
 HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB process_metagenomes/host_removal.slurm)
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB /home/edwa0468/GitHubs/EdwardsLab/process_metagenomes/fastq2fasta.slurm)
-MMSEQSJOB=$(sbatch --parsable --dependency=afterok:$FAJOB /home/edwa0468/GitHubs/EdwardsLab/process_metagenomes/mmseqs_easy_taxonomy_submit.slurm)
+MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB /home/edwa0468/GitHubs/EdwardsLab/process_metagenomes/mmseqs_easy_taxonomy.slurm)
 SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 process_metagenomes/mmseqs_add_subsystems.slurm)
 sbatch --dependency=afterok:$SSJOB /home/edwa0468/GitHubs/EdwardsLab/process_EK_metagenomes/count_subsystems.slurm
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_READS:1 /home/edwa0468/GitHubs/EdwardsLab/process_metagenomes/megahit.slurm)

@@ -17,6 +17,8 @@ if [[ ! -e DEFINITIONS.sh ]]; then
 	exit 2;
 fi
 
+source DEFINITIONS.sh
+
 # Note: according to Scott, writing to BGFS and then copying to /scratch is going to be a lot faster
 # than just writing to /scratch.
 

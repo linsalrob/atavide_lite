@@ -1,0 +1,198 @@
+
+@ARTICLE{Chen2018-iw,
+  title    = "fastp: an ultra-fast all-in-one {FASTQ} preprocessor",
+  author   = "Chen, Shifu and Zhou, Yanqing and Chen, Yaru and Gu, Jia",
+  abstract = "Motivation: Quality control and preprocessing of FASTQ files are
+              essential to providing clean data for downstream analysis.
+              Traditionally, a different tool is used for each operation, such
+              as quality control, adapter trimming and quality filtering. These
+              tools are often insufficiently fast as most are developed using
+              high-level programming languages (e.g. Python and Java) and
+              provide limited multi-threading support. Reading and loading data
+              multiple times also renders preprocessing slow and I/O
+              inefficient. Results: We developed fastp as an ultra-fast FASTQ
+              preprocessor with useful quality control and data-filtering
+              features. It can perform quality control, adapter trimming,
+              quality filtering, per-read quality pruning and many other
+              operations with a single scan of the FASTQ data. This tool is
+              developed in C++ and has multi-threading support. Based on our
+              evaluation, fastp is 2-5 times faster than other FASTQ
+              preprocessing tools such as Trimmomatic or Cutadapt despite
+              performing far more operations than similar tools. Availability
+              and implementation: The open-source code and corresponding
+              instructions are available at https://github.com/OpenGene/fastp.",
+  journal  = "Bioinformatics",
+  volume   =  34,
+  number   =  17,
+  pages    = "i884--i890",
+  month    =  sep,
+  year     =  2018,
+  url      = "http://dx.doi.org/10.1093/bioinformatics/bty560",
+  language = "en",
+  issn     = "1367-4803, 1367-4811",
+  pmid     = "30423086",
+  doi      = "10.1093/bioinformatics/bty560",
+  pmc      = "PMC6129281"
+}
+
+
+
+@ARTICLE{Li2009-vs,
+  title    = "The Sequence {Alignment/Map} format and {SAMtools}",
+  author   = "Li, Heng and Handsaker, Bob and Wysoker, Alec and Fennell, Tim
+              and Ruan, Jue and Homer, Nils and Marth, Gabor and Abecasis,
+              Goncalo and Durbin, Richard and {1000 Genome Project Data
+              Processing Subgroup}",
+  abstract = "SUMMARY: The Sequence Alignment/Map (SAM) format is a generic
+              alignment format for storing read alignments against reference
+              sequences, supporting short and long reads (up to 128 Mbp)
+              produced by different sequencing platforms. It is flexible in
+              style, compact in size, efficient in random access and is the
+              format in which alignments from the 1000 Genomes Project are
+              released. SAMtools implements various utilities for
+              post-processing alignments in the SAM format, such as indexing,
+              variant caller and alignment viewer, and thus provides universal
+              tools for processing read alignments. AVAILABILITY:
+              http://samtools.sourceforge.net.",
+  journal  = "Bioinformatics",
+  volume   =  25,
+  number   =  16,
+  pages    = "2078--2079",
+  month    =  aug,
+  year     =  2009,
+  url      = "http://dx.doi.org/10.1093/bioinformatics/btp352",
+  language = "en",
+  issn     = "1367-4803, 1367-4811",
+  pmid     = "19505943",
+  doi      = "10.1093/bioinformatics/btp352",
+  pmc      = "PMC2723002"
+}
+
+@ARTICLE{Li2018-qy,
+  title    = "Minimap2: pairwise alignment for nucleotide sequences",
+  author   = "Li, Heng",
+  abstract = "Motivation: Recent advances in sequencing technologies promise
+              ultra-long reads of ∼100 kb in average, full-length mRNA or cDNA
+              reads in high throughput and genomic contigs over 100 Mb in
+              length. Existing alignment programs are unable or inefficient to
+              process such data at scale, which presses for the development of
+              new alignment algorithms. Results: Minimap2 is a general-purpose
+              alignment program to map DNA or long mRNA sequences against a
+              large reference database. It works with accurate short reads of
+              $\geq$100 bp in length, $\geq$1 kb genomic reads at error rate
+              ∼15\%, full-length noisy Direct RNA or cDNA reads and assembly
+              contigs or closely related full chromosomes of hundreds of
+              megabases in length. Minimap2 does split-read alignment, employs
+              concave gap cost for long insertions and deletions and introduces
+              new heuristics to reduce spurious alignments. It is 3-4 times as
+              fast as mainstream short-read mappers at comparable accuracy, and
+              is $\geq$30 times faster than long-read genomic or cDNA mappers
+              at higher accuracy, surpassing most aligners specialized in one
+              type of alignment. Availability and implementation:
+              https://github.com/lh3/minimap2. Supplementary information:
+              Supplementary data are available at Bioinformatics online.",
+  journal  = "Bioinformatics",
+  volume   =  34,
+  number   =  18,
+  pages    = "3094--3100",
+  month    =  sep,
+  year     =  2018,
+  url      = "http://dx.doi.org/10.1093/bioinformatics/bty191",
+  language = "en",
+  issn     = "1367-4803, 1367-4811",
+  pmid     = "29750242",
+  doi      = "10.1093/bioinformatics/bty191",
+  pmc      = "PMC6137996"
+}
+
+
+@ARTICLE{Li2015-vg,
+  title    = "{MEGAHIT}: an ultra-fast single-node solution for large and
+              complex metagenomics assembly via succinct de Bruijn graph",
+  author   = "Li, Dinghua and Liu, Chi-Man and Luo, Ruibang and Sadakane,
+              Kunihiko and Lam, Tak-Wah",
+  abstract = "MEGAHIT is a NGS de novo assembler for assembling large and
+              complex metagenomics data in a time- and cost-efficient manner.
+              It finished assembling a soil metagenomics dataset with 252 Gbps
+              in 44.1 and 99.6 h on a single computing node with and without a
+              graphics processing unit, respectively. MEGAHIT assembles the
+              data as a whole, i.e. no pre-processing like partitioning and
+              normalization was needed. When compared with previous methods on
+              assembling the soil data, MEGAHIT generated a three-time larger
+              assembly, with longer contig N50 and average contig length;
+              furthermore, 55.8\% of the reads were aligned to the assembly,
+              giving a fourfold improvement.",
+  journal  = "Bioinformatics",
+  volume   =  31,
+  number   =  10,
+  pages    = "1674--1676",
+  month    =  may,
+  year     =  2015,
+  url      = "http://dx.doi.org/10.1093/bioinformatics/btv033",
+  language = "en",
+  issn     = "1367-4803, 1367-4811",
+  pmid     = "25609793",
+  doi      = "10.1093/bioinformatics/btv033"
+}
+
+
+
+@ARTICLE{Steinegger2017-qw,
+  title    = "{MMseqs2} enables sensitive protein sequence searching for the
+              analysis of massive data sets",
+  author   = "Steinegger, Martin and S{\"o}ding, Johannes",
+  journal  = "Nat. Biotechnol.",
+  volume   =  35,
+  number   =  11,
+  pages    = "1026--1028",
+  month    =  nov,
+  year     =  2017,
+  url      = "http://dx.doi.org/10.1038/nbt.3988",
+  language = "en",
+  issn     = "1087-0156, 1546-1696",
+  pmid     = "29035372",
+  doi      = "10.1038/nbt.3988"
+}
+
+
+@ARTICLE{Nissen2021-ry,
+  title    = "Improved metagenome binning and assembly using deep variational
+              autoencoders",
+  author   = "Nissen, Jakob Nybo and Johansen, Joachim and Alles{\o}e, Rosa
+              Lundbye and S{\o}nderby, Casper Kaae and Armenteros, Jose Juan
+              Almagro and Gr{\o}nbech, Christopher Heje and Jensen, Lars Juhl
+              and Nielsen, Henrik Bj{\o}rn and Petersen, Thomas Nordahl and
+              Winther, Ole and Rasmussen, Simon",
+  abstract = "Despite recent advances in metagenomic binning, reconstruction of
+              microbial species from metagenomics data remains challenging.
+              Here we develop variational autoencoders for metagenomic binning
+              (VAMB), a program that uses deep variational autoencoders to
+              encode sequence coabundance and k-mer distribution information
+              before clustering. We show that a variational autoencoder is able
+              to integrate these two distinct data types without any previous
+              knowledge of the datasets. VAMB outperforms existing
+              state-of-the-art binners, reconstructing 29-98\% and 45\% more
+              near-complete (NC) genomes on simulated and real data,
+              respectively. Furthermore, VAMB is able to separate closely
+              related strains up to 99.5\% average nucleotide identity (ANI),
+              and reconstructed 255 and 91 NC Bacteroides vulgatus and
+              Bacteroides dorei sample-specific genomes as two distinct
+              clusters from a dataset of 1,000 human gut microbiome samples. We
+              use 2,606 NC bins from this dataset to show that species of the
+              human gut microbiome have different geographical distribution
+              patterns. VAMB can be run on standard hardware and is freely
+              available at https://github.com/RasmussenLab/vamb .",
+  journal  = "Nat. Biotechnol.",
+  volume   =  39,
+  number   =  5,
+  pages    = "555--560",
+  month    =  may,
+  year     =  2021,
+  url      = "http://dx.doi.org/10.1038/s41587-020-00777-4",
+  language = "en",
+  issn     = "1087-0156, 1546-1696",
+  pmid     = "33398153",
+  doi      = "10.1038/s41587-020-00777-4",
+  pmc      = "4556158"
+}
+

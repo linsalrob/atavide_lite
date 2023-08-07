@@ -11,3 +11,19 @@ A simpler version of atavide that relies only on slurm or PBS scripts. Some of t
 See the verions:
    - [slurm](slurm/README.md) - designed to work on Flinders deepthought infrastructure
    - [pbs](pbs/README.md) - designed to work on the NCI infrastructrue for now
+
+
+Currently the pipeline depends on
+
+   - fastp
+   - samtools
+   - minimap2
+   - megahit
+   - mmseqs
+   - vamb
+
+You can install all of these with:
+
+```
+mamba install -y fastp samtools minimap2 megahit mmseqs vamb
+```

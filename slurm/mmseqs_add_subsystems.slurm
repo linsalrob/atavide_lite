@@ -6,6 +6,7 @@
 #SBATCH --mem=16G
 #SBATCH -o mmseqs_ss-%A_%a.out
 #SBATCH -e mmseqs_ss-%A_%a.err
+#SBATCH --partition=short
 
 eval "$(conda shell.bash hook)"
 conda activate bioinformatics
@@ -30,4 +31,4 @@ cp /home/edwa0468/UniRef/uniref.sqlite $BGFS
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 BASE=${R1/$FILEEND/}
 
-python ~/GitHubs/EdwardsLab/mmseqs/easy_taxonomy_to_function.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite | gzip -c >  mmseqs/$BASE/${BASE}_tophit_report_subsystems.gz
+python ~/GitHubs/atavide_lite/bin/easy_taxonomy_to_function.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite | gzip -c >  mmseqs/$BASE/${BASE}_tophit_report_subsystems.gz

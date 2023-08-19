@@ -11,4 +11,4 @@
 
 set -euo pipefail
 
-python /home/edwa0468/GitHubs/EdwardsLab/taxon/mmseqs_report_to_table.py -d mmseqs -o mmseqs_taxonomy -v
+python ~/GitHubs/atavide_lite/bin/mmseqs_report_to_table.py -d mmseqs -o mmseqs_taxonomy -v

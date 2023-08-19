@@ -6,19 +6,12 @@ if [[ $# != 1 ]]; then
 	exit 1;
 fi
 
-for R1 in $(find $1 -name \*_R1*); do 
-	R2=${R1/_R1/_R2}
-	if [[ -e $R2 ]]; then
-		if [[ ! -e cutadapt/$R1 ]] && [[ ! -e cutadapt/$R2 ]]; then
-			qsub -v R1=$R1,R2=$R2 ~/GitHubs/atavide_lite/pbs/fasta/cutadapt.pbs
-		elif [[ -e  cutadapt/$R1 ]]; then 
-			qsub -v R2=$R2 ~/GitHubs/atavide_lite/pbs/fasta/cutadapt.pbs
-		elif [[ -e cutadapt/$R2 ]]; then
-			qsub -v R1=$R1 ~/GitHubs/atavide_lite/pbs/fasta/cutadapt.pbs
-		fi
-	else
-		if [[ ! -e  cutadapt/$R1 ]]; then
-			qsub -v R1=$R1 ~/GitHubs/atavide_lite/pbs/fasta/cutadapt.pbs
-		fi
+SOURCE=$1
+DEST=cutadapt
+SCRIPT=~/GitHubs/atavide_lite/pbs/fasta/cutadapt.pbs
+
+for FILE in $(find $SOURCE -type f -printf "%f\n"); do 
+	if [[ ! -e $DEST/$FILE ]]; then
+		qsub -v R1=$SOURCE/$FILE $SCRIPT
 	fi
 done

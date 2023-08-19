@@ -17,6 +17,17 @@ We use [cutadapt](https://cutadapt.readthedocs.io/en/stable/) since it is able t
 The code [cutadapt_submit.sh](cutadapt_submit.sh) will submit everything in the directory you specify
 
 
-NOTE: NEXT WE NEED TO MAKE SURE ALL R1/R2 are computed because some might be missing ;-)
+```
+bash ~/GitHubs/atavide_lite/pbs/fasta/cutadapt_submit.sh fasta_split/
+```
 
+
+# Step 2. Remove human contamination
+
+We have a (pbs script](human.pbs) that trims out the R1 and R2 reads, and creates human and non-human directories. Again, there is a submit script to check for R1 and R2 or just R1:
+
+
+```
+bash ~/GitHubs/atavide_lite/pbs/fasta/human_submit.sh cutadapt
+```
 

@@ -105,7 +105,53 @@ sbatch --dependency=afterok:$VMJOB $SRC/vamb.slurm
 ```
 
 
+# Grouped VAMB
 
+There comes a time when we want to run vamb on a subset of reads, and so we have a `grouped` version of vamb.
+We use a simple `.tsv` file to designate the groups, and then we run each of the components of vamb on that group.
+
+For example, if we have a `.tsv` file with this data:
+
+--- | ---
+Host | Sample
+Angelshark | GSV317\_
+Angelshark | GSV326\_
+Angelshark | GSV329\_
+Angelshark | GSV342\_
+Eagle\_Ray | ER128RecapASuck\_
+Eagle\_Ray | ER151Suck\_
+Eagle\_Ray | ER247Suck\_
+
+
+We will separate GSV317, GSV326, GSV329, GSV342 into AngelShark and ER128RecapASuck, ER151Suck, ER247Suck into Eagle\_Ray directories, and then vamb them separately.
+
+The main trick here is to make it so that the sample names only give 0 or 1 results when grepping through R1_reads.txt which is why I append the `_` to these names.
+
+### Step 1: Create the contigs with the groups:
+
+```
+sbatch $SRC/vamb_concat_groups.slurm groups_sample.tsv
+```
+
+### Step 2: Map all the reads:
+
+```
+sbatch --array=1-$NUM_R1_READS:1 $SRC/vamb_minimap_group.slurm
+```
+
+### Step 3: Run vamb:
+
+```
+sbatch $SRC/vamb_group.slurm
+```
+
+All three lines as one go:
+
+```
+VCONCAT=$(sbatch --parsable $SRC/vamb_concat_groups.slurm groups_sample.tsv)
+VMAP=$(sbatch --parsable  --dependency=afterok:$VCONCAT --array=1-$NUM_R1_READS:1 $SRC/vamb_minimap_group.slurm)
+sbatch --parsable  --dependency=afterok:$VMAP $SRC/vamb_group.slurm
+```
 
 # All commands in one go:
 
@@ -129,3 +175,6 @@ sbatch --dependency=afterok:$VMJOB $SRC/vamb.slurm
 
 
 ```
+
+
+

@@ -54,7 +54,7 @@ R=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 # convert fastq to fasta
 # this throws an unbound error if FAFILEEND is not in DEFINITIONS
 R1=${R/$FILEEND/$FAFILEEND}
-R2=${R1/R1/R2}
+R2=${R1/_R1/_R2}
 OUTPUT=$OUTDIR/${R/$FILEEND/}
 TMPOUTPUT=${R/$FILEEND/}
 

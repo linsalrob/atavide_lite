@@ -44,6 +44,6 @@ export -f extract_R1
 export -f extract_R2
 mkdir -p fasta
 
-find -L $HOSTREMOVED -type f -name \*R1\*fastq.gz | parallel -j 16 extract_R1
-find -L $HOSTREMOVED -type f -name \*R2\*fastq.gz | parallel -j 16 extract_R2
+find -L $HOSTREMOVED -type f -name \*_R1\*fastq.gz | parallel -j 16 extract_R1
+find -L $HOSTREMOVED -type f -name \*_R2\*fastq.gz | parallel -j 16 extract_R2
 

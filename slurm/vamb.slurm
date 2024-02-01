@@ -34,7 +34,7 @@ mkdir --parents $OUTDIR/mapped_reads
 cp $OUTDIR/contigs.fna.gz $BGFS/$OUTDIR
 minimap2 -I100G -d $BGFS/$OUTDIR/contigs.mmi $BGFS/$OUTDIR/contigs.fna.gz
 for R1 in $(sort -R R1_reads.txt); do
-	R2=${R1/R1/R2}
+	R2=${R1/_R1/_R2}
 	BAM=${R1/$FILEEND/.bam}
 	if [[ -e $OUTDIR/mapped_reads/$BAM ]]; then
 		cp $OUTDIR/mapped_reads/$BAM $BGFS/$OUTDIR/mapped_reads/$BAM;

@@ -49,7 +49,7 @@ source DEFINITIONS.sh
 
 mkdir --parents megahit
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
-R2=${R1/R1/R2};
+R2=${R1/_R1/_R2}
 O=${R1/$FILEEND/};
 
 

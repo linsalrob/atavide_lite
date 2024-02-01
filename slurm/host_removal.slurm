@@ -33,7 +33,7 @@ mkdir -p $BGFS/fastq
 cp $HOSTFILE $BGFS/host.fna.gz
 
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
-R2=${R1/R1/R2}
+R2=${R1/_R1/_R2}
 
 echo "Processing $R1 and $R2" >&2;
 echo "Processing $R1 and $R2";

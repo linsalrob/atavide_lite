@@ -1,0 +1,13 @@
+name: atavide_lite
+channels:
+   - conda-forge
+   - bioconda
+   - defaults
+dependencies:
+   - fastp
+   - minimap2
+   - mmseqs2
+   - megahit
+   - samtools
+   - rsync
+   - vamb

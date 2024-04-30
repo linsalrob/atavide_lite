@@ -1,0 +1,8 @@
+name: atavide_lite_vamb
+channels:
+   - conda-forge
+   - bioconda
+   - defaults
+dependencies:
+   - vamb
+   - rsync

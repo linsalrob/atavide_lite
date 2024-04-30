@@ -10,7 +10,7 @@
 
 set -euo pipefail
 eval "$(conda shell.bash hook)"
-conda activate atavide_lite
+conda activate atavide_lite_vamb
 
 # run vamb_concat 
 # we want a tsv file with [category] [sample]

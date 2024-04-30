@@ -36,6 +36,7 @@ SRC=~/atavide_lite/slurm
 
 ```
 mamba env create -f ~/atavide_lite/atavide_lite.yaml
+mamba env create -f ~/atavide_lite/atavide_lite_vamb.yaml
 ```
 
 1. Create a list of R1 files.

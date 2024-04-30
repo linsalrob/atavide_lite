@@ -47,6 +47,8 @@ done
 
 rsync -a $BGFS/$OUTDIR/ $OUTDIR/
 
+conda activate atavide_lite_vamb
+
 vamb -o C -p 16 --cuda --outdir $OUTDIR/vamb --fasta $BGFS/$OUTDIR/contigs.fna.gz --bamfiles $BGFS/$OUTDIR/mapped_reads/*bam 
 
 python ~/atavide_lite/bin/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters.tsv 20000 $OUTDIR/bins

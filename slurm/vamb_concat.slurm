@@ -10,8 +10,8 @@
 
 set -euo pipefail
 eval "$(conda shell.bash hook)"
-conda activate vamb
+conda activate atavide_lite
 
 mkdir -p vamb
-python /home/edwa0468/GitHubs/atavide_lite/bin/vamb_concatenate.py vamb/contigs.fna.gz megahit/*/output/final.contigs.fa
+python ~/atavide_lite/bin/vamb_concatenate.py vamb/contigs.fna.gz megahit/*/output/final.contigs.fa
 

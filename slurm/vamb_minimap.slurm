@@ -11,7 +11,7 @@
 
 set -euo pipefail
 eval "$(conda shell.bash hook)"
-conda activate vamb
+conda activate atavide_lite
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2

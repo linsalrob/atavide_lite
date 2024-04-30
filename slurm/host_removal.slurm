@@ -9,7 +9,7 @@
 
 set -euo pipefail
 eval "$(conda shell.bash hook)"
-conda activate bioinformatics
+conda activate atavide_lite
 
 
 if [[ ! -e R1_reads.txt ]]; then

@@ -8,4 +8,4 @@
 #SBATCH -o count_ss-%j.out
 #SBATCH -e count_ss-%j.err
 
-perl ~/GitHubs/atavide_lite/bin/count_subsystems.pl -d mmseqs
+perl ~/atavide_lite/bin/count_subsystems.pl -d mmseqs

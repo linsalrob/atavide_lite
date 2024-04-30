@@ -21,7 +21,7 @@
 #SBATCH -e mmseqsET-%A_%a.err
 
 eval "$(conda shell.bash hook)"
-conda activate bioinformatics
+conda activate atavide_lite
 set -euo pipefail
 
 

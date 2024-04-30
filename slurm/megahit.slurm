@@ -35,7 +35,7 @@
 set -euo pipefail
 
 eval "$(conda shell.bash hook)"
-conda activate bioinformatics
+conda activate atavide_lite
 
 
 if [[ ! -e DEFINITIONS.sh ]]; then
@@ -67,7 +67,7 @@ TMPO=$BGFS/output
 megahit -1 $BGFS/input/$R1 -2 $BGFS/input/$R2 -o $TMPO -t 8
 
 megahit_toolkit contig2fastg 119 $TMPO/final.contigs.fa > $TMPO/final.graph.fastg; 
-fastg2gfa $TMPO/final.graph.fastg > $TMPO/final.gfa
+~/atavide_lite/bin/fastg2gfa $TMPO/final.graph.fastg > $TMPO/final.gfa
 
 
 rsync -av $TMPO megahit/$O

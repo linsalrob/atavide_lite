@@ -11,7 +11,7 @@
 
 set -uo pipefail
 eval "$(conda shell.bash hook)"
-conda activate vamb
+conda activate atavide_lite
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
@@ -44,7 +44,7 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 	if [[ $? != 0 ]]; then 
 		echo "Running VAMB on $OUTDIR failed." >&2;
 	else
-		python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/vamb/vae_clusters.tsv 20000 $BGFS/$OUTDIR/bins
+		python ~/atavide_lite/bin/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/vamb/vae_clusters.tsv 20000 $BGFS/$OUTDIR/bins
 		rm -f $BGFS/$OUTDIR/contigs.fna.gz
 		rsync -a $BGFS/$OUTDIR/ $OUTDIR/
 	fi

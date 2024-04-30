@@ -10,7 +10,7 @@
 
 set -euo pipefail
 eval "$(conda shell.bash hook)"
-conda activate vamb
+conda activate atavide_lite
 
 # run vamb_concat 
 # we want a tsv file with [category] [sample]
@@ -76,8 +76,8 @@ mkdir -p vamb_groups
 for LC in ${!FQPATHS[@]}; do 
 	echo "Making $LC" >&2;
 	mkdir -p vamb_groups/$LC
-	echo "python /home/edwa0468/GitHubs/atavide_lite/bin/vamb_concatenate.py vamb_groups/$LC/contigs.fna.gz ${FQPATHS[$LC]}" >&2;
-	bash -c "python /home/edwa0468/GitHubs/atavide_lite/bin/vamb_concatenate.py vamb_groups/$LC/contigs.fna.gz ${FQPATHS[$LC]}";
+	echo "python ~/atavide_lite/bin/vamb_concatenate.py vamb_groups/$LC/contigs.fna.gz ${FQPATHS[$LC]}" >&2;
+	bash -c "python ~/atavide_lite/bin/vamb_concatenate.py vamb_groups/$LC/contigs.fna.gz ${FQPATHS[$LC]}";
 done
 
 

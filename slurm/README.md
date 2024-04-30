@@ -25,10 +25,12 @@ export HOSTREMOVED=fastq_fastp
 
 Clone the atavide lite repository to your home directory, and make the compiled code
 
+```
 git clone https://github.com/linsalrob/atavide_lite.git
 cd atavide_lite/bin
 make
 SRC=~/atavide_lite/slurm
+```
 
 0b. Set up the conda environment
 

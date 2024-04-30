@@ -3,7 +3,7 @@
 #SBATCH --time=5-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH -o host-%A_%a.out
 #SBATCH -e host-%A_%a.err
 
@@ -46,6 +46,7 @@ if [[ $O == $R1 ]]; then
 	exit 1;
 fi
 
+echo -e "minimap2 -t 16 --split-prefix=$BGFS/tmp$$ -a -xsr $BGFS/host.fna.gz $BGFS/fastq/$R1 $BGFS/fastq/$R2 | samtools view -bh | samtools sort -o $BGFS/output/$O -\n" >&2;
 minimap2 -t 16 --split-prefix=$BGFS/tmp$$ -a -xsr $BGFS/host.fna.gz $BGFS/fastq/$R1 $BGFS/fastq/$R2 | samtools view -bh | samtools sort -o $BGFS/output/$O -
 samtools index $BGFS/output/$O
 

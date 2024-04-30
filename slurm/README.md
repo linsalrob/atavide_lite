@@ -172,7 +172,7 @@ sbatch --parsable  --dependency=afterok:$VMAP $SRC/vamb_group.slurm
 find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt
 
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' ')
-SRC=~edwa0468/GitHubs/atavide_lite/slurm
+SRC=~/atavide_lite/slurm
 
 JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 $SRC/fastp.slurm)
 HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB $SRC/host_removal.slurm)

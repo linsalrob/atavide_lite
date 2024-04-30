@@ -10,3 +10,4 @@ dependencies:
    - mmseqs2
    - megahit
    - rsync
+   - parallel

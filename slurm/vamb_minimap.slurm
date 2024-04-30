@@ -26,7 +26,6 @@ mkdir --parents $OUTDIR
 if [[ ! -e $OUTDIR/contigs.fna.gz ]]; then
 	echo "Please create the contigs with vamb_concatenate" >&2;
 	exit 2;
-	#python /home/edwa0468/GitHubs/EdwardsLab/process_EK_metagenomes/vamb_concatenate.py $OUTDIR/contigs.fna.gz megahit/*/output/final.contigs.fa 
 fi
 
 

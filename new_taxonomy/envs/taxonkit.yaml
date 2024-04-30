@@ -1,0 +1,6 @@
+name: taxonkit
+channels:
+        - conda-forge
+        - bioconda
+dependencies:
+    - taxonkit

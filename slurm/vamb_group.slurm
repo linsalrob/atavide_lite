@@ -1,15 +1,15 @@
 #!/bin/bash
-#SBATCH --job-name=VAMB
+#SBATCH --job-name=VAMBgroups
 #SBATCH --time=5-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=128G
-#SBATCH -o vamb-%j.out
-#SBATCH -e vamb-%j.err
+#SBATCH -o vamb_groups-%j.out
+#SBATCH -e vamb_groups-%j.err
 #SBATCH --gres=gpu:1
 #SBATCH --partition=gpu
 
-set -euo pipefail
+set -uo pipefail
 eval "$(conda shell.bash hook)"
 conda activate vamb
 
@@ -41,8 +41,11 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 	mkdir --parents $BGFS/$OUTDIR
 	rsync $OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/contigs.fna.gz 
 	vamb -o C -p 16 --cuda --outdir $BGFS/$OUTDIR/vamb --fasta $BGFS/$OUTDIR/contigs.fna.gz --bamfiles $OUTDIR/mapped_reads/*bam 
-
-	python ~/GitHubs/EdwardsLab/process_EK_metagenomes/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/vamb/vae_clusters.tsv 20000 $BGFS/$OUTDIR/bins
-	rm -f $BGFS/$OUTDIR/contigs.fna.gz
-	rsync -a $BGFS/$OUTDIR/ $OUTDIR/
+	if [[ $? != 0 ]]; then 
+		echo "Running VAMB on $OUTDIR failed." >&2;
+	else
+		python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/vamb/vae_clusters.tsv 20000 $BGFS/$OUTDIR/bins
+		rm -f $BGFS/$OUTDIR/contigs.fna.gz
+		rsync -a $BGFS/$OUTDIR/ $OUTDIR/
+	fi
 done

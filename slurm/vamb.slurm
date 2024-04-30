@@ -25,7 +25,7 @@ OUTDIR=vamb
 mkdir --parents $OUTDIR
 
 if [[ ! -e $OUTDIR/contigs.fna.gz ]]; then
-	python /home/edwa0468/GitHubs/EdwardsLab/process_EK_metagenomes/vamb_concatenate.py $OUTDIR/contigs.fna.gz megahit/*/output/final.contigs.fa 
+	python ~/GitHubs/atavide_lite/bin/vamb_concatenate.py $OUTDIR/contigs.fna.gz megahit/*/output/final.contigs.fa 
 fi
 
 mkdir --parents $BGFS/$OUTDIR $BGFS/$OUTDIR/mapped_reads  $BGFS/fastq
@@ -49,6 +49,6 @@ rsync -a $BGFS/$OUTDIR/ $OUTDIR/
 
 vamb -o C -p 16 --cuda --outdir $OUTDIR/vamb --fasta $BGFS/$OUTDIR/contigs.fna.gz --bamfiles $BGFS/$OUTDIR/mapped_reads/*bam 
 
-python ~/GitHubs/EdwardsLab/process_EK_metagenomes/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters.tsv 20000 $OUTDIR/bins
+python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters.tsv 20000 $OUTDIR/bins
 
 rsync -a $BGFS/$OUTDIR/ $OUTDIR/

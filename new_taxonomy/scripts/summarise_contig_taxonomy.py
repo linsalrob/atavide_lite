@@ -14,34 +14,6 @@ from roblib import colours, stream_fasta
 __author__ = 'Rob Edwards'
 
 
-def orf_locations(orf_file, verbose=False):
-    """
-    Read the ORF locations and store the midpoint
-    """
-
-    if verbose:
-        print(f"{colors.BLUE}Reading {orf_file}{colours.ENDC}", 
-              file=sys.stderr)
-
-
-    opener = open
-
-    if ".gz" in orf_file:  # gzipped version of the file, we need gzip.open
-        opener = gzip.open
-
-    locs = re.compile(r'>(\w+)\s+\[[\w\-]+\s+frame\s+[\+\-\d+]+\s(\d+)\s(\d+)\]')
-
-    position = {}
-
-    with opener(orf_file, "rt") as f:
-        # >orf1 [4a901472-3d00-4da0-b0e7-9169d21efcfc frame +1 58 225]
-        for l in f:
-            m = locs.match(l)
-            (orf, beg, end) = m.groups()
-            position[orf] = (int(beg)+int(end))/2
-    return position
-
-
 def parse_taxonomy(taxfile, verbose=False):
     """
     Parse the taxonomy file
@@ -107,20 +79,6 @@ def parse_taxonomy(taxfile, verbose=False):
             contig_tax[contig]['species'][f'{kng};{phy};{cls};{orr};{fam};{gen};{sp}'] = contig_tax[contig]['species'].get(f'{kng};{phy};{cls};{orr};{fam};{gen};{sp}', 0) + 1
             contign[contig] = contign.get(contig, 0) + 1
 
-            """
-            
-            
-            # now we reconstruct these at all levels and count them
-            tax['kingdom'][kng] = tax['kingdom'].get(kng, 0) + 1
-            tax['phylum'][f'{kng};{phy}'] = tax['phylum'].get(f'{kng};{phy}', 0) + 1
-            tax['class'][f'{kng};{phy};{cls}'] = tax['class'].get(f'{kng};{phy};{cls}', 0) + 1
-            tax['order'][f'{kng};{phy};{cls};{orr}'] = tax['order'].get(f'{kng};{phy};{cls};{orr}', 0) + 1
-            tax['family'][f'{kng};{phy};{cls};{orr};{fam}'] = tax['family'].get(f'{kng};{phy};{cls};{orr};{fam}', 0) + 1
-            tax['genus'][f'{kng};{phy};{cls};{orr};{fam};{gen}'] = tax['genus'].get(f'{kng};{phy};{cls};{orr};{fam};{gen}', 0) + 1
-            tax['species'][f'{kng};{phy};{cls};{orr};{fam};{gen};{sp}'] = tax['species'].get(f'{kng};{phy};{cls};{orr};{fam};{gen};{sp}', 0) + 1
-            
-            orf_tax[p[0]] = [kng, phy, cls, orr, fam, gen, sp]
-            """
 
     
     # for each contig we have the best hit, so we can tax the max for tax!
@@ -152,7 +110,6 @@ def parse_taxonomy(taxfile, verbose=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=' ')
-    parser.add_argument('-o', help='orf fasta file that includes the gene locations', required=True)
     parser.add_argument('-t', help='lca taxonomy file', required=True)
     parser.add_argument('-v', help='verbose output', action='store_true')
     args = parser.parse_args()

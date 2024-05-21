@@ -21,14 +21,18 @@ if not os.environ["TAXONKIT_DB"]:
 
 READDIR = 'fastq'
 ORFDIR  = 'orfs'
+FASTADIR = ORFDIR
 MMSEQS = 'mmseqs'
 
 # A Snakemake regular expression matching the forward mate FASTQ files.
 # the comma after SAMPLES is important!
-SAMPLES, = glob_wildcards(os.path.join(READDIR, '{sample}.fastq.gz'))
-if len(SAMPLES) == 0:
+FQSAMPLES, = glob_wildcards(os.path.join(READDIR, '{sample}.fastq.gz'))
+if len(FQSAMPLES) == 0:
     sys.stderr.write(f"We did not find any fastq files in {SAMPLES}. Is this the right read dir?\n")
     sys.exit(0)
+
+
+#localrules: all_contig
 
 # include the required rules
 include: "rules/get_orfs.smk"
@@ -36,16 +40,16 @@ include: "rules/mmseqs_single.smk"
 include: "taxonomy.smk"
 include: "rules/summarise.smk"
 
+
 # make some output directories
 os.makedirs(ORFDIR, exist_ok=True)
 os.makedirs(MMSEQS, exist_ok=True)
 
-rule all:
+rule all_contig:
     input:
-        expand(os.path.join(ORFDIR, '{sample}.fasta.gz'), sample=SAMPLES),
-        expand(os.path.join(MMSEQS, "{sample}", "{sample}_lca.tsv.gz"), sample=SAMPLES),
-        expand(os.path.join(MMSEQS, "{sample}", "{sample}_lca_taxonomy.tsv.gz"), sample=SAMPLES),
-        expand(os.path.join(MMSEQS, "{sample}", "{sample}.contigs.tsv.gz"), sample=SAMPLES)
-
+        expand(os.path.join(MMSEQS, "{sample}", "{sample}.contigs.tsv.gz"), sample=FQSAMPLES),
+        expand(os.path.join(ORFDIR, '{sample}.fasta.gz'), sample=FQSAMPLES),
+        expand(os.path.join(MMSEQS, "{sample}", "{sample}_lca.tsv.gz"), sample=FQSAMPLES),
+        expand(os.path.join(MMSEQS, "{sample}", "{sample}_lca_taxonomy.tsv.gz"), sample=FQSAMPLES),
 
 

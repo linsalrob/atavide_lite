@@ -9,12 +9,11 @@ import argparse
 import gzip
 import re
 
-from roblib import colours, stream_fasta
 
 __author__ = 'Rob Edwards'
 
 
-def parse_taxonomy(taxfile, verbose=False):
+def parse_taxonomy(taxfile, outputfile):
     """
     Parse the taxonomy file
     """
@@ -51,12 +50,13 @@ def parse_taxonomy(taxfile, verbose=False):
             # just based on the most abundant
             #
             #
-            if verbose:
-                print(l, file=sys.stderr, end="")
             kng, phy, cls, orr, fam, gen, sp = p[4].split(";")
 
             ctgre = re.compile(r'^(.*)-(orf\d+)')
             m = ctgre.match(p[0])
+            if not m:
+                print(f"Error: no group from {p[0]} in {taxfile}", file=sys.stderr)
+                continue
             contig = m.groups()[0]
 
             if contig not in contig_tax:
@@ -84,14 +84,21 @@ def parse_taxonomy(taxfile, verbose=False):
     # for each contig we have the best hit, so we can tax the max for tax!
     print("\t".join(['contig', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']))
 
-    for contig in contig_tax.keys():
-        n+=1
-        print(contig, end="")
-        for tx in ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']:
-            contigmx = max(contig_tax[contig][tx], key=contig_tax[contig][tx].get)
-            print(f"\t{contigmx}", end="")
-            tax[tx][contigmx] = tax[tx].get(contigmx, 0)+1
-        print()
+
+
+    openwriter = open
+    if outputfile.endswith('.gz'):
+        openwriter = gzip.open
+
+    with openwriter(outputfile, 'wt') as out:
+        for contig in contig_tax.keys():
+            n+=1
+            print(contig, end="", file=out)
+            for tx in ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']:
+                contigmx = max(contig_tax[contig][tx], key=contig_tax[contig][tx].get)
+                print(f"\t{contigmx}", end="", file=out)
+                tax[tx][contigmx] = tax[tx].get(contigmx, 0)+1
+            print(file=out)
 
     # now we have the counts.
     print("Most likely taxonomy overall", file=sys.stderr)
@@ -104,17 +111,7 @@ def parse_taxonomy(taxfile, verbose=False):
 
     
 
+parse_taxonomy(snakemake.input.lcatax, snakemake.output.consum)
 
-
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=' ')
-    parser.add_argument('-t', help='lca taxonomy file', required=True)
-    parser.add_argument('-v', help='verbose output', action='store_true')
-    args = parser.parse_args()
-
-    
-    parse_taxonomy(args.t, args.v)
 
 

@@ -23,6 +23,7 @@ READDIR = 'fastq'
 ORFDIR  = 'orfs'
 FASTADIR = ORFDIR
 MMSEQS = 'mmseqs'
+TAX = 'taxonomy'
 
 # A Snakemake regular expression matching the forward mate FASTQ files.
 # the comma after SAMPLES is important!
@@ -51,5 +52,23 @@ rule all_contig:
         expand(os.path.join(ORFDIR, '{sample}.fasta.gz'), sample=FQSAMPLES),
         expand(os.path.join(MMSEQS, "{sample}", "{sample}_lca.tsv.gz"), sample=FQSAMPLES),
         expand(os.path.join(MMSEQS, "{sample}", "{sample}_lca_taxonomy.tsv.gz"), sample=FQSAMPLES),
+        os.path.join(TAX, "kingdom.tsv.gz"), os.path.join(TAX, "phylum.tsv.gz"), 
+        os.path.join(TAX, "class.tsv.gz"), os.path.join(TAX, "order.tsv.gz"), 
+        os.path.join(TAX, "family.tsv.gz"), os.path.join(TAX, "genus.tsv.gz"), 
+        os.path.join(TAX, "species.tsv.gz")
 
+rule concatentate_taxonomies:
+    input:
+        taxfiles = expand(os.path.join(MMSEQS, "{sample}", "{sample}.contigs.tsv.gz"), sample=FQSAMPLES)
+    output:
+        k = os.path.join(TAX, "kingdom.tsv.gz"),
+        p = os.path.join(TAX, "phylum.tsv.gz"),
+        c = os.path.join(TAX, "class.tsv.gz"),
+        o = os.path.join(TAX, "order.tsv.gz"),
+        f = os.path.join(TAX, "family.tsv.gz"),
+        g = os.path.join(TAX, "genus.tsv.gz"),
+        s = os.path.join(TAX, "species.tsv.gz"),
+        outdir = directory(TAX)
+    script:
+        "scripts/combine_taxonomies.py"
 

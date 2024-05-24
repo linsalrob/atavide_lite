@@ -1,5 +1,36 @@
 
+# MinION Metagenome Taxonomy and Function
 
+This pipeline calculates the read-based taxonomy and function for your metagenomes.
+
+Before you start, you need to run these three steps separately:
+
+1. Dorado – basecalling
+2. Filtlong – QC/QA – removes low quality (<5%) and v. short reads (<1,000bp) (You might also check for adapter sequences with fastp, but that should be removed by Dorado)
+3. Host removal with minimap2 and samtools filters
+
+This pipeline then predicts _all_ open reading frames, and calculates their taxonomy and function
+
+4. ORF calling – direct on fastq – >30 amino acids. This will generate multiple orfs per sequence
+5. mmseqs2 is used to generate easy taxonomy on amino acids
+6. We add taxonomy labels using taxonkit
+7. Summarise taxonomy per contig (or long sequence)
+8. Make one table each for kingdom, phylum, class, order, family, genus, species
+9. We add functions and subsystems from the BVBRC
+10. We summarise those subsystems (see below).
+
+
+# Taxonomy
+
+We provide several taxonomy level files:
+
+- kingdom.tsv.gz
+- phylum.tsv.gz
+- class.tsv.gz
+- order.tsv.gz
+- family.tsv.gz
+- genus.tsv.gz
+- species.tsv.gz
 
 
 

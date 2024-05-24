@@ -39,7 +39,7 @@ if len(FQSAMPLES) == 0:
 # include the required rules
 include: "rules/get_orfs.smk"
 include: "rules/mmseqs_single.smk"
-include: "taxonomy.smk"
+include: "rules/taxonomy.smk"
 include: "rules/summarise.smk"
 include: "rules/add_functions.smk"
 include: "rules/summarise_subsystem_counts.smk"

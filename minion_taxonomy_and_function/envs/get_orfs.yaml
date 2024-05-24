@@ -1,0 +1,6 @@
+name: mmseqs2
+channels:
+    - conda-forge
+    - bioconda
+dependencies:
+    - get_orfs

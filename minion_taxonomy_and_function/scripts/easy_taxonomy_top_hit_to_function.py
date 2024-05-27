@@ -45,7 +45,8 @@ def printout(results, mthd, outputfile):
         for r in results['subsystems'] + results['nosubsystems']:
             print(r, file=outputfile)
     if mthd == 'f':
-        print(results['subsystems'][0], file=outputfile)
+        if results['subsystems']:
+            print(results['subsystems'][0], file=outputfile)
 
 def add_ss_tax(tophitaln, mthd, sqlitedb, outputfile, verbose=False):
     """
@@ -67,8 +68,8 @@ def add_ss_tax(tophitaln, mthd, sqlitedb, outputfile, verbose=False):
     urs = re.compile(r'^UniRef\d+_(\w+)')
     cur = con.cursor()
 
-    opener = open if is_gzip(tophitaln) else gzip.open
-    writeopener = open if outputfile.endswith('.gz') else gzip.open
+    opener = gzip.open if is_gzip(tophitaln) else open
+    writeopener = gzip.open if outputfile.endswith('.gz') else open
 
     with opener(tophitaln, 'rt') as f, writeopener(outputfile, 'wt') as out:
         lastsequence = None
@@ -78,9 +79,9 @@ def add_ss_tax(tophitaln, mthd, sqlitedb, outputfile, verbose=False):
             if not lastsequence:
                 lastsequence = p[0]
             if lastsequence != p[0]:
-                printout(results, mthd, outputfile)
+                printout(results, mthd, out)
                 lastsequence = p[0]
-                data = []
+                results = {'subsystems': [], 'nosubsystems': []}
             m = urs.match(p[1])
             if m and m.group(1):
                 try:
@@ -103,12 +104,12 @@ def add_ss_tax(tophitaln, mthd, sqlitedb, outputfile, verbose=False):
                         results['subsystems'].append("\t".join(list(p) + [func] + list(s)))
                         counts += 1
                     if counts == 0:
-                        results['nosubsystem'].append("\t".join(list(p) + [func] + list(s)))
+                        results['nosubsystems'].append("\t".join(list(p) + [func] + ["", "", "", "", ""]))
                 else:
-                    results['nosubsystem'].append("\t".join(list(p) + ["", "", "", "", "", ""]))
+                    results['nosubsystems'].append("\t".join(list(p) + ["", "", "", "", "", ""]))
             else:
                 print(f"Can't parse ID from {p[0]}", file=sys.stderr)
-                results['nosubsystem'].append("\t".join(list(p) + ["", "", "", "", "", ""]))
+                results['nosubsystems'].append("\t".join(list(p) + ["", "", "", "", "", ""]))
 
 
     con.close()

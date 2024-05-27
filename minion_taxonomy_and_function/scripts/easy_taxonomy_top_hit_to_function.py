@@ -34,6 +34,7 @@ def printout(results, mthd, outputfile):
     'r': print one at random
     'a': print all results
     's': print all subsystems
+    't': the first hit
     """
 
     if mthd == 'r':
@@ -47,6 +48,9 @@ def printout(results, mthd, outputfile):
     if mthd == 'f':
         if results['subsystems']:
             print(results['subsystems'][0], file=outputfile)
+    if mthd == 't':
+        if results['tophit']:
+            print(results['tophit'], file=outputfile)
 
 def add_ss_tax(tophitaln, mthd, sqlitedb, outputfile, verbose=False):
     """
@@ -73,7 +77,7 @@ def add_ss_tax(tophitaln, mthd, sqlitedb, outputfile, verbose=False):
 
     with opener(tophitaln, 'rt') as f, writeopener(outputfile, 'wt') as out:
         lastsequence = None
-        results = {'subsystems': [], 'nosubsystems': []}
+        results = {'subsystems': [], 'nosubsystems': [], 'tophit': None}
         for l in f:
             p = l.strip().split("\t")
             if not lastsequence:
@@ -81,7 +85,7 @@ def add_ss_tax(tophitaln, mthd, sqlitedb, outputfile, verbose=False):
             if lastsequence != p[0]:
                 printout(results, mthd, out)
                 lastsequence = p[0]
-                results = {'subsystems': [], 'nosubsystems': []}
+                results = {'subsystems': [], 'nosubsystems': [], 'tophit': None}
             m = urs.match(p[1])
             if m and m.group(1):
                 try:
@@ -102,21 +106,30 @@ def add_ss_tax(tophitaln, mthd, sqlitedb, outputfile, verbose=False):
                     counts = 0
                     for s in (cur.fetchall()):
                         results['subsystems'].append("\t".join(list(p) + [func] + list(s)))
+                        if not results['tophit']:
+                            results['tophit'] = "\t".join(list(p) + [func] + list(s))
                         counts += 1
                     if counts == 0:
                         results['nosubsystems'].append("\t".join(list(p) + [func] + ["", "", "", "", ""]))
+                        if not results['tophit']:
+                            results['tophit'] = "\t".join(list(p) + [func] + ["", "", "", "", ""])
                 else:
                     results['nosubsystems'].append("\t".join(list(p) + ["", "", "", "", "", ""]))
+                    if not results['tophit']:
+                        results['tophit'] = "\t".join(list(p) + ["", "", "", "", "", ""])
             else:
                 print(f"Can't parse ID from {p[0]}", file=sys.stderr)
                 results['nosubsystems'].append("\t".join(list(p) + ["", "", "", "", "", ""]))
+                if not results['tophit']:
+                    results['tophit'] = "\t".join(list(p) + ["", "", "", "", "", ""])
+
 
 
     con.close()
 
 
 if __name__ == "__main__":
-    valid_methods = ['f', 'a', 'r', 's']
+    valid_methods = ['f', 'a', 'r', 's', 't']
     parser = argparse.ArgumentParser(description='Print some ')
     parser.add_argument('-a', '--tophitaln',  help='mmseqs top hit alignment file', required=True)
     parser.add_argument('-o', '--outputfile', help='input file', required=True)
@@ -124,7 +137,8 @@ if __name__ == "__main__":
                         help='method to choose the print out. Currrent choices are\n' +
                         'f: print out the first subsystem match\n' +
                         'r: print one match at random from subsystems + no subsytems\n' +
-                        'a: print all matches\ns: print all subsystem matches')
+                        'a: print all matches\ns: print all subsystem matches\n' +
+                        't: use the top hit in the alignment file')
     parser.add_argument('-s', '--sqlitedb', help='sqlite database', required=True)
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()

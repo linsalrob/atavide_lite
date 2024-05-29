@@ -28,9 +28,10 @@ rule get_orfs:
         minorflen = 30
     resources:
         cores = 16
+    conda: "../envs/get_orfs.yaml"
     shell:
         """
-        /home/edwa0468/bin/get_orfs -f {input.fq}  -l {params.minorflen} -j {resources.cores} > {output.faa}
+        get_orfs -f {input.fq}  -l {params.minorflen} -j {resources.cores} > {output.faa}
         """
 
 rule compress_fastq:

@@ -11,7 +11,6 @@ import os
 import re
 import sys
 import argparse
-from roblib import is_gzip
 import sqlite3
 
 __author__ = 'Rob Edwards'
@@ -36,7 +35,7 @@ if __name__ == "__main__":
     urs = re.compile(r'^UniRef\d+_(\w+)')
     cur = con.cursor()
 
-    with gzip.open(args.f, 'rt') if is_gzip(args.f) else open(args.f, 'r') as f:
+    with gzip.open(args.f, 'rt') if args.f.endswith('.gz') else open(args.f, 'r') as f:
         for l in f:
             p = l.strip().split("\t")
             m = urs.match(p[0])

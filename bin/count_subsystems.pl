@@ -1,8 +1,6 @@
 use strict;
 use Getopt::Std;
 use Data::Dumper;
-use Rob;
-my $rob = new Rob;
 
 my %opts;
 getopts('d:m:s:v', \%opts);

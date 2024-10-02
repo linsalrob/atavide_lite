@@ -38,7 +38,7 @@ mmseqs/
 Then you can run the command:
 
 ```
-snakemake --profile slurm -s ~/GitHubs/pawsey/atavide/new_taxonomy/taxonomy.smk
+snakemake --profile slurm -s ~/GitHubs/atavide_lite/new_taxonomy/taxonomy.smk
 ```
 
 and it should make the `*.lca.taxonomy.tsv.gz` files for you

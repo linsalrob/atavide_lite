@@ -1,0 +1,17 @@
+#!/bin/bash
+#PBS -P ob80
+#PBS -q normal
+#PBS -l ncpus=1
+#PBS -l mem=64GB
+#PBS -l walltime=2:00:00
+#PBS -l wd
+#PBS -l other=hyperthread
+#PBS -l storage=scratch/ob80+gdata/ob80
+#PBS -N CountSS
+
+
+set -euo pipefail
+eval "$(conda shell.bash hook)"
+conda activate bioinformatics
+
+perl ~/GitHubs/atavide_lite/bin/count_subsystems.pl -d mmseqs

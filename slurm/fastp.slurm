@@ -9,7 +9,7 @@
 
 set -euo pipefail
 eval "$(conda shell.bash hook)"
-conda activate bioinformatics
+conda activate atavide_lite
 
 
 if [[ ! -e R1_reads.txt ]]; then 
@@ -27,10 +27,10 @@ source DEFINITIONS.sh
 
 mkdir -p $BGFS/output
 mkdir -p $BGFS/fastq
-cp /home/edwa0468/GitHubs/fast-adapter-trimming/adapters/IlluminaAdapters.fa $BGFS
+cp ~/atavide_lite/adapters/IlluminaAdapters.fa $BGFS
 
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
-R2=${R1/R1/R2}
+R2=${R1/_R1/_R2}
 cp $SOURCE/$R1 $SOURCE/$R2 $BGFS/fastq
 
 echo "fastp -n 1 -l 100 -i $BGFS/fastq/$R1 -I $BGFS/fastq/$R2 -o $BGFS/output/$R1 -O $BGFS/output/$R2 --adapter_fasta $BGFS/IlluminaAdapters.fa " >&2

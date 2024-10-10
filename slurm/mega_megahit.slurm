@@ -1,13 +1,17 @@
 #!/bin/bash
 #SBATCH --job-name=MegaHit
-#SBATCH --time=7-0
+#SBATCH --time=5-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=512G
+#SBATCH --partition=high-capacity
+#SBATCH --qos=hc-concurrent-jobs
 #SBATCH -o megahit-%A_%a.out
 #SBATCH -e megahit-%A_%a.err
 
-
+# This is for large files that may otherwise fail to lack of mem
+#
+# 
 ## For an example run on Emma's EagleRay data
 # 
 #  This suggests that we probably don't need 128G// high capacity,
@@ -64,7 +68,7 @@ echo "Using $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 for the assembly" >&2;
 cp -t $BGFS/input $HOSTREMOVED/$R1 $HOSTREMOVED/$R2
 TMPO=$BGFS/output
 
-megahit -1 $BGFS/input/$R1 -2 $BGFS/input/$R2 -o $TMPO -t 8
+megahit -1 $BGFS/input/$R1 -2 $BGFS/input/$R2 -o $TMPO -t 32
 
 megahit_toolkit contig2fastg 119 $TMPO/final.contigs.fa > $TMPO/final.graph.fastg; 
 ~/atavide_lite/bin/fastg2gfa $TMPO/final.graph.fastg > $TMPO/final.gfa

@@ -3,13 +3,13 @@
 #SBATCH --time=5-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH -o host-%A_%a.out
 #SBATCH -e host-%A_%a.err
 
 set -euo pipefail
 eval "$(conda shell.bash hook)"
-conda activate bioinformatics
+conda activate atavide_lite
 
 
 if [[ ! -e R1_reads.txt ]]; then
@@ -33,7 +33,7 @@ mkdir -p $BGFS/fastq
 cp $HOSTFILE $BGFS/host.fna.gz
 
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
-R2=${R1/R1/R2}
+R2=${R1/_R1/_R2}
 
 echo "Processing $R1 and $R2" >&2;
 echo "Processing $R1 and $R2";
@@ -46,6 +46,7 @@ if [[ $O == $R1 ]]; then
 	exit 1;
 fi
 
+echo -e "minimap2 -t 16 --split-prefix=$BGFS/tmp$$ -a -xsr $BGFS/host.fna.gz $BGFS/fastq/$R1 $BGFS/fastq/$R2 | samtools view -bh | samtools sort -o $BGFS/output/$O -\n" >&2;
 minimap2 -t 16 --split-prefix=$BGFS/tmp$$ -a -xsr $BGFS/host.fna.gz $BGFS/fastq/$R1 $BGFS/fastq/$R2 | samtools view -bh | samtools sort -o $BGFS/output/$O -
 samtools index $BGFS/output/$O
 

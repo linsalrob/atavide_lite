@@ -9,7 +9,7 @@
 #SBATCH --partition=short
 
 eval "$(conda shell.bash hook)"
-conda activate bioinformatics
+conda activate atavide_lite
 
 if [[ ! -e R1_reads.txt ]]; then 
 	echo "Please make a file with the R1 reads using this command:" >&2
@@ -31,4 +31,4 @@ cp /home/edwa0468/UniRef/uniref.sqlite $BGFS
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 BASE=${R1/$FILEEND/}
 
-python ~/GitHubs/atavide_lite/bin/easy_taxonomy_to_function.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite | gzip -c >  mmseqs/$BASE/${BASE}_tophit_report_subsystems.gz
+python ~/atavide_lite/bin/easy_taxonomy_to_function.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite | gzip -c >  mmseqs/$BASE/${BASE}_tophit_report_subsystems.gz

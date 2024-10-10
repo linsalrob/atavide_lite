@@ -21,7 +21,7 @@
 #SBATCH -e mmseqsET-%A_%a.err
 
 eval "$(conda shell.bash hook)"
-conda activate bioinformatics
+conda activate atavide_lite
 set -euo pipefail
 
 
@@ -54,7 +54,7 @@ R=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 # convert fastq to fasta
 # this throws an unbound error if FAFILEEND is not in DEFINITIONS
 R1=${R/$FILEEND/$FAFILEEND}
-R2=${R1/R1/R2}
+R2=${R1/_R1/_R2}
 OUTPUT=$OUTDIR/${R/$FILEEND/}
 TMPOUTPUT=${R/$FILEEND/}
 
@@ -68,9 +68,9 @@ rsync -a $DBSOURCE/ $BGFS/$DB/
 cp fasta/$R1 fasta/$R2 $BGFS
 echo "Copied " `date` >&2;
 
-echo "Running mmseqs easy-taxonomy $BGFS/$R1 $BGFS/$R2 $BGFS/$DB/$DB $BGFS/output/$TMPOUTPUT tmp --start-sens 1 --sens-steps 3 -s 7 --threads 32" 2>&1;
+echo "Running mmseqs easy-taxonomy $BGFS/$R1 $BGFS/$R2 $BGFS/$DB/$DB $BGFS/output/$TMPOUTPUT tmp --threads 32" 2>&1;
 
-mmseqs easy-taxonomy $BGFS/$R1 $BGFS/$R2 $BGFS/$DB/$DB $BGFS/output/$TMPOUTPUT $(mktemp -d -p $BGFS) --start-sens 1 --sens-steps 3 -s 7 --threads 32
+mmseqs easy-taxonomy $BGFS/$R1 $BGFS/$R2 $BGFS/$DB/$DB $BGFS/output/$TMPOUTPUT $(mktemp -d -p $BGFS) --threads 32
 
 find $BGFS/output -type f  | parallel -j 32 gzip
 

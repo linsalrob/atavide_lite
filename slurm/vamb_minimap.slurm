@@ -11,7 +11,7 @@
 
 set -euo pipefail
 eval "$(conda shell.bash hook)"
-conda activate vamb
+conda activate atavide_lite
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
@@ -26,12 +26,11 @@ mkdir --parents $OUTDIR
 if [[ ! -e $OUTDIR/contigs.fna.gz ]]; then
 	echo "Please create the contigs with vamb_concatenate" >&2;
 	exit 2;
-	#python /home/edwa0468/GitHubs/EdwardsLab/process_EK_metagenomes/vamb_concatenate.py $OUTDIR/contigs.fna.gz megahit/*/output/final.contigs.fa 
 fi
 
 
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
-R2=${R1/R1/R2}
+R2=${R1/_R1/_R2}
 BAM=${R1/$FILEEND/.bam}
 
 if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then

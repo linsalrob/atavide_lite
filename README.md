@@ -26,11 +26,9 @@ Currently the pipeline depends on these software
 You can install all of these with:
 
 ```
-mamba install -y fastp samtools minimap2 megahit mmseqs2
-mamba create -n vamb vamb
+mamba env create -f ~/atavide_lite/atavide_lite.yaml
 ```
 
-(Note: vamb has a couple of dependencies that may not work if you do them in your base repo).
 
 If you use atavide light, please [cite it](citation.cff) and then please also [cite the other papers](references.bib) that describe these great tools.
 

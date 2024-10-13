@@ -7,6 +7,10 @@ if not os.environ["TAXONKIT_DB"]:
     print("Please define the TAXONKIT_DB database location (even if you set it to ~/.taxonkit)", file=sys.stderr)
     sys.exit(1)
 
+if not os.path.exists(os.environ["TAXONKIT_DB"]):
+    txd = os.environ["TAXONKIT_DB"]
+    print(f"The taxonkit db path {txd} is defined but does not exist!")
+    sys.exit(1)
 
 MMSEQS = "mmseqs"
 TEST="SAGCFN_22_01149_S3"

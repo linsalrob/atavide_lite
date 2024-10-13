@@ -42,3 +42,12 @@ snakemake --profile slurm -s ~/GitHubs/atavide_lite/new_taxonomy/taxonomy.smk
 ```
 
 and it should make the `*.lca.taxonomy.tsv.gz` files for you
+
+
+Once the snakemake has run, you can use this command:
+
+```
+python ~/GitHubs/atavide_lite/new_taxonomy/scripts/join_taxonomies.py -t taxonomy -o taxonomy_summary/
+```
+
+to create the summary file. I wasted a day trying to incorporate that into the snakemake, but failed, so just run it post-facto

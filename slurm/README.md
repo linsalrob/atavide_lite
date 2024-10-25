@@ -176,7 +176,7 @@ sbatch --parsable  --dependency=afterok:$VMAP $SRC/vamb_group.slurm
 # All commands in one go:
 
 ```
-mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm
+mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm slurm_output/fastp_slurm
 find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt
 
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' ')

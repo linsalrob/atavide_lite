@@ -7,10 +7,6 @@
 #SBATCH -o checkm-%j.out
 #SBATCH -e checkm-%j.err
 
-set -euo pipefail
-eval "$(conda shell.bash hook)"
-conda activate checkm
-
 if [[ -z $CHECKM_DATA_PATH ]]; then 
 	echo "Please define CHECKM_DATA_PATH with your databases" >&2; 
 	exit 1;
@@ -20,6 +16,10 @@ if [[ $# -lt 2 ]]; then
 	echo "$0 <source directory> <destination directory>" >&2
 	exit 1
 fi
+
+set -euo pipefail
+eval "$(conda shell.bash hook)"
+conda activate checkm
 
 # this %/ removes the trailing / if there is one
 SOURCE=${1%/}
@@ -31,5 +31,6 @@ rsync -az $SOURCE/ $BGFS/$LOCALSOURCE/
 
 echo "Running checkm on $BGFS/$LOCALSOURCE and output in $BGFS/checkm"  >&2;
 checkm lineage_wf -t 16 $BGFS/$LOCALSOURCE $BGFS/checkm
-rsync $BGFS/checkm/ $DEST/
+checkm qa -t 16 $BGFS/checkm/lineage.ms $BGFS/checkm
+rsync -az $BGFS/checkm/ $DEST/
 

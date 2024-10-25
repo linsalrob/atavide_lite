@@ -31,16 +31,24 @@ def import_data(conn, sample_id, file, table, verbose=False):
             p = l.rstrip().split("\t")
             p.insert(0, sample_id)
             if table == 'tophit_aln':
-                values = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                values = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             elif table == 'lca_taxonomy':
-                values = "(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                # k__Bacteria;p__;c__;o__;f__;g__;s__
+                taxa = p[-1].split(";")
+                p = p + taxa
+                if len(p) != 17:
+                    ps = "|".join(p)
+                    ts = "|".join(taxa)
+                    print(f"{colours.RED}Only {len(p)} items in {l}\np: |{ps}\nt: |{ts}|{colours.ENDC}", file=sys.stderr)
+                    sys.exit(1)
+                values = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             elif table == 'tophit_report_subsystems':
-                values = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?)"
+                values = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?)"
             else:
                 print(f"{colours.PINK}WARNING: Do not have a SQLite table caled {table}{colours.ENDC}", file=sys.stderr)
                 return
-
-            cursor.execute(f'INSERT INTO ? VALUES {values}', p)
+            insert_str = f"INSERT INTO {table} VALUES {values}"
+            cursor.execute(insert_str, p)
 
     conn.commit()
 
@@ -107,7 +115,7 @@ def define_tables(conn, verbose=False):
         """
         CREATE TABLE IF NOT EXISTS tophit_aln (
             sample_id TEXT,
-            query TEXT,
+            sequence_id TEXT,
             subject TEXT,
             percent_identity FLOAT,
             alignment_length INTEGER,
@@ -117,11 +125,31 @@ def define_tables(conn, verbose=False):
             query_end INTEGER,
             subject_start INTEGER,
             subject_end INTEGER,
-            evalue REAL            
+            evalue REAL,
+            bitscore INTEGER
         );
-        
+        """
+    )
+    conn.commit()
+    
+
+    """
+    1       R100400180029:20221013142947:V350096418:2:156151:1:2/1/1
+    2       1783272
+    3       clade
+    4       Terrabacteria group
+    5       1
+    6       1
+    7       1
+    8       1.000
+    9       k__Bacteria;p__;c__;o__;f__;g__;s__
+    """
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS lca_taxonomy (
             sample_id TEXT,
+            sequence_id TEXT,
             taxid INTEGER,
             taxonomic_rank TEXT,
             scientific_name TEXT,
@@ -129,10 +157,41 @@ def define_tables(conn, verbose=False):
             label_fragments INTEGER,
             label_agreements INTEGER,
             label_support FLOAT,
-            phylogeny TEXT                    
+            phylogeny TEXT,
+            taxonomy_kingdom TEXT,
+            taxonomy_phylum TEXT,
+            taxonomy_class TEXT,
+            taxonomy_order TEXT,
+            taxonomy_family TEXT,
+            taxonomy_genus TEXT,
+            taxonomy_species TEXT
         );
-        
-        
+        """
+    )
+    conn.commit()
+    
+
+    """
+    1       UniRef50_A0A0D6QQV9
+    2       1
+    3       0.340
+    4       0.340
+    5       0.367
+    6       1300915
+    7       species
+    8       Anaeromyxobacter sp. PSR-1
+    9       Heme A synthase, cytochrome oxidase biogenesis protein Cox15-CtaA
+    10      Energy
+    11      Respiration
+    12      Biogenesis of respiratory chain components
+    13      Biogenesis of cytochrome c oxidases
+    14      Heme A synthase, cytochrome oxidase biogenesis protein Cox15-CtaA
+    15      0.3333333333333333
+    """
+
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS tophit_report_subsystems (
             sample_id TEXT,
             unirefid TEXT,
@@ -142,6 +201,7 @@ def define_tables(conn, verbose=False):
             sequence_identity FLOAT,
             taxonomy_id INTEGER,
             taxonomic_rank TEXT,
+            scientific_name TEXT,
             uniref_function TEXT,
             area_of_metabolims TEXT,
             classification1 TEXT,
@@ -167,7 +227,7 @@ if __name__ == "__main__":
     try:
         conn = sqlite3.connect(args.database)
     except sqlite3.Error as e:
-        print(f"{colours.RED}FATAL: Can't connect to database {args.d}{colours.ENDC}", file=sys.stderr)
+        print(f"{colours.RED}FATAL: Can't connect to database {args.database}{colours.ENDC}", file=sys.stderr)
         exit(10)
 
     define_tables(conn, args.verbose)

@@ -5,7 +5,7 @@ Source: https://stackoverflow.com/questions/287871/print-in-terminal-with-colors
 """
 import os
 import sys
-from .rob_error import ColorNotFoundError
+from .error import ColorNotFoundError
 
 __author__ = 'Rob Edwards'
 

@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
-#SBATCH -o megahit-%A_%a.out
-#SBATCH -e megahit-%A_%a.err
+#SBATCH -o slurm_output/megahit_slurm/megahit-%A_%a.out
+#SBATCH -e slurm_output/megahit_slurm/megahit-%A_%a.err
 
 
 ## For an example run on Emma's EagleRay data

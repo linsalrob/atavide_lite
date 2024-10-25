@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=128G
-#SBATCH -o map_reads-%A_%a.out
-#SBATCH -e map_reads-%A_%a.err
+#SBATCH -o slurm_output/vamb_slurm/map_reads-%A_%a.out
+#SBATCH -e slurm_output/vamb_slurm/map_reads-%A_%a.err
 
 # Run the minimap section for each of the groups
 

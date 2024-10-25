@@ -6,8 +6,8 @@
 #SBATCH --mem=512G
 #SBATCH --partition=high-capacity
 #SBATCH --qos=hc-concurrent-jobs
-#SBATCH -o megahit-%A_%a.out
-#SBATCH -e megahit-%A_%a.err
+#SBATCH -o slurm_output/megahit_slurm/megahit-%A_%a.out
+#SBATCH -e slurm_output/megahit_slurm/megahit-%A_%a.err
 
 # This is for large files that may otherwise fail to lack of mem
 #

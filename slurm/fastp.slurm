@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
-#SBATCH -o fastp-%A_%a.out
-#SBATCH -e fastp-%A_%a.err
+#SBATCH -o slurm_output/fastp_slurm/fastp-%A_%a.out
+#SBATCH -e slurm_output/fastp_slurm/fastp-%A_%a.err
 
 set -euo pipefail
 eval "$(conda shell.bash hook)"

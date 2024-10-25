@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=128G
-#SBATCH -o host-%A_%a.out
-#SBATCH -e host-%A_%a.err
+#SBATCH -o slurm_output/host_slurm/host-%A_%a.out
+#SBATCH -e slurm_output/host_slurm/host-%A_%a.err
 
 set -euo pipefail
 eval "$(conda shell.bash hook)"

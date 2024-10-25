@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=16G
-#SBATCH -o mmseqs_ss-%A_%a.out
-#SBATCH -e mmseqs_ss-%A_%a.err
+#SBATCH -o slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.out
+#SBATCH -e slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.err
 #SBATCH --partition=short
 
 eval "$(conda shell.bash hook)"

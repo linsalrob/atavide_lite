@@ -17,8 +17,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=200G
-#SBATCH -o mmseqsET-%A_%a.out
-#SBATCH -e mmseqsET-%A_%a.err
+#SBATCH -o slurm_output/mmseqs_slurm/mmseqsET-%A_%a.out
+#SBATCH -e slurm_output/mmseqs_slurm/mmseqsET-%A_%a.err
 
 eval "$(conda shell.bash hook)"
 conda activate atavide_lite

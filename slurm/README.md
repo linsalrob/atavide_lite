@@ -39,6 +39,12 @@ mamba env create -f ~/atavide_lite/atavide_lite.yaml
 mamba env create -f ~/atavide_lite/atavide_lite_vamb.yaml
 ```
 
+0c. Create some directories for the slurm output
+
+```
+mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm
+```
+
 1. Create a list of R1 files.
 
 Several of the steps will use the file `R1_reads.txt` to know which reads we have. Of course, `snakemake` doesn't need this, but at the moment I'm being very conservative and running each command separately via `slurm`. In addition, this allows me to use `$BGFS` which I don't know how to use with `snakemake`!
@@ -170,6 +176,7 @@ sbatch --parsable  --dependency=afterok:$VMAP $SRC/vamb_group.slurm
 # All commands in one go:
 
 ```
+mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm
 find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt
 
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' ')

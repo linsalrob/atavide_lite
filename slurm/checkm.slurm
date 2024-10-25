@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64GB
-#SBATCH -o checkm-%j.out
-#SBATCH -e checkm-%j.err
+#SBATCH -o slurm_output/checkm-%j.out
+#SBATCH -e slurm_output/checkm-%j.err
 
 if [[ -z $CHECKM_DATA_PATH ]]; then 
 	echo "Please define CHECKM_DATA_PATH with your databases" >&2; 

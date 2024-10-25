@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
-#SBATCH -o faing-%j.out
-#SBATCH -e faing-%j.err
+#SBATCH -o slurm_output/faing-%j.out
+#SBATCH -e slurm_output/faing-%j.err
 
 set -euo pipefail
 

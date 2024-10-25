@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=128G
-#SBATCH -o vamb-%j.out
-#SBATCH -e vamb-%j.err
+#SBATCH -o slurm_output/vamb_slurm/vamb-%j.out
+#SBATCH -e slurm_output/vamb_slurm/vamb-%j.err
 #SBATCH --gres=gpu:1
 #SBATCH --partition=gpu
 

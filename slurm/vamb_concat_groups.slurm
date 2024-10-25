@@ -5,8 +5,8 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=32G
 #SBATCH --partition=short
-#SBATCH -o vamb_concat-%j.out
-#SBATCH -e vamb_concat-%j.err
+#SBATCH -o slurm_output/vamb_slurm/vamb_concat-%j.out
+#SBATCH -e slurm_output/vamb_slurm/vamb_concat-%j.err
 
 set -euo pipefail
 eval "$(conda shell.bash hook)"

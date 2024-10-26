@@ -11,3 +11,7 @@ dependencies:
    - megahit
    - rsync
    - parallel
+   - snakemake
+   - snakemake-executor-plugin-cluster-generic
+   - taxonkit
+

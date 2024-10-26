@@ -5,10 +5,13 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=12G
 #SBATCH --partition=short
-#SBATCH -o mmtax-%j.out
-#SBATCH -e mmtax-%j.err
+#SBATCH -o slurm_output/mmtax-%j.out
+#SBATCH -e slurm_output/mmtax-%j.err
 
 
 set -euo pipefail
+eval "$(conda shell.bash hook)"
+conda activate atavide_lite
 
-python ~/atavide_lite/bin/mmseqs_report_to_table.py -d mmseqs -o mmseqs_taxonomy -v
+snakemake --profile slurm -s ~/GitHubs/atavide_lite/new_taxonomy/taxonomy.smk
+python ~/GitHubs/atavide_lite/new_taxonomy/scripts/join_taxonomies.py -t taxonomy -o taxonomy_summary/

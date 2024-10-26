@@ -76,8 +76,8 @@ mkdir -p vamb_groups
 for LC in ${!FQPATHS[@]}; do 
 	echo "Making $LC" >&2;
 	mkdir -p vamb_groups/$LC
-	echo "python ~/atavide_lite/bin/vamb_concatenate.py vamb_groups/$LC/contigs.fna.gz ${FQPATHS[$LC]}" >&2;
-	bash -c "python ~/atavide_lite/bin/vamb_concatenate.py vamb_groups/$LC/contigs.fna.gz ${FQPATHS[$LC]}";
+	echo "python ~/atavide_lite/bin/vamb_concatenate.py -m 300 vamb_groups/$LC/contigs.fna.gz ${FQPATHS[$LC]}" >&2;
+	bash -c "python ~/atavide_lite/bin/vamb_concatenate.py -m 300 vamb_groups/$LC/contigs.fna.gz ${FQPATHS[$LC]}";
 done
 
 

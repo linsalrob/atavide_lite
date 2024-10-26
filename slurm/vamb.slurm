@@ -25,7 +25,7 @@ OUTDIR=vamb
 mkdir --parents $OUTDIR
 
 if [[ ! -e $OUTDIR/contigs.fna.gz ]]; then
-	python ~/atavide_lite/bin/vamb_concatenate.py $OUTDIR/contigs.fna.gz megahit/*/output/final.contigs.fa 
+	python ~/atavide_lite/bin/vamb_concatenate.py -m 300 $OUTDIR/contigs.fna.gz megahit/*/output/final.contigs.fa 
 fi
 
 mkdir --parents $BGFS/$OUTDIR $BGFS/$OUTDIR/mapped_reads  $BGFS/fastq

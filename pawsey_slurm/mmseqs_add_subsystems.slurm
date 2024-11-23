@@ -1,0 +1,49 @@
+#!/bin/bash
+#SBATCH --job-name=mmseqs_ss
+#SBATCH --time=0-10
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=16G
+#SBATCH -o slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.out
+#SBATCH -e slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.err
+
+
+if [[ ! -e R1_reads.txt ]]; then 
+	echo "Please make a file with the R1 reads using this command:" >&2
+	echo "find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt" >&2;
+	exit 2;
+fi
+
+
+if [[ ! -e DEFINITIONS.sh ]]; then
+	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
+	exit 2;
+fi
+
+source DEFINITIONS.sh
+
+# if we are job #1 we are going to copy the database, otherwise we
+# are going to wait for the "copying_done" flag
+
+DBDIR=~/scratch_1018/uniref
+
+if [[ $SLURM_ARRAY_TASK_ID == 1 ]]; then
+	if [ ! -e $DBDIR/copying_done ]; then
+		eval "$(conda shell.bash hook)"
+		conda activate rclone
+		mkdir -p $DBDIR
+		rclone copy A18:dbs/uniref.sqlite $DBDIR/
+		touch $DBDIR/copying_done
+	fi
+else
+	while [ ! -e $DBDIR/copying_done ]; do
+		# sleep a random amount of time between 1 and 60 seconds. 
+		# Hopefully this will also cause random offsets in reading the db
+		sleep $(( (RANDOM % 30) + 1 ))
+	done
+fi
+
+R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
+BASE=${R1/$FILEEND/}
+
+python ~/atavide_lite/bin/easy_taxonomy_to_function.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite | gzip -c >  mmseqs/$BASE/${BASE}_tophit_report_subsystems.gz

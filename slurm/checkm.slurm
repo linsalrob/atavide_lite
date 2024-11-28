@@ -2,8 +2,10 @@
 #SBATCH --job-name=checkm
 #SBATCH --time=5-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=64GB
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128GB
+#SBATCH --partition=high-capacity
+#SBATCH --qos=hc-concurrent-jobs
 #SBATCH -o slurm_output/checkm-%j.out
 #SBATCH -e slurm_output/checkm-%j.err
 

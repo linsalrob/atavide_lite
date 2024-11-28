@@ -194,7 +194,7 @@ if __name__ == "__main__":
         for ss in sorted(all_subsystems):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_all[sample].get(s, 0) / ss_total[sample]))
+                out.write("\t" + str(ss_all[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
 
     with open(f"{args.subsystems}/README.md", 'w') as out:

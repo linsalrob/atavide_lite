@@ -33,7 +33,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--subsystems', help='subsystems output directory [subsystems]', default='subsystems')
     parser.add_argument('-m', '--metadata', help='metadata file. If you provide this we strip of _S34 (or whatever) and then try and rename your columns')
 
-    parser.add_argument('-v', help='verbose output', action='store_true')
+    parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
 
     metadata = {}
@@ -61,7 +61,8 @@ if __name__ == "__main__":
             sys.stderr.write(f"Skipping {sample} because there is no subsystems file\n")
             continue
 
-        sys.stderr.write(f"Reading {sample}\n")
+        if args.verbose:
+            print(f"Reading {sample}\n", file=sys.stderr)
         sample_id =  sub.sub('', sample)
         if sample_id in metadata:
             sample_id = metadata[sample_id]
@@ -108,6 +109,8 @@ if __name__ == "__main__":
     os.makedirs(args.subsystems, exist_ok=True)
 
     ## raw counts
+    if args.verbose:
+        print('Writing raw counts', file=sys.stderr)
 
     sorted_samples = sorted(all_samples)
     with open(f"{args.subsystems}/class_raw.tsv", 'w') as out:
@@ -157,6 +160,9 @@ if __name__ == "__main__":
     #
     # This normalisation is to the total number of reads that have any match in the database
 
+    if args.verbose:
+        print('Writing normalised counts (all)', file=sys.stderr)
+
     for sample in total:
         total[sample] /= 1e6
 
@@ -201,6 +207,9 @@ if __name__ == "__main__":
             out.write("\n")
 
     ## Subsystems normalization
+
+    if args.verbose:
+        print('Writing normalised counts (subsystems)', file=sys.stderr)
 
     # we divide the totals by 1e6 so that when we do the division we now are normalized per million reads
     for sample in ss_total:

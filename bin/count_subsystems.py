@@ -46,14 +46,12 @@ if __name__ == "__main__":
                 metadata[p[0]] = sub.sub('', p[1])
 
     all_samples = set()
-    total = {}
-    ss_total = {}
-    ss_class = {}
-    ss_lvl1 = {}
-    ss_lvl2 = {}
-    ss_sub = {}
-    ss_all = {}
-    all_subsystems = set()
+    total = {}; ss_total = {}
+    ss_class = {}; all_classes = set()
+    ss_lvl1 = {}; all_lvl1 = set()
+    ss_lvl2 = {}; all_lvl2 = set()
+    ss_sub = {}; all_sub = set()
+    ss_all = {}; all_subsystems = set()
 
     for sample in os.listdir(args.directory):
 
@@ -77,23 +75,29 @@ if __name__ == "__main__":
                     sys.exit(-1)
 
                 total[sample_id] = total.get(sample_id, 0) + float(p[14]) ## this is the total of all reads
+                # if we don't have p[9] --> top level, we don't count ss.
                 if p[9]:
                     ss_total[sample_id] = ss_total.get(sample_id, 0) + float(p[14]) ## this is the total of only those reads that have a subsystems match
+
                     if sample_id not in ss_class:
                         ss_class[sample_id] = {}
                     ss_class[sample_id][p[9]] = ss_class[sample_id].get(p[9], 0) + float(p[14])
+                    all_classes.add(p[9])
 
                     if sample_id not in ss_lvl1:
                         ss_lvl1[sample_id] = {}
                     ss_lvl1[sample_id][p[10]] = ss_lvl1[sample_id].get(p[10], 0) + float(p[14])
+                    all_lvl1.add(p[10])
 
                     if sample_id not in ss_lvl2:
                         ss_lvl2[sample_id] = {}
                     ss_lvl2[sample_id][f"{p[10]}; {p[11]}"] = ss_lvl2[sample_id].get(f"{p[10]}; {p[11]}", 0) + float(p[14])
+                    all_lvl2.add(f"{p[10]}; {p[11]}")
 
                     if sample_id not in ss_sub:
                         ss_sub[sample_id] = {}
                     ss_sub[sample_id][p[12]] = ss_sub[sample_id].get(p[12], 0) + float(p[14])
+                    all_sub.add(p[12])
 
                     if sample_id not in ss_all:
                         ss_all[sample_id] = {}
@@ -108,42 +112,42 @@ if __name__ == "__main__":
     sorted_samples = sorted(all_samples)
     with open(f"{args.subsystems}/class_raw.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
-        for s in sorted(ss_class.keys()):
-            out.write(s)
+        for ss in sorted(all_classes):
+            out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_class[s].get(sample, 0)))
+                out.write("\t" + str(ss_class[sample].get(ss, 0)))
             out.write("\n")
 
     with open(f"{args.subsystems}/level1_raw.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
-        for s in sorted(ss_lvl1.keys()):
-            out.write(s)
+        for ss in sorted(all_lvl1):
+            out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_lvl1[s].get(sample, 0)))
+                out.write("\t" + str(ss_lvl1[sample].get(ss, 0)))
             out.write("\n")
 
     with open(f"{args.subsystems}/level2_raw.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
-        for s in sorted(ss_lvl2.keys()):
-            out.write(s)
+        for ss in sorted(all_lvl2):
+            out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_lvl2[s].get(sample, 0)))
+                out.write("\t" + str(ss_lvl2[sample].get(ss, 0)))
             out.write("\n")
 
     with open(f"{args.subsystems}/subsystem_raw.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
-        for s in sorted(ss_sub.keys()):
-            out.write(s)
+        for ss in sorted(all_sub):
+            out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_sub[s].get(sample, 0)))
+                out.write("\t" + str(ss_sub[sample].get(ss, 0)))
             out.write("\n")
 
     with open(f"{args.subsystems}/all_raw.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
-        for s in sorted(ss_all.keys()):
-            out.write(s)
+        for ss in sorted(all_subsystems):
+            out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_all[s].get(sample, 0)))
+                out.write("\t" + str(ss_all[sample].get(ss, 0)))
             out.write("\n")
 
     ## normalized counts
@@ -153,44 +157,44 @@ if __name__ == "__main__":
     for sample in ss_total:
         ss_total[sample] /= 1e6
 
-    with open(f"{args.subsystems}/class_normalized.tsv", 'w') as out:
+    with open(f"{args.subsystems}/class_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
-        for s in sorted(ss_class.keys()):
-            out.write(s)
+        for ss in sorted(all_classes):
+            out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_class[s].get(sample, 0) / ss_total[sample]))
+                out.write("\t" + str(ss_class[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/level1_normalized.tsv", 'w') as out:
+    with open(f"{args.subsystems}/level1_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
-        for s in sorted(ss_lvl1.keys()):
-            out.write(s)
+        for ss in sorted(all_lvl1):
+            out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_lvl1[s].get(sample, 0) / ss_total[sample]))
+                out.write("\t" + str(ss_lvl1[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/level2_normalized.tsv", 'w') as out:
+    with open(f"{args.subsystems}/level2_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
-        for s in sorted(ss_lvl2.keys()):
-            out.write(s)
+        for ss in sorted(all_lvl2):
+            out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_lvl2[s].get(sample, 0) / ss_total[sample]))
+                out.write("\t" + str(ss_lvl2[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/subsystem_normalized.tsv", 'w') as out:
+    with open(f"{args.subsystems}/subsystem_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
-        for s in sorted(ss_sub.keys()):
-            out.write(s)
+        for ss in sorted(all_sub):
+            out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_sub[s].get(sample, 0) / ss_total[sample]))
+                out.write("\t" + str(ss_sub[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/all_normalized.tsv", 'w') as out:
+    with open(f"{args.subsystems}/all_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
-        for s in sorted(ss_all.keys()):
-            out.write(s)
+        for ss in sorted(all_subsystems):
+            out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_all[s].get(sample, 0) / ss_total[sample]))
+                out.write("\t" + str(ss_all[sample].get(s, 0) / ss_total[sample]))
             out.write("\n")
 
     with open(f"{args.subsystems}/README.md", 'w') as out:

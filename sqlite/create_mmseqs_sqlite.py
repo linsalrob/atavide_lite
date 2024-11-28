@@ -111,12 +111,29 @@ def define_tables(conn, verbose=False):
     cursor = conn.cursor()
 
     # Create the tables
+    # An example data point is given for each table. Remember that we need to add the sample ID at the beginning
+    #
+    """
+        1       R100400180029:20221013142947:V350096418:1:330061:1:23/1/1
+        2       UniRef50_A0A371S7B4
+        3       0.238
+        4       322
+        5       36
+        6       0
+        7       0
+        8       48
+        9       0
+        10      322
+        11      1.266E-23
+        12      100
+    """
+
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS tophit_aln (
             sample_id TEXT,
-            sequence_id TEXT,
-            subject TEXT,
+            dna_id TEXT,
+            uniref_id TEXT,
             percent_identity FLOAT,
             alignment_length INTEGER,
             gaps INTEGER,
@@ -149,8 +166,8 @@ def define_tables(conn, verbose=False):
         """
         CREATE TABLE IF NOT EXISTS lca_taxonomy (
             sample_id TEXT,
-            sequence_id TEXT,
-            taxid INTEGER,
+            dna_id TEXT,
+            taxonomy_id INTEGER,
             taxonomic_rank TEXT,
             scientific_name TEXT,
             num_fragments INTEGER,
@@ -194,7 +211,7 @@ def define_tables(conn, verbose=False):
         """
         CREATE TABLE IF NOT EXISTS tophit_report_subsystems (
             sample_id TEXT,
-            unirefid TEXT,
+            uniref_id TEXT,
             number_aligned_sequences INTEGER,
             unique_target_coverage FLOAT,
             total_target_coverage FLOAT,
@@ -214,6 +231,30 @@ def define_tables(conn, verbose=False):
     )
 
     conn.commit()
+
+
+
+def create_indexes(conn, verbose=False):
+    """
+    Create indexes on the tables
+    """
+    indexes = [
+        "CREATE INDEX idx_tophit_aln_sample_dna ON tophit_aln (sample_id, dna_id);",
+        "CREATE INDEX idx_tophit_aln_sample_uniref ON tophit_aln (sample_id, uniref_id);",
+        "CREATE INDEX idx_lca_taxonomy_sample_dna ON lca_taxonomy (sample_id, dna_id);",
+        "CREATE INDEX idx_lca_taxonomy_genus ON lca_taxonomy (taxonomy_genus);",
+        "CREATE INDEX idx_tophit_report_sample_uniref ON tophit_report_subsystems (sample_id, uniref_id);",
+        "CREATE INDEX idx_tophit_report_subsystem ON tophit_report_subsystems (subsystem);"
+    ]
+    
+    cursor = conn.cursor()
+    
+    for i in indexes:
+        cursor.execute(i)
+
+    conn.commit()
+
+
 
 
 if __name__ == "__main__":
@@ -242,5 +283,8 @@ if __name__ == "__main__":
         get_all_samples_with_metadata(conn, metadata, args.mmseqs, args.verbose)
     else:
         get_all_samples(conn, args.mmseqs, args.verbose)
+
+
+    create_indexes(conn, args.verbose)
 
     conn.close()

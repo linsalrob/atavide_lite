@@ -62,7 +62,7 @@ if __name__ == "__main__":
             continue
 
         if args.verbose:
-            print(f"Reading {sample}\n", file=sys.stderr)
+            print(f"Reading {sample}", file=sys.stderr)
         sample_id =  sub.sub('', sample)
         if sample_id in metadata:
             sample_id = metadata[sample_id]

@@ -150,10 +150,59 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_all[sample].get(ss, 0)))
             out.write("\n")
 
+
     ## normalized counts
 
+    ## All normalizations
+    #
+    # This normalisation is to the total number of reads that have any match in the database
+
+    for sample in total:
+        total[sample] /= 1e6
+
+    with open(f"{args.subsystems}/class_norm_all.tsv", 'w') as out:
+        out.write("\t" + "\t".join(sorted_samples) + "\n")
+        for ss in sorted(all_classes):
+            out.write(ss)
+            for sample in sorted_samples:
+                out.write("\t" + str(ss_class[sample].get(ss, 0) / total[sample]))
+            out.write("\n")
+
+    with open(f"{args.subsystems}/level1_norm_all.tsv", 'w') as out:
+        out.write("\t" + "\t".join(sorted_samples) + "\n")
+        for ss in sorted(all_lvl1):
+            out.write(ss)
+            for sample in sorted_samples:
+                out.write("\t" + str(ss_lvl1[sample].get(ss, 0) / total[sample]))
+            out.write("\n")
+
+    with open(f"{args.subsystems}/level2_norm_all.tsv", 'w') as out:
+        out.write("\t" + "\t".join(sorted_samples) + "\n")
+        for ss in sorted(all_lvl2):
+            out.write(ss)
+            for sample in sorted_samples:
+                out.write("\t" + str(ss_lvl2[sample].get(ss, 0) / total[sample]))
+            out.write("\n")
+
+    with open(f"{args.subsystems}/subsystem_norm_all.tsv", 'w') as out:
+        out.write("\t" + "\t".join(sorted_samples) + "\n")
+        for ss in sorted(all_sub):
+            out.write(ss)
+            for sample in sorted_samples:
+                out.write("\t" + str(ss_sub[sample].get(ss, 0) / total[sample]))
+            out.write("\n")
+
+    with open(f"{args.subsystems}/all_norm_all.tsv", 'w') as out:
+        out.write("\t" + "\t".join(sorted_samples) + "\n")
+        for ss in sorted(all_subsystems):
+            out.write(ss)
+            for sample in sorted_samples:
+                out.write("\t" + str(ss_all[sample].get(ss, 0) / total[sample]))
+            out.write("\n")
+
+    ## Subsystems normalization
+
     # we divide the totals by 1e6 so that when we do the division we now are normalized per million reads
-    # NORMALIZED TO ALL READS THAT HAVE A MATCH
     for sample in ss_total:
         ss_total[sample] /= 1e6
 

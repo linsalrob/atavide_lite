@@ -3,7 +3,7 @@
 #SBATCH --time=0-10
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
-#SBATCH --mem=16G
+#SBATCH --mem=64G
 #SBATCH -o slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.out
 #SBATCH -e slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.err
 
@@ -26,10 +26,10 @@ source DEFINITIONS.sh
 # are going to wait for the "copying_done" flag
 
 DBDIR=~/scratch_1018/uniref
+eval "$(conda shell.bash hook)"
 
 if [[ $SLURM_ARRAY_TASK_ID == 1 ]]; then
 	if [ ! -e $DBDIR/copying_done ]; then
-		eval "$(conda shell.bash hook)"
 		conda activate rclone
 		mkdir -p $DBDIR
 		rclone copy A18:dbs/uniref.sqlite $DBDIR/
@@ -43,7 +43,10 @@ else
 	done
 fi
 
+conda activate atavide_lite
+
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 BASE=${R1/$FILEEND/}
 
-python ~/atavide_lite/bin/easy_taxonomy_to_function.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite | gzip -c >  mmseqs/$BASE/${BASE}_tophit_report_subsystems.gz
+python ~/atavide_lite/bin/easy_taxonomy_to_function.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite  >  mmseqs/$BASE/${BASE}_tophit_report_subsystems
+pigz mmseqs/$BASE/${BASE}_tophit_report_subsystems

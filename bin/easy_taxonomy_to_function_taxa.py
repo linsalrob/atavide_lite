@@ -51,17 +51,20 @@ if __name__ == "__main__":
             # (6) rank eg: subspecies
             # (7) scientific name: Streptococcus oralis subsp.tigurinus
             m = urs.match(p[0])
+            tax = ""
             if m and m.group(1):
 
                 # get the taxonomy. IN my example test case (above) we often see the same
                 # taxon repeated. We cache this, for speed
-                tax = ""
                 if p[5] in taxonomy_cache:
                     tax = taxonomy_cache[p[5]]
                 else:
-                    tax_res = pytaxonkit.lineage(p[5])
-                    taxonomy_cache[p[5]] = tax_res['Lineage'][0]
+                    tax_res = pytaxonkit.lineage([p[5]], prefix=True)
                     tax = tax_res['Lineage'][0]
+                    if not isinstance(tax, str):
+                        tax = str(tax)
+                        print(f"Converted {tax} to str for {p[5]}", file=sys.stderr)
+                    taxonomy_cache[p[5]] = tax
 
                 try:
                     # cur.execute("select distinct superclass, class, subclass, subsystem_name, func from subsystems

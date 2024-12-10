@@ -60,11 +60,23 @@ if ($opts{m}) {
 opendir(DIR, $opts{d}) || die "$! : $opts{d}";
 foreach my $sub (grep {$_ !~ /^\./} readdir(DIR)) {
 	# mmseqs/SAGCFN_22_00789_S34/SAGCFN_22_00789_S34_tophit_report_subsystems.gz
-	if (! -e "$opts{d}/$sub/${sub}_tophit_report_subsystems.gz") {
-		print STDERR "No subsystems found for $sub\n";
+	
+	my $tax_inputfile = "$opts{d}/$sub/${sub}_tophit_report_subsystems_taxa.gz";
+	my $ori_inputfile = "$opts{d}/$sub/${sub}_tophit_report_subsystems.gz";
+	my $inputfile;
+
+	if (-e $tax_inputfile) {
+		# this is the new format with the taxonomy
+		$inputfile = $tax_inputfile;
+	} elsif (-e $ori_inputfile) {
+		# this is the old format without the taxonomy
+		$inputfile = $ori_inputfile;
+	} else {
+		print STDERR "No subsystems found for $sub (we checked both $tax_inputfile and $ori_inputfile)\n";
 		next;
 	}
-	open(IN, "gunzip -c $opts{d}/$sub/${sub}_tophit_report_subsystems.gz |") || die "$! opening pipe to  $opts{d}/$sub/${sub}_tophit_report_subsystems.gz";
+
+	open(IN, "gunzip -c $inputfile |") || die "$! opening pipe to $inputfile";
 	my $id = $sub;
 	$id =~ s/_S\d+$//;
 	if ($meta{$id}) {$id = $meta{$id}}

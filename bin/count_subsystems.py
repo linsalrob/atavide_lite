@@ -57,22 +57,30 @@ if __name__ == "__main__":
 
         # mmseqs/SAGCFN_22_00789_S34/SAGCFN_22_00789_S34_tophit_report_subsystems.gz
 
-        if not os.path.exists(os.path.join(args.directory, sample, f"{sample}_tophit_report_subsystems.gz")):
+        tax_ss_file = os.path.join(args.directory, sample, f"{sample}_tophit_report_subsystems_taxa.gz")
+        ori_ss_file = os.path.join(args.directory, sample, f"{sample}_tophit_report_subsystems.gz")
+        ss_file = None
+
+        if os.path.exists(tax_ss_file):
+            ss_file = tax_ss_file
+        elif os.path.exists(ori_ss_file):
+            ss_file = ori_ss_file
+        else
             sys.stderr.write(f"Skipping {sample} because there is no subsystems file\n")
             continue
 
         if args.verbose:
-            print(f"Reading {sample}", file=sys.stderr)
+            print(f"Reading {sample} from {ss_file}", file=sys.stderr)
         sample_id =  sub.sub('', sample)
         if sample_id in metadata:
             sample_id = metadata[sample_id]
 
         all_samples.add(sample_id)
-        with gzip.open(os.path.join(args.directory, sample, f"{sample}_tophit_report_subsystems.gz"), 'rt') as f:
+        with gzip.open(ss_file, 'rt') as f:
             for l in f:
                 p = l.strip().split("\t")
-                if len(p) != 15:
-                    sys.stderr.write(f"Error: {sample} has {len(p)} columns, not 15\n")
+                if len(p) < 15:
+                    sys.stderr.write(f"Error: {sample} has {len(p)} columns, not 15 or 16\n")
                     sys.exit(-1)
 
                 total[sample_id] = total.get(sample_id, 0) + float(p[14]) ## this is the total of all reads

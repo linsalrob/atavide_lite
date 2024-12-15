@@ -41,4 +41,5 @@ if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 	fi
 
 	minimap2 -t 16 -N 5 -ax sr $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$READS | samtools view -F 3584 -b --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
+	samtools index $OUTDIR/mapped_reads/$BAM
 fi

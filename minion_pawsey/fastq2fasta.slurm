@@ -7,7 +7,12 @@
 #SBATCH -o slurm_output/faing-%j.out
 #SBATCH -e slurm_output/faing-%j.err
 
+
 set -euo pipefail
+eval "$(conda shell.bash hook)"
+#conda activate atavide_lite
+conda activate /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite
+
 
 
 if [[ ! -e DEFINITIONS.sh ]]; then

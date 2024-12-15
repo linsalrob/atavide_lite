@@ -65,12 +65,15 @@ if [[ -e $OUTPUT ]]; then
 fi
 
 
+
 mkdir -p $OUTPUT
-echo "Running mmseqs easy-taxonomy $R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT tmp --threads 32" 2>&1;
+echo "Running mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT tmp --threads 32" 2>&1;
 
-mmseqs easy-taxonomy $R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $(mktemp -d -p .) --threads 32
+TPD=$(mktemp -d -p .)
+mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads 32
+rm -rf $TPD
 
-find $OUTPUT/$TMPOUTPUT -type f  | parallel -j 32 gzip
+find $OUTPUT/ -type f  | parallel -j 32 gzip
 
 echo "Fin " `date` >&2;
 

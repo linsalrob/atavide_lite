@@ -56,6 +56,7 @@ if __name__ == "__main__":
     ss_lvl2 = {}; all_lvl2 = set()
     ss_sub = {}; all_sub = set()
     ss_all = {}; all_subsystems = set()
+    ss_fn = {}; all_fn = set()
 
     for sample in os.listdir(args.directory):
 
@@ -112,10 +113,17 @@ if __name__ == "__main__":
                     ss_sub[sample_id][p[12]] = ss_sub[sample_id].get(p[12], 0) + float(p[14])
                     all_sub.add(p[12])
 
+                    if sample_id not in ss_fn:
+                        ss_fn[sample_id] = {}
+                    all_with_fn = f"{p[9]}; {p[10]}; {p[11]}; {p[12]}; {p[13]}"
+                    ss_fn[sample_id][all_with_fn] = ss_fn[sample_id].get(all_with_fn, 0) + float(p[14])
+                    all_fn.add(all_with_fn)
+
                     if sample_id not in ss_all:
                         ss_all[sample_id] = {}
-                    ss_all[sample_id][f"{p[9]}; {p[10]}; {p[11]}; {p[12]}"] = ss_all[sample_id].get(f"{p[9]}; {p[10]}; {p[11]}; {p[12]}", 0) + float(p[14])
-                    all_subsystems.add(f"{p[9]}; {p[10]}; {p[11]}; {p[12]}")
+                    all_with_sub = f"{p[9]}; {p[10]}; {p[11]}; {p[12]}"
+                    ss_all[sample_id][all_with_sub] = ss_all[sample_id].get(all_with_sub, 0) + float(p[14])
+                    all_subsystems.add(all_with_sub)
 
     # now we have all the data, let's write it out
     os.makedirs(args.subsystems, exist_ok=True)
@@ -164,6 +172,15 @@ if __name__ == "__main__":
             for sample in sorted_samples:
                 out.write("\t" + str(ss_all[sample].get(ss, 0)))
             out.write("\n")
+
+    with open(f"{args.subsystems}/all_fn_raw.tsv", 'w') as out:
+        out.write("\t" + "\t".join(sorted_samples) + "\n")
+        for ss in sorted(all_fn):
+            out.write(ss)
+            for sample in sorted_samples:
+                out.write("\t" + str(ss_fn[sample].get(ss, 0)))
+            out.write("\n")
+
 
 
     ## normalized counts
@@ -218,6 +235,16 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_all[sample].get(ss, 0) / total[sample]))
             out.write("\n")
 
+    with open(f"{args.subsystems}/all_norm_fn_all.tsv", 'w') as out:
+        out.write("\t" + "\t".join(sorted_samples) + "\n")
+        for ss in sorted(all_fn):
+            out.write(ss)
+            for sample in sorted_samples:
+                out.write("\t" + str(ss_fn[sample].get(ss, 0) / total[sample]))
+            out.write("\n")
+
+
+
     ## Subsystems normalization
 
     if args.verbose:
@@ -266,6 +293,16 @@ if __name__ == "__main__":
             for sample in sorted_samples:
                 out.write("\t" + str(ss_all[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
+
+    with open(f"{args.subsystems}/all_norm_fn_ss.tsv", 'w') as out:
+        out.write("\t" + "\t".join(sorted_samples) + "\n")
+        for ss in sorted(all_fn):
+            out.write(ss)
+            for sample in sorted_samples:
+                out.write("\t" + str(ss_fn[sample].get(ss, 0) / ss_total[sample]))
+            out.write("\n")
+
+
 
     with open(f"{args.subsystems}/README.md", 'w') as out:
         out.write("""

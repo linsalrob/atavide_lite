@@ -6,4 +6,6 @@ channels:
 dependencies:
    - vamb
    - rsync
+   - samtools>=1.20
+   - minimap2
    - parallel

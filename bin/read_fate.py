@@ -7,21 +7,22 @@ import os
 import sys
 import argparse
 import gzip
-from roblib import bcolors, stream_fastq, stream_fasta
+from atavide_lib import colors, stream_fastq
 __author__ = 'Rob Edwards'
 
-def fq_ids(fqfile, verebose=False):
+
+def fq_ids(fastq_file):
     """
     Read fqfile and return a set of ids
     """
 
     ids = set()
-    for seqid, header, seq, qual in stream_fastq(fqfile):
+    for seqid, header, seq, qual in stream_fastq(fastq_file):
         ids.add(seqid)
     return ids
 
 
-def sequence_names(read_id_file='R1_reads.txt', verbose=False):
+def sequence_names(read_id_file='R1_reads.txt'):
     """
     Read the read id file and return a set of read filenames
     """
@@ -32,20 +33,20 @@ def sequence_names(read_id_file='R1_reads.txt', verbose=False):
             ids.add(l.strip())
     return ids
 
-def read_definitions(defintions_file = "DEFINITIIONS.sh", verbose=False):
+def read_definitions(defintions_file = "DEFINITIIONS.sh"):
     """
     Read the definitions file and return a dictionary of the definitions
     """
 
-    defs = {}
+    definitions = {}
     with open(defintions_file, 'r') as f:
         for l in f:
             if l.startswith("export"):
                 p = l.replace("export ", "").strip().split("=")
-                defs[p[0]] = p[1].replace('"', '')
-    return defs
+                definitions[p[0]] = p[1].replace('"', '')
+    return definitions
 
-def read_tsv(tsvfile, column=0, verbose=False):
+def read_tsv(tsvfile, column=0):
     """
     Read a tsv file and return a set of values from the column
     """
@@ -67,28 +68,12 @@ def write_unknown_reads(fastq_file, unknown_reads, outputfile, verbose=False):
     """
 
     if verbose:
-        print(f"{bcolors.GREEN}Reading {fastq_file} and writing unknown reads to {outputfile}{bcolors.ENDC}")
-        print(f"\t{bcolors.PINK}First two ids :", list(unknown_reads)[0:2], "{bcolors.ENDC}", file=sys.stderr)
+        print(f"{colors.GREEN}Reading {fastq_file} and writing unknown reads to {outputfile}{colors.ENDC}")
+        print(f"\t{colors.PINK}First two ids :", list(unknown_reads)[0:2], "{colors.ENDC}", file=sys.stderr)
     with open(outputfile, 'a') as out:
         for seqid, header, seq, qual in stream_fastq(fastq_file):
             if seqid in unknown_reads:
                 out.write(f"@{header}\n{seq}\n+\n{qual}\n")
-
-
-"""
-(miniconda3) edwa0468@setonix-05:Kinshasa [1106]$ ls fastq
-barcode01.clean.fastq.gz  barcode03.clean.fastq.gz  barcode05.clean.fastq.gz  barcode07.clean.fastq.gz  barcode09.clean.fastq.gz  barcode11.clean.fastq.gz  barcode13.clean.fastq.gz
-barcode02.clean.fastq.gz  barcode04.clean.fastq.gz  barcode06.clean.fastq.gz  barcode08.clean.fastq.gz  barcode10.clean.fastq.gz  barcode12.clean.fastq.gz  unclassified.clean.fastq.gz
-(miniconda3) edwa0468@setonix-05:Kinshasa [1107]$ ls human/
-barcode01.clean.fastq.gz  barcode03.clean.fastq.gz  barcode05.clean.fastq.gz  barcode07.clean.fastq.gz  barcode09.clean.fastq.gz  barcode11.clean.fastq.gz  barcode13.clean.fastq.gz
-barcode02.clean.fastq.gz  barcode04.clean.fastq.gz  barcode06.clean.fastq.gz  barcode08.clean.fastq.gz  barcode10.clean.fastq.gz  barcode12.clean.fastq.gz  unclassified.clean.fastq.gz
-(miniconda3) edwa0468@setonix-05:Kinshasa [1109]$ ls mmseqs
-barcode01  barcode02  barcode03  barcode04  barcode05  barcode06  barcode07  barcode08  barcode09  barcode10  barcode11  barcode12  barcode13  unclassified
-(miniconda3) edwa0468@setonix-05:Kinshasa [1110]$ ls mmseqs/barcode01/
-barcode01_lca_taxonomy.tsv.gz  barcode01_lca.tsv.gz  barcode01_report.gz  barcode01_taxonomy.tsv.gz  barcode01_tophit_aln.gz  barcode01_tophit_report.gz  barcode01_tophit_report_subsystems_taxa.gz
-(miniconda3) edwa0468@setonix-05:Kinshasa [1111]$
-"""
-
 
 
 if __name__ == "__main__":
@@ -100,62 +85,60 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # step one, read our reads file and get the list of sample names
-    full_names = sequence_names(args.reads, args.verbose)
+    full_names = sequence_names(args.reads)
 
     if args.verbose:
-        print(f"{bcolors.GREEN}Read {len(full_names)} read names{bcolors.ENDC}")
+        print(f"{colors.GREEN}Read {len(full_names)} read names{colors.ENDC}")
 
     # read the definitions file
-    defs = read_definitions(args.definitions, args.verbose)
+    defs = read_definitions(args.definitions)
     if args.verbose:
-        print(f"{bcolors.GREEN}Read {len(defs)} definitions{bcolors.ENDC}")
+        print(f"{colors.GREEN}Read {len(defs)} definitions{colors.ENDC}")
 
-    short_names = {x:x.replace(defs['FILEEND'], "") for x in full_names}
+    short_names = {x: x.replace(defs['FILEEND'], "") for x in full_names}
 
     # read the initial fastq files
     if args.verbose:
-        print(f"{bcolors.GREEN}Reading fastq files{bcolors.ENDC}", file=sys.stderr)
+        print(f"{colors.GREEN}Reading fastq files{colors.ENDC}", file=sys.stderr)
     fqfiles = {}
     for n in full_names:
-        fqfiles[n] = fq_ids(os.path.join("fastq", n), args.verbose)
+        fqfiles[n] = fq_ids(os.path.join("fastq", n))
 
     # read the post-qc fastq files
     if args.verbose:
-        print(f"{bcolors.GREEN}Reading post qc fastq files{bcolors.ENDC}", file=sys.stderr)
+        print(f"{colors.GREEN}Reading post qc fastq files{colors.ENDC}", file=sys.stderr)
     fastp = {}
     for n in full_names:
-        fastp[n] = fq_ids(os.path.join("fastq_fastp", n), args.verbose)
+        fastp[n] = fq_ids(os.path.join("fastq_fastp", n))
     
     # read the human files
     if args.verbose:
-        print(f"{bcolors.GREEN}Reading human files{bcolors.ENDC}", file=sys.stderr)
+        print(f"{colors.GREEN}Reading human files{colors.ENDC}", file=sys.stderr)
     human = {}
     for n in full_names:
-        human[n] = fq_ids(os.path.join("human", n), args.verbose)
+        human[n] = fq_ids(os.path.join("human", n))
 
     # reads the not human files
     if args.verbose:
-        print(f"{bcolors.GREEN}Reading not human files{bcolors.ENDC}", file=sys.stderr)
+        print(f"{colors.GREEN}Reading not human files{colors.ENDC}", file=sys.stderr)
     not_human = {}
     for n in full_names:
-        not_human[n] = fq_ids(os.path.join("no_human", n), args.verbose)
+        not_human[n] = fq_ids(os.path.join("no_human", n))
 
     # read the mmseqs files
     if args.verbose:
-        print(f"{bcolors.GREEN}Reading mmseqs files{bcolors.ENDC}", file=sys.stderr)
+        print(f"{colors.GREEN}Reading mmseqs files{colors.ENDC}", file=sys.stderr)
     mmseqs = {}
     for kn in short_names:
         aln = os.path.join('mmseqs', short_names[kn], f"{short_names[kn]}_tophit_aln.gz")
         if not os.path.exists(aln):
-            print(f"{bcolors.RED}Missing {aln}{bcolors.ENDC}")
+            print(f"{colors.RED}Missing {aln}{colors.ENDC}")
             continue
 
-        mmseqs[kn] = read_tsv(aln, column=0, verbose=args.verbose)
-        print(f"{bcolors.GREEN}Read {len(mmseqs[kn])} mmseqs hits for {short_names[kn]}{bcolors.ENDC}")
-
+        mmseqs[kn] = read_tsv(aln, column=0)
+        print(f"{colors.GREEN}Read {len(mmseqs[kn])} mmseqs hits for {short_names[kn]}{colors.ENDC}")
 
     # now we need to figure out where the reads are
-
     with open("read_fate.tsv", 'w') as out:
         print(f"Name\tTotal\tfastp\tHuman\tNot Human\tMMseqs hits\tUnknown", file=out)
         for n in full_names:
@@ -185,9 +168,11 @@ if __name__ == "__main__":
                     f.write(f"{r}\tnot sure\n")
 
     if args.unknown:
+        if os.path.exists(args.unknown):
+            print(f"{colors.RED}Output file {args.unknown} exists. Cowardly not overwriting it, and we would append to it, so please rename it{colors.ENDC}")
+            sys.exit(-1)
         if args.verbose:
-            print(f"{bcolors.GREEN}Writing unknown reads to {args.unknown}{bcolors.ENDC}", file=sys.stderr)
+            print(f"{colors.GREEN}Writing unknown reads to {args.unknown}{colors.ENDC}", file=sys.stderr)
         for kn in unknown_reads:
             fqfile = os.path.join("fastq", kn)
             write_unknown_reads(fqfile, unknown_reads[kn], args.unknown, args.verbose)
-

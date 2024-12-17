@@ -168,6 +168,9 @@ if __name__ == "__main__":
                     f.write(f"{r}\tnot sure\n")
 
     if args.unknown:
+        if os.path.exists(args.unknown):
+            print(f"{colors.RED}Output file {args.unknown} exists. Cowardly not overwriting it, and we would append to it, so please rename it{colors.ENDC}")
+            sys.exit(-1)
         if args.verbose:
             print(f"{colors.GREEN}Writing unknown reads to {args.unknown}{colors.ENDC}", file=sys.stderr)
         for kn in unknown_reads:

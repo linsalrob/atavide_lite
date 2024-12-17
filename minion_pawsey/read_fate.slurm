@@ -12,4 +12,6 @@ eval "$(conda shell.bash hook)"
 conda activate /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb
 
 mkdir -p Unknowns
-python ~/atavide_lite/bin/read_fate.py -r reads.txt -u Unknowns/unknowns.fastq
+
+export PYTHONPATH=$PYTHONPATH:~/atavide_lite
+python ~/atavide_lite/bin/read_fate.py -r reads.txt -u Unknowns/unknowns.fastq -v

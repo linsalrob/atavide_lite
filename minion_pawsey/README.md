@@ -21,6 +21,7 @@ HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB,
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB,$MMSEQSDLD $SRC/mmseqs_easy_taxonomy.slurm)
 sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_taxonomy.slurm
+sbatch --dependency=afterok:$MMSEQSJOB $SRC/read_fate.slurm
 SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 $SRC/mmseqs_add_subsystems_taxonomy.slurm)
 sbatch --dependency=afterok:$SSJOB $SRC/count_subsystems.slurm
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_READS:1 $SRC/megahit.slurm)

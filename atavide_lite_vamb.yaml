@@ -4,8 +4,12 @@ channels:
    - bioconda
    - defaults
 dependencies:
-   - vamb
    - rsync
    - samtools>=1.20
    - minimap2
+   - python<3.12
    - parallel
+   - pip
+   - pip:
+      - vamb
+

@@ -61,6 +61,20 @@ def read_tsv(tsvfile, column=0, verbose=False):
     return values
 
 
+def write_unknown_reads(fastq_file, unknown_reads, outputfile, verbose=False):
+    """
+    Write the unknown reads to the output file
+    """
+
+    if verbose:
+        print(f"{bcolors.GREEN}Reading {fastq_file} and writing unknown reads to {outputfile}{bcolors.ENDC}")
+        print(f"\t{bcolors.PINK}First two ids :", list(unknown_reads)[0:2], "{bcolors.ENDC}", file=sys.stderr)
+    with open(outputfile, 'a') as out:
+        for seqid, header, seq, qual in stream_fastq(fastq_file):
+            if seqid in unknown_reads:
+                out.write(f"@{header}\n{seq}\n+\n{qual}\n")
+
+
 """
 (miniconda3) edwa0468@setonix-05:Kinshasa [1106]$ ls fastq
 barcode01.clean.fastq.gz  barcode03.clean.fastq.gz  barcode05.clean.fastq.gz  barcode07.clean.fastq.gz  barcode09.clean.fastq.gz  barcode11.clean.fastq.gz  barcode13.clean.fastq.gz
@@ -81,6 +95,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=' ')
     parser.add_argument('-r', '--reads', help='reads file', required=True)
     parser.add_argument('-d', '--definitions', help='definitions file', default='DEFINITIONS.sh')
+    parser.add_argument('-u', '--unknown', help='output unknown reads to this file')
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
     
@@ -149,8 +164,10 @@ if __name__ == "__main__":
 
     os.makedirs("read_fate", exist_ok=True)
     # print a list of all the reads in each set
+    unknown_reads = {}
     for kn in short_names:
         n = short_names[kn]
+        unknown_reads[kn] = set()
         with open(os.path.join("read_fate", f"{n}.txt"), 'w') as f:
             for r in fqfiles[kn]:
                 if r not in fastp[kn]:
@@ -162,8 +179,15 @@ if __name__ == "__main__":
                     if r in mmseqs[kn]:
                         f.write(f"{r}\tuniref\n")
                     else:
+                        unknown_reads[kn].add(r)
                         f.write(f"{r}\tunknown\n")
                 else:
                     f.write(f"{r}\tnot sure\n")
 
+    if args.unknown:
+        if args.verbose:
+            print(f"{bcolors.GREEN}Writing unknown reads to {args.unknown}{bcolors.ENDC}", file=sys.stderr)
+        for kn in unknown_reads:
+            fqfile = os.path.join("fastq", kn)
+            write_unknown_reads(fqfile, unknown_reads[kn], args.unknown, args.verbose)
 

@@ -8,4 +8,5 @@
 #SBATCH -o count_ss-%j.out
 #SBATCH -e count_ss-%j.err
 
-perl ~/atavide_lite/bin/count_subsystems.pl -d mmseqs
+#perl ~/atavide_lite/bin/count_subsystems.pl -d mmseqs
+python ~/atavide_lite/bin/count_subsystems.py -d mmseqs -s subsystems

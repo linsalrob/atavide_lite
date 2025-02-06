@@ -7,7 +7,7 @@ import os
 import sys
 import argparse
 import gzip
-from atavide_lib import colors, stream_fastq
+from atavide_lib import colors, stream_fastq, read_definitions
 __author__ = 'Rob Edwards'
 
 
@@ -32,19 +32,6 @@ def sequence_names(read_id_file='R1_reads.txt'):
         for l in f:
             ids.add(l.strip())
     return ids
-
-def read_definitions(defintions_file = "DEFINITIIONS.sh"):
-    """
-    Read the definitions file and return a dictionary of the definitions
-    """
-
-    definitions = {}
-    with open(defintions_file, 'r') as f:
-        for l in f:
-            if l.startswith("export"):
-                p = l.replace("export ", "").strip().split("=")
-                definitions[p[0]] = p[1].replace('"', '')
-    return definitions
 
 def read_tsv(tsvfile, column=0):
     """

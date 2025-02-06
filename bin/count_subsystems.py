@@ -235,7 +235,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_all[sample].get(ss, 0) / total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/all_norm_fn_all.tsv", 'w') as out:
+    with open(f"{args.subsystems}/all_fn_norm_all.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_fn):
             out.write(ss)
@@ -294,7 +294,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_all[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/all_norm_fn_ss.tsv", 'w') as out:
+    with open(f"{args.subsystems}/all_fn_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_fn):
             out.write(ss)

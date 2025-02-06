@@ -36,7 +36,7 @@ if __name__ == "__main__":
             print(f"{colors.RED}Could not find {sample}_lca_taxonomy.tsv.gz{colors.ENDC}")
             continue
         if args.verbose:
-            print(f"{colors.GREEN}Reading {sample}_lca_taxonomy.tsv.gz{colors.ENDC}")
+            print(f"{colors.GREEN}Reading {sample}_lca_taxonomy.tsv.gz{colors.ENDC}", file=sys.stderr)
         wanted = set()
         with gzip.open(os.path.join(args.mmseqs, sample, f"{sample}_lca_taxonomy.tsv.gz"), 'rt') as f:
             for l in f:
@@ -44,12 +44,19 @@ if __name__ == "__main__":
                 if args.taxonomy in p[8]:
                     wanted.add(p[0])
         # now read the fasta file from the fasta dir and write out the wanted reads
-        with open(os.path.join(args.fasta, f"{sample}{defs['FAFILEEND']}"), 'r') as f, open(os.path.join(args.output, f"{sample}_{args.taxonomy}.fasta"), 'w') as out:
+        if args.verbose:
+            print(f"{colors.BLUE}\tWriting {len(wanted)} sequences to the fasta file", file=sys.stderr)
+        with gzip.open(os.path.join(args.fasta, f"{sample}{defs['FAFILEEND']}"), 'rt') as f, open(os.path.join(args.output, f"{sample}_{args.taxonomy}.fasta"), 'w') as out:
             write = False
+            written = 0
             for l in f:
                 if l.startswith(">"):
                     write = False
-                    if l[1:].strip() in wanted:
+                    p = l[1:].strip().split()
+                    if p[0] in wanted:
+                        written += 1
                         write = True
                 if write:
                     out.write(l)
+        if args.verbose:
+            print(f"{colors.PINK}Wrote {written} sequences{colors.ENDC}", file=sys.stderr)

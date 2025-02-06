@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=mmseqs_ss
-#SBATCH --time=0-10
+#SBATCH --time=7-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
@@ -25,14 +25,19 @@ fi
 source DEFINITIONS.sh
 
 
-cp /home/edwa0468/UniRef/uniref.sqlite $BGFS
-
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 BASE=${R1/$FILEEND/}
+
+if [[ -e mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa.gz ]]; then 
+	echo "mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa.gz already exists. Not overwriting" >&2;
+	exit 2
+fi
+
+cp /home/edwa0468/UniRef/uniref.sqlite $BGFS
 
 echo "Running ~/atavide_lite/bin/easy_taxonomy_to_function_taxa.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite > $BGFS/${BASE}_tophit_report_subsystems_taxa" >&2
 python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite > $BGFS/${BASE}_tophit_report_subsystems_taxa
 pigz $BGFS/${BASE}_tophit_report_subsystems_taxa 
 mkdir -p mmseqs/$BASE
-mv -f $BGFS/${BASE}_tophit_report_subsystems_taxa mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa.gz
+mv -f $BGFS/${BASE}_tophit_report_subsystems_taxa.gz mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa.gz
 

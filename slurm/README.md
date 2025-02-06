@@ -179,7 +179,7 @@ sbatch --parsable  --dependency=afterok:$VMAP $SRC/vamb_group.slurm
 mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm slurm_output/fastp_slurm
 find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt
 
-export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' ')
+export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' '); echo "There are $NUM_R1_READS reads"
 SRC=~/atavide_lite/slurm
 
 JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 $SRC/fastp.slurm)

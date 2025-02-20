@@ -162,7 +162,7 @@ if __name__ == "__main__":
                         fn_ss = ["", "", "", "", ""]
                         if k in fns:
                             fn_ss = [fns[k], "", "", "", ""]
-                        if fns[k] in ss:
+                        if k in fns and fns[k] in ss:
                             frac = data[k]['count'] / len(ss[fns[k]])
                             for s in ss[fns[k]]:
                                 print(f"{data[k]['results']}\t{fns[k]}\t{s}\t{frac}\t{taxonomy_cache[data[k]['taxid']]}")

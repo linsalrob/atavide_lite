@@ -61,13 +61,25 @@ def functions_to_subsystems(functions, known_subsystems, logger):
             known_subsystems[sur[4]] = [sur[:4]]
     return known_subsystems
 
+def get_taxonomy(list_ids, known_taxonomies, logger):
+    """
+    Get the taxonomy for a list of ids
+    """
+    tax_res = pytaxonkit.lineage(list_ids, prefix=True)
+    for i, t in zip(list_ids, tax_res['Lineage']):
+        if not isinstance(t, str):
+            t = str(t)
+            logger.debug(f"Converted {t} to str for {i}")
+        known_taxonomies[i] = t
+    return known_taxonomies
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=' ')
     parser.add_argument('-f', help='mmseqs easy_taxonomy tophit_report.gz', required=True)
     parser.add_argument('-d', help='sqlite3 database of trembl, sprot, seed',
                         default="dummy_database.sqlite")
-    parser.add_argument('-q', '--max_queries', type=int, default=10000,
+    parser.add_argument('-q', '--max_queries', type=int, default=1000,
                         help='maximum number of simultaneous queries (more requires more memory!)',)
     parser.add_argument('-l', '--log', help='log file')
     parser.add_argument('--loglevel', help='log level', default='INFO',
@@ -80,8 +92,10 @@ if __name__ == "__main__":
 
     logger = logging.getLogger(__name__)
     if args.log:
-        logging.basicConfig(filename=args.log, encoding='utf-8', level=args.loglevel.upper())
-    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+        logging.basicConfig(filename=args.log, encoding='utf-8', level=args.loglevel.upper(),
+                            format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    else:
+        logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
     try:
         con = sqlite3.connect(args.d)
@@ -98,11 +112,12 @@ if __name__ == "__main__":
     cur.execute("PRAGMA cache_size=-8000000;")  # Increase cache size. This is about 8GB
     cur.execute("PRAGMA temp_store=MEMORY;")  # Store temp data in RAM
 
-    taxonomy_cache = {}
-
     data = {}
-    known_subsystems = {}
+    subsystems_cache = {}
+    taxonomy_cache = {}
     logger.info(f"Reading data from {args.f}")
+    new_taxonomies = set()
+
     with gzip.open(args.f, 'rt') if args.f.endswith('.gz') else open(args.f, 'r') as f:
         for ln in f:
             p = ln.strip().split("\t")
@@ -123,41 +138,36 @@ if __name__ == "__main__":
                 data[thisid] = {}
                 data[thisid]['count'] = int(p[1])
                 data[thisid]['results'] = p
-
-                # get the taxonomy. IN my example test case (above) we often see the same
-                # taxon repeated. We cache this, for speed
-                logger.debug(f"Getting taxonomy for {p[5]}")
-                if p[5] in taxonomy_cache:
-                    data[thisid]['tax'] = taxonomy_cache[p[5]]
-                else:
-                    tax_res = pytaxonkit.lineage([p[5]], prefix=True)
-                    tax = tax_res['Lineage'][0]
-                    if not isinstance(tax, str):
-                        tax = str(tax)
-                        print(f"Converted {tax} to str for {p[5]}", file=sys.stderr)
-                    taxonomy_cache[p[5]] = tax
-                    data[thisid]['tax'] = tax
-
-                if len(data.keys()) % int(args.max_queries/10) == 0:
-                    logger.info(f"Processed {len(data.keys())} uniref ids")
+                data[thisid]['taxid'] = p[5]
+                new_taxonomies.add(data[thisid]['taxid'])
 
                 if len(data.keys()) >= args.max_queries:
+                    # get all the taxonomies
+                    new_taxonomies = new_taxonomies - set(taxonomy_cache.keys())
+                    logger.info(f"Getting taxonomies for {len(new_taxonomies)} tax ids")
+                    taxonomy_cache = get_taxonomy(new_taxonomies, taxonomy_cache, logger)
+
                     # get all the functions
                     logger.info(f"Getting functions for {len(data.keys())} uniref ids")
                     uniref_ids = list(data.keys())
                     fns = uniref_to_func(uniref_ids, logger)
-                    new_functions = set(fns.values())-set(known_subsystems.keys())
-                    ss = functions_to_subsystems(new_functions, known_subsystems, logger)
+                    new_functions = set(fns.values())-set(subsystems_cache.keys())
+                    logger.info(f"Getting subsystems for {len(new_functions)} functions")
+                    ss = functions_to_subsystems(new_functions, subsystems_cache, logger)
+                    logger.info("Printing data")
                     for k in data:
+                        if data[k]['taxid'] not in taxonomy_cache:
+                            logger.error(f"Taxonomy not found for {k}")
+                            taxonomy_cache[data[k]['taxid']]="Unknown"
                         fn_ss = ["", "", "", "", ""]
                         if k in fns:
                             fn_ss = [fns[k], "", "", "", ""]
                         if fns[k] in ss:
                             frac = data[k]['count'] / len(ss[fns[k]])
                             for s in ss[fns[k]]:
-                                print(f"{data[k]['results']}\t{fns[k]}\t{s}\t{frac}\t{data[k]['tax']}")
+                                print(f"{data[k]['results']}\t{fns[k]}\t{s}\t{frac}\t{taxonomy_cache[data[k]['taxid']]}")
                         else:
-                            print(f"{data[k]['results']}\t{fn_ss}\t{data[k]['count']}\t{data[k]['tax']}")
+                            print(f"{data[k]['results']}\t{fn_ss}\t{data[k]['count']}\t{taxonomy_cache[data[k]['taxid']]}")
                     data = {}
                     num_lines_processed = 0
             else:

@@ -157,7 +157,6 @@ if __name__ == "__main__":
                     ss = functions_to_subsystems(new_functions, subsystems_cache, logger)
                     logger.info("Printing data")
                     for k in data:
-                        output = data[k]['results']
                         if data[k]['taxid'] not in taxonomy_cache:
                             logger.error(f"Taxonomy not found for {k}")
                             taxonomy_cache[data[k]['taxid']]="k__;p__;c__;o__;f__;g__;s__"
@@ -167,10 +166,10 @@ if __name__ == "__main__":
                         if k in fns and fns[k] in ss:
                             frac = data[k]['count'] / len(ss[fns[k]])
                             for s in ss[fns[k]]:
-                                output += [fns[k]] + s + [str(frac), taxonomy_cache[data[k]['taxid']]]
+                                output = data[k]['results'] + [fns[k]] + s + [str(frac), taxonomy_cache[data[k]['taxid']]]
                                 print("\t".join(output))
                         else:
-                            output += fn_ss + [str(data[k]['count']), taxonomy_cache[data[k]['taxid']]]
+                            output = data[k]['results'] + fn_ss + [str(data[k]['count']), taxonomy_cache[data[k]['taxid']]]
                             print("\t".join(output))
                     data = {}
             else:

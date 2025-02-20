@@ -38,7 +38,7 @@ def uniref_to_func(uniref_list):
     return functions
 
 
-def functions_to_subsystems(functions, known_subsystems):
+def functions_to_subsystems(functions, known_subsystems, logger=None):
     """
     Given a list of functions, return the subsystems for each
     """
@@ -54,9 +54,12 @@ def functions_to_subsystems(functions, known_subsystems):
 
     for sur in cur.fetchall():
         if sur[4] in known_subsystems:
-            known_subsystems[sur[4]].append(sur[:4])
+            known_subsystems[sur[4]].append(list(sur[:4]))
         else:
-            known_subsystems[sur[4]] = [sur[:4]]
+            known_subsystems[sur[4]] = [list(sur[:4])]
+    
+    if logger:
+        logger.debug(known_subsystems)
     return known_subsystems
 
 def get_taxonomy(list_ids, known_taxonomies, logger):
@@ -151,7 +154,7 @@ if __name__ == "__main__":
                     fns = uniref_to_func(uniref_ids)
                     new_functions = list(set(fns.values())-set(subsystems_cache.keys()))
                     logger.info(f"Getting subsystems for {len(new_functions)} functions")
-                    ss = functions_to_subsystems(new_functions, subsystems_cache)
+                    ss = functions_to_subsystems(new_functions, subsystems_cache, logger)
                     logger.info("Printing data")
                     for k in data:
                         output = data[k]['results']
@@ -164,7 +167,7 @@ if __name__ == "__main__":
                         if k in fns and fns[k] in ss:
                             frac = data[k]['count'] / len(ss[fns[k]])
                             for s in ss[fns[k]]:
-                                output += fns[k] + s + [str(frac), taxonomy_cache[data[k]['taxid']]]
+                                output += [fns[k]] + s + [str(frac), taxonomy_cache[data[k]['taxid']]]
                                 print("\t".join(output))
                         else:
                             output += fn_ss + [str(data[k]['count']), taxonomy_cache[data[k]['taxid']]]

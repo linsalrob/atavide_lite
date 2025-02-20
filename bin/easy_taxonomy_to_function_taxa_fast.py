@@ -13,17 +13,19 @@ import sys
 import argparse
 import sqlite3
 import pytaxonkit
+import logging
 
 __author__ = 'Rob Edwards'
 
 
-def uniref_to_func(uniref_list):
+def uniref_to_func(uniref_list, logger):
     """
     Given a list of uniref ids, return the functions of each
     """
 
     placeholders = ",".join(["?"] * len(uniref_list))  # Create ?, ?, ?
     query = f"SELECT uniprot, func FROM trembl WHERE uniprot IN ({placeholders})"
+    logger.debug("Query: {}".format(query))
     try:
         cur.execute(query, uniref_list)
     except sqlite3.OperationalError as sqlerr:
@@ -37,13 +39,14 @@ def uniref_to_func(uniref_list):
     return functions
 
 
-def functions_to_subsystems(functions, known_subsystems):
+def functions_to_subsystems(functions, known_subsystems, logger):
     """
     Given a list of functions, return the subsystems for each
     """
 
     placeholders = ",".join(["?"] * len(functions))  # Create ?, ?, ?
     query = f"SELECT distinct superclass, class, subclass, subsystem_name, func FROM subsystems WHERE func IN ({placeholders})"
+    logger.debug("Query: {}".format(query))
     try:
         cur.execute(query, functions)
     except sqlite3.OperationalError as sqlerr:
@@ -66,11 +69,19 @@ if __name__ == "__main__":
                         default="dummy_database.sqlite")
     parser.add_argument('-q', '--max_queries', type=int, default=10000,
                         help='maximum number of simultaneous queries (more requires more memory!)',)
+    parser.add_argument('-l', '--log', help='log file')
+    parser.add_argument('--loglevel', help='log level', default='INFO',
+                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'])
     parser.add_argument('-v', help='verbose output', action='store_true')
     args = parser.parse_args()
 
     if not os.path.exists(args.d):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), args.d)
+
+    logger = logging.getLogger(__name__)
+    if args.log:
+        logging.basicConfig(filename=args.log, encoding='utf-8', level=args.loglevel.upper())
+    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
     try:
         con = sqlite3.connect(args.d)
@@ -81,6 +92,7 @@ if __name__ == "__main__":
 
     urs = re.compile(r'^UniRef\d+_(\w+)')
     cur = con.cursor()
+    logger.info("Connected to database")
 
     # suggested by chatty, these PRAGMA commands should speed up the database
     cur.execute("PRAGMA cache_size=-8000000;")  # Increase cache size. This is about 8GB
@@ -89,9 +101,8 @@ if __name__ == "__main__":
     taxonomy_cache = {}
 
     data = {}
-    num_lines_processed = 0
     known_subsystems = {}
-
+    logger.info(f"Reading data from {args.f}")
     with gzip.open(args.f, 'rt') if args.f.endswith('.gz') else open(args.f, 'r') as f:
         for ln in f:
             p = ln.strip().split("\t")
@@ -108,7 +119,6 @@ if __name__ == "__main__":
             m = urs.match(p[0])
             tax = ""
             if m and m.group(1):
-                num_lines_processed += 1
                 thisid = m.group(1)
                 data[thisid] = {}
                 data[thisid]['count'] = int(p[1])
@@ -116,6 +126,7 @@ if __name__ == "__main__":
 
                 # get the taxonomy. IN my example test case (above) we often see the same
                 # taxon repeated. We cache this, for speed
+                logger.debug(f"Getting taxonomy for {p[5]}")
                 if p[5] in taxonomy_cache:
                     data[thisid]['tax'] = taxonomy_cache[p[5]]
                 else:
@@ -127,12 +138,13 @@ if __name__ == "__main__":
                     taxonomy_cache[p[5]] = tax
                     data[thisid]['tax'] = tax
 
-                if num_lines_processed >= args.max_queries:
+                if len(data.keys()) >= args.max_queries:
                     # get all the functions
+                    logger.info(f"Getting functions for {len(data.keys())} uniref ids")
                     uniref_ids = list(data.keys())
-                    fns = uniref_to_func(uniref_ids)
+                    fns = uniref_to_func(uniref_ids, logger)
                     new_functions = set(fns.values())-set(known_subsystems.keys())
-                    ss = functions_to_subsystems(new_functions, known_subsystems)
+                    ss = functions_to_subsystems(new_functions, known_subsystems, logger)
                     for k in data:
                         fn_ss = ["", "", "", "", ""]
                         if k in fns:

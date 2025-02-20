@@ -34,9 +34,12 @@ if [[ -e mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa.gz ]]; then
 fi
 
 cp /home/edwa0468/UniRef/uniref.sqlite $BGFS
+cp mmseqs/$BASE/${BASE}_tophit_report.gz $BGFS
 
-echo "Running ~/atavide_lite/bin/easy_taxonomy_to_function_taxa.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite > $BGFS/${BASE}_tophit_report_subsystems_taxa" >&2
-python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite > $BGFS/${BASE}_tophit_report_subsystems_taxa
+echo `date` "Running ~/atavide_lite/bin/easy_taxonomy_to_function_taxa.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite > $BGFS/${BASE}_tophit_report_subsystems_taxa" >&2
+python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa.py -f $BGFS/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite > $BGFS/${BASE}_tophit_report_subsystems_taxa
+echo `date` "easy_taxonomy_to_function_taxa complete" >&2
+
 pigz $BGFS/${BASE}_tophit_report_subsystems_taxa 
 mkdir -p mmseqs/$BASE
 mv -f $BGFS/${BASE}_tophit_report_subsystems_taxa.gz mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa.gz

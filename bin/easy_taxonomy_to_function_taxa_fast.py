@@ -138,6 +138,9 @@ if __name__ == "__main__":
                     taxonomy_cache[p[5]] = tax
                     data[thisid]['tax'] = tax
 
+                if len(data.keys()) % int(args.max_queries/10) == 0:
+                    logger.info(f"Processed {len(data.keys())} uniref ids")
+
                 if len(data.keys()) >= args.max_queries:
                     # get all the functions
                     logger.info(f"Getting functions for {len(data.keys())} uniref ids")

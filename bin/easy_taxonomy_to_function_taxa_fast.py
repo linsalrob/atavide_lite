@@ -164,10 +164,10 @@ if __name__ == "__main__":
                         if k in fns and fns[k] in ss:
                             frac = data[k]['count'] / len(ss[fns[k]])
                             for s in ss[fns[k]]:
-                                output += fns[k] + s + [str(frac)] + taxonomy_cache[data[k]['taxid']]
+                                output += fns[k] + s + [str(frac), taxonomy_cache[data[k]['taxid']]]
                                 print("\t".join(output))
                         else:
-                            output += fn_ss + [str(data[k]['count'])] + taxonomy_cache[data[k]['taxid']]
+                            output += fn_ss + [str(data[k]['count']), taxonomy_cache[data[k]['taxid']]]
                             print("\t".join(output))
                     data = {}
             else:

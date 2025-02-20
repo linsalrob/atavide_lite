@@ -151,7 +151,7 @@ if __name__ == "__main__":
                     logger.info(f"Getting functions for {len(data.keys())} uniref ids")
                     uniref_ids = list(data.keys())
                     fns = uniref_to_func(uniref_ids, logger)
-                    new_functions = set(fns.values())-set(subsystems_cache.keys())
+                    new_functions = list(set(fns.values())-set(subsystems_cache.keys()))
                     logger.info(f"Getting subsystems for {len(new_functions)} functions")
                     ss = functions_to_subsystems(new_functions, subsystems_cache, logger)
                     logger.info("Printing data")

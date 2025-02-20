@@ -18,14 +18,13 @@ import logging
 __author__ = 'Rob Edwards'
 
 
-def uniref_to_func(uniref_list, logger):
+def uniref_to_func(uniref_list):
     """
     Given a list of uniref ids, return the functions of each
     """
 
     placeholders = ",".join(["?"] * len(uniref_list))  # Create ?, ?, ?
     query = f"SELECT uniprot, func FROM trembl WHERE uniprot IN ({placeholders})"
-    logger.debug("Query: {}".format(query))
     try:
         cur.execute(query, uniref_list)
     except sqlite3.OperationalError as sqlerr:
@@ -39,14 +38,13 @@ def uniref_to_func(uniref_list, logger):
     return functions
 
 
-def functions_to_subsystems(functions, known_subsystems, logger):
+def functions_to_subsystems(functions, known_subsystems):
     """
     Given a list of functions, return the subsystems for each
     """
 
     placeholders = ",".join(["?"] * len(functions))  # Create ?, ?, ?
     query = f"SELECT distinct superclass, class, subclass, subsystem_name, func FROM subsystems WHERE func IN ({placeholders})"
-    logger.debug("Query: {}".format(query))
     try:
         cur.execute(query, functions)
     except sqlite3.OperationalError as sqlerr:
@@ -79,7 +77,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', help='mmseqs easy_taxonomy tophit_report.gz', required=True)
     parser.add_argument('-d', help='sqlite3 database of trembl, sprot, seed',
                         default="dummy_database.sqlite")
-    parser.add_argument('-q', '--max_queries', type=int, default=1000,
+    parser.add_argument('-q', '--max_queries', type=int, default=2000,
                         help='maximum number of simultaneous queries (more requires more memory!)',)
     parser.add_argument('-l', '--log', help='log file')
     parser.add_argument('--loglevel', help='log level', default='INFO',
@@ -150,26 +148,28 @@ if __name__ == "__main__":
                     # get all the functions
                     logger.info(f"Getting functions for {len(data.keys())} uniref ids")
                     uniref_ids = list(data.keys())
-                    fns = uniref_to_func(uniref_ids, logger)
+                    fns = uniref_to_func(uniref_ids)
                     new_functions = list(set(fns.values())-set(subsystems_cache.keys()))
                     logger.info(f"Getting subsystems for {len(new_functions)} functions")
-                    ss = functions_to_subsystems(new_functions, subsystems_cache, logger)
+                    ss = functions_to_subsystems(new_functions, subsystems_cache)
                     logger.info("Printing data")
                     for k in data:
+                        output = data[k]['results']
                         if data[k]['taxid'] not in taxonomy_cache:
                             logger.error(f"Taxonomy not found for {k}")
-                            taxonomy_cache[data[k]['taxid']]="Unknown"
+                            taxonomy_cache[data[k]['taxid']]="k__;p__;c__;o__;f__;g__;s__"
                         fn_ss = ["", "", "", "", ""]
                         if k in fns:
                             fn_ss = [fns[k], "", "", "", ""]
                         if k in fns and fns[k] in ss:
                             frac = data[k]['count'] / len(ss[fns[k]])
                             for s in ss[fns[k]]:
-                                print(f"{data[k]['results']}\t{fns[k]}\t{s}\t{frac}\t{taxonomy_cache[data[k]['taxid']]}")
+                                output += fns[k] + s + [str(frac)] + taxonomy_cache[data[k]['taxid']]
+                                print("\t".join(output))
                         else:
-                            print(f"{data[k]['results']}\t{fn_ss}\t{data[k]['count']}\t{taxonomy_cache[data[k]['taxid']]}")
+                            output += fn_ss + [str(data[k]['count'])] + taxonomy_cache[data[k]['taxid']]
+                            print("\t".join(output))
                     data = {}
-                    num_lines_processed = 0
             else:
                 print(f"Can't parse ID from {p[0]}", file=sys.stderr)
                 print("\t".join(p + ["", "", "", "", "", "", p[1], ""]))

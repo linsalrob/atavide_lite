@@ -57,7 +57,8 @@ if __name__ == "__main__":
     # now we stream the fasta file and write the contigs to the appropriate file, and save the filehandle in filehandles
     # then when we are done we close the filehandles
     if args.v:
-        print(f"{colours.BLUE}Writing the fasta files{colours.ENDC}", file=sys
+        print(f"{colours.BLUE}Writing the fasta files{colours.ENDC}", file=sys)
+
     for header, seq in stream_fasta(args.f):
         if header not in clusters:
             continue

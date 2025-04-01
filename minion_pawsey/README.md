@@ -14,7 +14,7 @@ SRC=~/atavide_lite/minion_pawsey
 
 # download the databases
 HUMANDLDJOB=$(sbatch --parsable $SRC/download_human.slurm)
-MMSEQSDLD=$(sbatach --parsablle $SRC/mmseqs_download.slurm)
+MMSEQSDLD=$(sbatach --parsable $SRC/mmseqs_download.slurm)
 
 JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 $SRC/fastp.slurm)
 HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB,$HUMANDLDJOB $SRC/host_removal.slurm)

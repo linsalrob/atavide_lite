@@ -193,7 +193,11 @@ MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB $SRC/vamb_concat.slurm)
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 $SRC/vamb_minimap.slurm)
 VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB $SRC/vamb.slurm)
-CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/bins/ vamb/checkm)
+VAMBUNSPLIT=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/vamb_split.slurm vamb/contigs.fna.gz vamb/vae_clusters_unsplit.tsv vamb/clusters_unsplit)
+VAMBSPLIT=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/vamb_split.slurm vamb/contigs.fna.gz vamb/vae_clusters_split.tsv vamb/clusters_split)
+# CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/bins/ vamb/checkm)
+CHECKMUNSPLITJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/clusters_unsplit vamb/checkm_unsplit)
+CHECKMSPLITJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/clusters_split vamb/checkm_split)
 
 ```
 

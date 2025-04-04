@@ -57,15 +57,15 @@ if __name__ == "__main__":
     # now we stream the fasta file and write the contigs to the appropriate file, and save the filehandle in filehandles
     # then when we are done we close the filehandles
     if args.v:
-        print(f"{colours.BLUE}Writing the fasta files{colours.ENDC}", file=sys)
+        print(f"{colours.BLUE}Writing the fasta files{colours.ENDC}", file=sys.stderr)
 
     for header, seq in stream_fasta(args.f):
         if header not in clusters:
             continue
         cluster_id = clusters[header]
         if cluster_id not in filehandles:
-            filename = os.path.join(args.o, f'{cluster_id}.fasta')
-            filehandles[cluster_id] = open(filename, 'w')
+            filename = os.path.join(args.o, f'{cluster_id}.fasta.gz')
+            filehandles[cluster_id] = gzip.open(filename, 'wt')
         print(f">{header}\n{seq}", file=filehandles[cluster_id])
 
     for handle in filehandles.values():

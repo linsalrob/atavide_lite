@@ -8,6 +8,11 @@
 #SBATCH -e slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.err
 
 
+if [[ ! -n "$ATAVIDE_CONDA" ]]; then
+    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
+    exit 2;
+fi
+
 if [[ ! -e R1_reads.txt ]]; then 
 	echo "Please make a file with the R1 reads using this command:" >&2
 	echo "find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt" >&2;
@@ -43,7 +48,7 @@ else
 	done
 fi
 
-conda activate atavide_lite
+conda activate $ATAVIDE_CONDA
 
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 BASE=${R1/$FILEEND/}

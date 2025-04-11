@@ -9,11 +9,13 @@ dependencies:
    - minimap2
    - mmseqs2
    - megahit
+   - rclone
    - rsync
    - parallel
    - pigz
    - pytaxonkit
    - snakemake
+   - sra-tools
    - snakemake-executor-plugin-cluster-generic
    - taxonkit
 

@@ -3,6 +3,16 @@
 This is the same scripts as in [../slurm](../slurm) but I've "optimised" this to run on Pawsey. They are not optimised at all, but they run!
 
 
+# Create a new conda environment:
+
+```
+TMP=$(for i in {1..12}; do printf "%x" $((RANDOM % 16)); done)
+mamba env create --yes --prefix /scratch/pawsey1018/edwa0468/software/miniconda3/$TMP --file ../atavide_lite.yaml
+mamba activate /scratch/pawsey1018/edwa0468/software/miniconda3/$TMP
+export ATAVIDE_CONDA=/scratch/pawsey1018/edwa0468/software/miniconda3/$TMP
+```
+
+
 # All commands in one go:
 
 ```

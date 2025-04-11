@@ -8,6 +8,7 @@
 #SBATCH -e slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.err
 
 
+
 if [[ ! -n "$ATAVIDE_CONDA" ]]; then
     echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
     exit 2;
@@ -32,10 +33,10 @@ source DEFINITIONS.sh
 
 DBDIR=~/scratch_1018/uniref
 eval "$(conda shell.bash hook)"
+conda activate $ATAVIDE_CONDA
 
 if [[ $SLURM_ARRAY_TASK_ID == 1 ]]; then
 	if [ ! -e $DBDIR/copying_done ]; then
-		conda activate rclone
 		mkdir -p $DBDIR
 		rclone copy A18:dbs/uniref.sqlite $DBDIR/
 		touch $DBDIR/copying_done
@@ -48,7 +49,6 @@ else
 	done
 fi
 
-conda activate $ATAVIDE_CONDA
 
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 BASE=${R1/$FILEEND/}

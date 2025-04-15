@@ -12,6 +12,15 @@ mamba activate /scratch/pawsey1018/edwa0468/software/miniconda3/$TMP
 export ATAVIDE_CONDA=/scratch/pawsey1018/edwa0468/software/miniconda3/$TMP
 ```
 
+# Renaming files
+
+If you download files that have only `_1.fastq.gz` or `_2.fastq.gz` and need to rename them:
+
+```
+for F in *_1.fastq.gz; do mv $F ${F/_1/_R1}; done
+for F in *_2.fastq.gz; do mv $F ${F/_2/_R2}; done
+```
+
 
 # All commands in one go:
 
@@ -24,10 +33,11 @@ SRC=~/atavide_lite/slurm
 PAWSEY_SRC=~/atavide_lite/pawsey_slurm
 
 HUMANDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_human.slurm)
-JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 $SRC/fastp.slurm)
-HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB --dependency=afterok:$HUMANDLDJOB $SRC/host_removal.slurm)
-FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
-MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)
+UNIREFJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA download_uniref50.slurm)
+JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/fastp.slurm)
+HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB --dependency=afterok:$HUMANDLDJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/host_removal.slurm)
+FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $PAWSEY_SRC/fastq2fasta.slurm)
+MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB --dependency=afterok:$UNIREFJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_easy_taxonomy.slurm)
 sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_taxonomy.slurm
 SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 $PAWSEY_SRC/mmseqs_add_subsystems_taxonomy.slurm)
 sbatch --dependency=afterok:$SSJOB $PAWSEY_SRC/count_subsystems.slurm

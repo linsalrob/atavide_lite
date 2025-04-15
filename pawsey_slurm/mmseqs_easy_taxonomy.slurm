@@ -34,7 +34,6 @@ echo "Start " `date` >&2;
 
 DB=UniRef50
 DBSOURCE=/scratch/$PAWSEY_PROJECT/$USER/Databases/$DB
-TMPDIR=/scratch/$PAWSEY_PROJECT/$USER/tmp
 
 if [[ ! -e $DBSOURCE ]]; then
 	echo "Please edit $0 and correct the location of the $DB files" >&2;
@@ -48,10 +47,12 @@ fi
 
 source DEFINITIONS.sh
 
-OUTDIR=mmseqs
+R=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
+
+TMPDIR=/scratch/$PAWSEY_PROJECT/$USER/tmp
+OUTDIR=mmseqs/${R/$FILEEND/}
 mkdir --parents $OUTDIR $TMPDIR
 
-R=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 # convert fastq to fasta
 # this throws an unbound error if FAFILEEND is not in DEFINITIONS
 R1=${R/$FILEEND/$FAFILEEND}

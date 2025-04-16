@@ -22,13 +22,12 @@
 
 
 set -euo pipefail
+if [[ ! -n "$ATAVIDE_CONDA" ]]; then
+    echo "Please include the ATAVIDE_CONDA location on your slurm submission: --export=ATAVIDE_CONDA=$ATAVIDE_CONDA" >&2
+    exit 2;
+fi
 eval "$(conda shell.bash hook)"
-#conda activate atavide_lite
-conda activate /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite
-
-
-
-
+conda activate $ATAVIDE_CONDA
 
 # Output file is the base name. There will be several files with that name, so we write to $BGFS and then copy everything to the directory
 # with that name once done

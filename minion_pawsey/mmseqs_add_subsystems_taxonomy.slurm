@@ -7,6 +7,13 @@
 #SBATCH -o slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.out
 #SBATCH -e slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.err
 
+if [[ ! -n "$ATAVIDE_CONDA" ]]; then
+    echo "Please include the ATAVIDE_CONDA location on your slurm submission: --export=ATAVIDE_CONDA=$ATAVIDE_CONDA" >&2
+    exit 2;
+fi
+eval "$(conda shell.bash hook)"
+conda activate $ATAVIDE_CONDA
+
 
 if [[ ! -e reads.txt ]]; then 
 	echo "Please make a file with the reads using this command:" >&2
@@ -26,11 +33,9 @@ source DEFINITIONS.sh
 # are going to wait for the "copying_done" flag
 
 DBDIR=~/scratch_1018/uniref
-eval "$(conda shell.bash hook)"
 
 if [[ $SLURM_ARRAY_TASK_ID == 1 ]]; then
 	if [ ! -e $DBDIR/copying_done ]; then
-		conda activate rclone
 		mkdir -p $DBDIR
 		rclone copy A18:dbs/uniref.sqlite $DBDIR/
 		touch $DBDIR/copying_done
@@ -42,8 +47,6 @@ else
 		sleep $(( (RANDOM % 30) + 1 ))
 	done
 fi
-
-conda activate /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite
 
 
 READS=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)

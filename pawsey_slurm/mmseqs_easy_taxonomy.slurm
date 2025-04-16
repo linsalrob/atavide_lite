@@ -70,7 +70,7 @@ fi
 echo "Running  mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $(mktemp -d -p $TMPDIR) --threads 64" >&2;
 mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $(mktemp -d -p $TMPDIR) --threads 64
 
-find $OUTPUT -type f  | parallel -j 32 gzip
+find $OUTDIR -type f  | parallel -j 32 gzip
 
 echo "Fin " `date` >&2;
 

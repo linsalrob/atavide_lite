@@ -7,7 +7,7 @@ dependencies:
    - samtools>=1.20
    - fastp
    - minimap2
-   - checkm
+   - checkm-genome
    - mmseqs2
    - megahit
    - rclone

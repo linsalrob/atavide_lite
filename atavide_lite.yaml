@@ -7,6 +7,7 @@ dependencies:
    - samtools>=1.20
    - fastp
    - minimap2
+   - checkm
    - mmseqs2
    - megahit
    - rclone

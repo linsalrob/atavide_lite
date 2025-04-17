@@ -36,7 +36,7 @@ DB=UniRef50
 DBSOURCE=/scratch/$PAWSEY_PROJECT/$USER/Databases/$DB
 
 if [[ ! -e $DBSOURCE ]]; then
-	echo "Please edit $0 and correct the location of the $DB files" >&2;
+	echo "Please edit $0 and correct the location of the $DB files. We expected them in $DBSOURCE" >&2;
 	exit 1;
 fi
 

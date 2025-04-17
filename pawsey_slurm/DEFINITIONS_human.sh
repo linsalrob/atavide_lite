@@ -1,6 +1,7 @@
 # This definitions file is for use with the HUMAN genomes. 
 # Make sure you change FILEEND/FAFILEEND
 
+export SAMPLENAME=xxxyyy
 export FILEEND=_R1.fastq.gz
 export FAFILEEND=_R1.fasta.gz
 export SOURCE=fastq

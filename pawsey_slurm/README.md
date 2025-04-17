@@ -31,6 +31,9 @@ find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' ')
 SRC=~/atavide_lite/slurm
 PAWSEY_SRC=~/atavide_lite/pawsey_slurm
+cp $SRC/DEFINITIONS.sh .
+
+# edit the DEFINITIONS file to change the sample name
 
 HUMANDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_human.slurm)
 TAXDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_taxon_db.slurm)
@@ -40,7 +43,7 @@ HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB 
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $PAWSEY_SRC/fastq2fasta.slurm)
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB --dependency=afterok:$UNIREFJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_easy_taxonomy.slurm)
 sbatch --dependency=afterok:$MMSEQSJOB --dependency=afterok:$TAXDLDJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_taxonomy.slurm
-SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA   $PAWSEY_SRC/mmseqs_add_subsystems_taxonomy.slurm)
+SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA   $PAWSEY_SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
 
 
 sbatch --dependency=afterok:$SSJOB $PAWSEY_SRC/count_subsystems.slurm

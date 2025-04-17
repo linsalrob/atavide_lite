@@ -1,6 +1,7 @@
 # This definitions file is for use with the SHARK genomes. 
 # Make sure you change FILEEND/FAFILEEND
 
+export SAMPLENAME=xxxyyy
 export FILEEND=_R1_001.fastq.gz
 export FAFILEEND=_R1_001.fasta.gz
 export SOURCE=fastq

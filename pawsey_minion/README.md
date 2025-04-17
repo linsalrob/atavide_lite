@@ -24,6 +24,9 @@ find fastq -type f -printf "%f\n" > reads.txt
 
 export NUM_R1_READS=$(wc -l reads.txt | cut -f 1 -d ' ')
 SRC=~/atavide_lite/pawsey_minion
+cp $SRC/DEFINITIONS.sh .
+
+# edit the DEFINITIONS file to change the sample name
 
 # download the databases
 HUMANDLDJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/download_human.slurm)

@@ -15,11 +15,14 @@ FILEEND=_R1.fastq.gz
 Currently, we read these variables from `DEFINITIONS.sh`:
 
 ```
+export SAMPLENAME=xxxyyy
 export FILEEND=_L001_R1_001.fastq.gz
 export FAFILEEND=_L001_R1_001.fasta.gz
 export SOURCE=fastq
 export HOSTREMOVED=fastq_fastp
 ```
+
+Change the samplename to something meaningful, and we'll use that in the final output files
 
 0. Set the source of the scripts
 
@@ -181,6 +184,10 @@ find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt
 
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' '); echo "There are $NUM_R1_READS reads"
 SRC=~/atavide_lite/slurm
+cp $SRC/DEFINITIONS.sh .
+
+# edit the DEFINITIONS file to change the sample name
+
 
 JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 $SRC/fastp.slurm)
 HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB $SRC/host_removal.slurm)

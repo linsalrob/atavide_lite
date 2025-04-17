@@ -3,19 +3,21 @@ use Getopt::Std;
 use Data::Dumper;
 
 my %opts;
-getopts('d:m:s:v', \%opts);
+getopts('d:m:s:n:v', \%opts);
 unless ($opts{d}) {
 	die <<EOF;
 	$0
 	-d directory of mmseqs outputs [mmseqs]
 	-m metadata file. If you provide this we strip of _S34 (or whatever) and then try and rename your columns
 	-s subsystems output directory [subsystems]
+	-n sample name used for the file outputs
 	-v verbose output
 EOF
 }
 
 unless ($opts{s}) {$opts{s}="subsystems"}
-
+if ($opts{n}) {$opts{n} =~ s/\W//g}
+else {$opts{n}="atavide"}
 
 # 0       UniRef50_L1JF06
 # 1       1
@@ -105,7 +107,7 @@ foreach my $sub (grep {$_ !~ /^\./} readdir(DIR)) {
 my @allsub = sort {$a cmp $b} keys %allsub;
 mkdir "$opts{s}", 0755;
 
-open(OUT, ">$opts{s}/class_raw.tsv") || die "$! $opts{s}/class_raw.tsv";
+open(OUT, ">$opts{s}/$opts{n}_class_raw.tsv") || die "$! $opts{s}/$opts{n}_class_raw.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$ac) {
 	print OUT $s;
@@ -117,7 +119,7 @@ foreach my $s (sort {$a cmp $b} keys %$ac) {
 }
 close OUT;
 
-open(OUT, ">$opts{s}/level1_raw.tsv") || die "$! $opts{s}/level1_raw.tsv";
+open(OUT, ">$opts{s}/$opts{n}_level1_raw.tsv") || die "$! $opts{s}/$opts{n}_level1_raw.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$al1) {
 	print OUT $s;
@@ -129,7 +131,7 @@ foreach my $s (sort {$a cmp $b} keys %$al1) {
 }
 close OUT;
 
-open(OUT, ">$opts{s}/level2_raw.tsv") || die "$! $opts{s}/level2_raw.tsv";
+open(OUT, ">$opts{s}/$opts{n}_level2_raw.tsv") || die "$! $opts{s}/$opts{n}_level2_raw.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$al2) {
 	print OUT $s;
@@ -142,7 +144,7 @@ foreach my $s (sort {$a cmp $b} keys %$al2) {
 close OUT;
 
 
-open(OUT, ">$opts{s}/$opts{s}_raw.tsv") || die "$! $opts{s}/$opts{s}_raw.tsv";
+open(OUT, ">$opts{s}/$opts{n}_$opts{s}_raw.tsv") || die "$! $opts{s}/$opts{n}_$opts{s}_raw.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$ass) {
 	print OUT $s;
@@ -155,7 +157,7 @@ foreach my $s (sort {$a cmp $b} keys %$ass) {
 close OUT;
 
 
-open(OUT, ">$opts{s}/all_raw.tsv") || die "$! $opts{s}/all_raw.tsv";
+open(OUT, ">$opts{s}/$opts{n}_all_raw.tsv") || die "$! $opts{s}/$opts{n}_all_raw.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$aall) {
 	print OUT $s;
@@ -174,7 +176,7 @@ close OUT;
 
 map {$total{$_} /= 1e6} keys %total;
 
-open(OUT, ">$opts{s}/class_norm_all.tsv") || die "$! $opts{s}/class_norm_all.tsv";
+open(OUT, ">$opts{s}/$opts{n}_class_norm_all.tsv") || die "$! $opts{s}/$opts{n}_class_norm_all.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$ac) {
 	print OUT $s;
@@ -186,7 +188,7 @@ foreach my $s (sort {$a cmp $b} keys %$ac) {
 }
 close OUT;
 
-open(OUT, ">$opts{s}/level1_norm_all.tsv") || die "$! $opts{s}/level1_norm_all.tsv";
+open(OUT, ">$opts{s}/$opts{n}_level1_norm_all.tsv") || die "$! $opts{s}/$opts{n}_level1_norm_all.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$al1) {
 	print OUT $s;
@@ -198,7 +200,7 @@ foreach my $s (sort {$a cmp $b} keys %$al1) {
 }
 close OUT;
 
-open(OUT, ">$opts{s}/level2_norm_all.tsv") || die "$! $opts{s}/level2_norm_all.tsv";
+open(OUT, ">$opts{s}/$opts{n}_level2_norm_all.tsv") || die "$! $opts{s}/$opts{n}_level2_norm_all.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$al2) {
 	print OUT $s;
@@ -211,7 +213,7 @@ foreach my $s (sort {$a cmp $b} keys %$al2) {
 close OUT;
 
 
-open(OUT, ">$opts{s}/$opts{s}_norm_all.tsv") || die "$! $opts{s}/$opts{s}_norm_all.tsv";
+open(OUT, ">$opts{s}/$opts{n}_$opts{s}_norm_all.tsv") || die "$! $opts{s}/$opts{n}_$opts{s}_norm_all.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$ass) {
 	print OUT $s;
@@ -224,7 +226,7 @@ foreach my $s (sort {$a cmp $b} keys %$ass) {
 close OUT;
 
 
-open(OUT, ">$opts{s}/all_norm_all.tsv") || die "$! $opts{s}/all_norm_all.tsv";
+open(OUT, ">$opts{s}/$opts{n}_all_norm_all.tsv") || die "$! $opts{s}/$opts{n}_all_norm_all.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$aall) {
 	print OUT $s;
@@ -241,7 +243,7 @@ close OUT;
 
 map {$sstotal{$_} /= 1e6} keys %sstotal;
 
-open(OUT, ">$opts{s}/class_norm_ss.tsv") || die "$! $opts{s}/class_norm_ss.tsv";
+open(OUT, ">$opts{s}/$opts{n}_class_norm_ss.tsv") || die "$! $opts{s}/$opts{n}_class_norm_ss.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$ac) {
 	print OUT $s;
@@ -253,7 +255,7 @@ foreach my $s (sort {$a cmp $b} keys %$ac) {
 }
 close OUT;
 
-open(OUT, ">$opts{s}/level1_norm_ss.tsv") || die "$! $opts{s}/level1_norm_ss.tsv";
+open(OUT, ">$opts{s}/$opts{n}_level1_norm_ss.tsv") || die "$! $opts{s}/$opts{n}_level1_norm_ss.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$al1) {
 	print OUT $s;
@@ -265,7 +267,7 @@ foreach my $s (sort {$a cmp $b} keys %$al1) {
 }
 close OUT;
 
-open(OUT, ">$opts{s}/level2_norm_ss.tsv") || die "$! $opts{s}/level2_norm_ss.tsv";
+open(OUT, ">$opts{s}/$opts{n}_level2_norm_ss.tsv") || die "$! $opts{s}/$opts{n}_level2_norm_ss.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$al2) {
 	print OUT $s;
@@ -278,7 +280,7 @@ foreach my $s (sort {$a cmp $b} keys %$al2) {
 close OUT;
 
 
-open(OUT, ">$opts{s}/$opts{s}_norm_ss.tsv") || die "$! $opts{s}/$opts{s}_norm_ss.tsv";
+open(OUT, ">$opts{s}/$opts{n}_$opts{s}_norm_ss.tsv") || die "$! $opts{s}/$opts{n}_$opts{s}_norm_ss.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$ass) {
 	print OUT $s;
@@ -291,7 +293,7 @@ foreach my $s (sort {$a cmp $b} keys %$ass) {
 close OUT;
 
 
-open(OUT, ">$opts{s}/all_norm_ss.tsv") || die "$! $opts{s}/all_norm_ss.tsv";
+open(OUT, ">$opts{s}/$opts{n}_all_norm_ss.tsv") || die "$! $opts{s}/$opts{n}_all_norm_ss.tsv";
 print OUT "\t", join("\t", @allsub), "\n";
 foreach my $s (sort {$a cmp $b} keys %$aall) {
 	print OUT $s;

@@ -8,5 +8,12 @@
 #SBATCH -o count_ss-%j.out
 #SBATCH -e count_ss-%j.err
 
-#perl ~/atavide_lite/bin/count_subsystems.pl -d mmseqs
-python ~/atavide_lite/bin/count_subsystems.py -d mmseqs -s subsystems
+
+if [[ ! -e DEFINITIONS.sh ]]; then
+	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
+	exit 2;
+fi
+
+source DEFINITIONS.sh
+
+python ~/atavide_lite/bin/count_subsystems.py -d mmseqs -s subsystems -n $SAMPLENAME

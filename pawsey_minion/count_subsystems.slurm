@@ -7,4 +7,12 @@
 #SBATCH -o slurm_output/count_ss-%j.out
 #SBATCH -e slurm_output/count_ss-%j.err
 
-perl ~/atavide_lite/bin/count_subsystems.pl -d mmseqs
+
+if [[ ! -e DEFINITIONS.sh ]]; then
+	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
+	exit 2;
+fi
+
+source DEFINITIONS.sh
+
+perl ~/atavide_lite/bin/count_subsystems.pl -d mmseqs -n $SAMPLENAME

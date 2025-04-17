@@ -29,16 +29,13 @@ fi
 eval "$(conda shell.bash hook)"
 conda activate $ATAVIDE_CONDA
 
-# Output file is the base name. There will be several files with that name, so we write to $BGFS and then copy everything to the directory
-# with that name once done
-
 echo "Start " `date` >&2;
 
 DB=UniRef50
-DBSOURCE=UniRef50
+DBSOURCE=/scratch/$PAWSEY_PROJECT/$USER/Databases/$DB
 
 if [[ ! -e $DBSOURCE ]]; then
-	echo "Please edit $0 and correct the location of the $DB files" >&2;
+	echo "Please edit $0 and correct the location of the $DB files. We expected them in $DBSOURCE" >&2;
 	exit 1;
 fi
 

@@ -23,7 +23,7 @@ mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseq
 find fastq -type f -printf "%f\n" > reads.txt
 
 export NUM_R1_READS=$(wc -l reads.txt | cut -f 1 -d ' ')
-SRC=~/atavide_lite/minion_pawsey
+SRC=~/atavide_lite/pawsey_minion
 
 # download the databases
 HUMANDLDJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/download_human.slurm)
@@ -37,7 +37,7 @@ FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB --export=ATAVIDE_CONDA=$
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB,$MMSEQSDLD --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_easy_taxonomy.slurm)
 sbatch --dependency=afterok:$MMSEQSJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_taxonomy.slurm
 sbatch --dependency=afterok:$MMSEQSJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/read_fate.slurm
-SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_add_subsystems_taxonomy.slurm)
+SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
 sbatch --dependency=afterok:$SSJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/count_subsystems.slurm
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA --array=1-$NUM_R1_READS:1 $SRC/megahit.slurm)
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb_concat.slurm)

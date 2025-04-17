@@ -63,9 +63,9 @@ fi
 
 
 mkdir -p $OUTPUT
-echo "Running mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT tmp --threads 32" 2>&1;
 
-TPD=$(mktemp -d -p .)
+TPD=$(mktemp -d -p /scratch/$PAWSEY_PROJECT/$USER/tmp)
+echo "Running mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads 32" 2>&1;
 mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads 32
 rm -rf $TPD
 

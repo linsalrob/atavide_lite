@@ -42,9 +42,9 @@ if [[ $O == $READS ]]; then
 	echo "ERROR: OUTPUT $O and INPUT $READS are the same. Are you sure the files end $FILEEND?" >&2;
 	exit 1;
 fi
-
-echo -e "minimap2 -t 16 --split-prefix=tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -\n" >&2;
-minimap2 -t 16 --split-prefix=tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -
+TMPDIR=(mktemp -d -p /scratch/$PAWSEY_PROJECT/$USER/tmp)
+echo -e "minimap2 -t 16 --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -\n" >&2;
+minimap2 -t 16 --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -
 samtools index $HOST/$O
 
 

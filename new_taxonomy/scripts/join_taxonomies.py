@@ -64,7 +64,7 @@ if __name__ == "__main__":
     taxa = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
 
     os.makedirs(args.output, exist_ok=True)
-    samplename = re.sub(r'\W', '', args.n)
+    samplename = re.sub(r'\W', '', args.name)
 
     for t in taxa:
         inputs = []

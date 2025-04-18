@@ -17,3 +17,4 @@ fi
 source DEFINITIONS.sh
 
 python ~/atavide_lite/bin/count_subsystems.py -d mmseqs -s subsystems -n $SAMPLENAME
+find subsystems -type f -exec pigz {} \;

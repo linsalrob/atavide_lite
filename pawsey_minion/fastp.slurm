@@ -3,7 +3,7 @@
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=32G
+#SBATCH --mem=128G
 #SBATCH -o slurm_output/fastp_slurm/fastp-%A_%a.out
 #SBATCH -e slurm_output/fastp_slurm/fastp-%A_%a.err
 

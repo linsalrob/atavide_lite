@@ -73,4 +73,4 @@ if __name__ == "__main__":
                 inputs.append(os.path.join(args.taxonomy, sd, f"{t}.tsv.gz"))
         if args.verbose:
             print(f"Writing {t} from {inputs}", file=sys.stderr)
-        join(inputs, os.path.join(args.output, f"{samplename}_{t}.raw.tsv.gz"),  os.path.join(args.output, f"{t}.norm.tsv.gz"))
+        join(inputs, os.path.join(args.output, f"{samplename}_{t}.raw.tsv.gz"),  os.path.join(args.output, f"{samplename}_{t}.norm.tsv.gz"))

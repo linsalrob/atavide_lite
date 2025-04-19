@@ -2,7 +2,7 @@
 #SBATCH --job-name=HostRemoval
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=1
 #SBATCH --mem=128G
 #SBATCH -o slurm_output/host_slurm/host-%A_%a.out
 #SBATCH -e slurm_output/host_slurm/host-%A_%a.err
@@ -44,7 +44,7 @@ if [[ $O == $READS ]]; then
 fi
 TMPDIR=$(mktemp -d -p /scratch/$PAWSEY_PROJECT/$USER/tmp)
 echo -e "minimap2 -t 16 --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -\n" >&2;
-minimap2 -t 16 --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -
+minimap2 -t 64 --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -
 samtools index $HOST/$O
 
 

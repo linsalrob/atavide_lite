@@ -19,6 +19,10 @@ unless ($opts{s}) {$opts{s}="subsystems"}
 if ($opts{n}) {$opts{n} =~ s/\W//g}
 else {$opts{n}="atavide"}
 
+
+## Input format:
+
+# The original format we used was this, but note that the function is in columns 8 & 13. 
 # 0       UniRef50_L1JF06
 # 1       1
 # 2       0.636
@@ -34,6 +38,33 @@ else {$opts{n}="atavide"}
 # 12      Hopanoid biosynthesis --> Subsystem 
 # 13      Phytoene synthase (EC 2.5.1.32) --> Function
 # 14      0.5 --> Weighted count
+#
+# Then we updated the format and added the taxa in column 15. Then we updated the format again when we added mmseqs_add_subsystems_taxonomy_fast.slurm and
+# removed the redundant duplicate of the format.
+#
+# Now the format is:
+# 0       UniRef50_A0A5J4P836
+# 1       12
+# 2       0.954
+# 3       7.245
+# 4       0.653
+# 5       85831
+# 6       species
+# 7       Bacteroides acidifaciens
+# 8       Pyruvate,phosphate dikinase (EC 2.7.9.1)                8 --> Function
+# 9       Energy                                                  9 --> Class
+# 10      Energy and Precursor Metabolites Generation            10 --> Level 1
+# 11      Central Metabolism                                     11 --> Level 2
+# 12      Glycolysis and Gluconeogenesis                         12 --> Subsystem
+# 13      4.0                                                    13 --> Weighted count
+# 14      k__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides;s__Bacteroides acidifaciens --> taxonomy
+#
+## This version _only_ works on the 'newer' format from mmseqs_add_subsystems_taxonomy_fast.slurm which has one
+# less column (I removed the redundant function column). 
+# Its a bit of a mess because it means we have incompatible formats floating around
+# However, you can change the format essentially by changing the $weight_column variable
+
+my $weight_column = 13;
 
 # this is a REALLY memory inefficient way of doing this!
 my $class; my $ac;
@@ -60,6 +91,7 @@ if ($opts{m}) {
 }
 
 opendir(DIR, $opts{d}) || die "$! : $opts{d}";
+
 foreach my $sub (grep {$_ !~ /^\./} readdir(DIR)) {
 	# mmseqs/SAGCFN_22_00789_S34/SAGCFN_22_00789_S34_tophit_report_subsystems.gz
 	
@@ -86,23 +118,27 @@ foreach my $sub (grep {$_ !~ /^\./} readdir(DIR)) {
 	while (<IN>) {
 		chomp;
 		my @a=split /\t/;
-		$total{$id}+=$a[14]; ## this is the total of all reads
+		$total{$id}+=$a[$weight_column]; ## this is the total of all reads
 		next unless ($a[9]);
-		$sstotal{$id}+=$a[14]; ## this is the total of only those reads that have a subsystems match
-		$class->{$id}->{$a[9]} += $a[14];
+		$sstotal{$id}+=$a[$weight_column]; ## this is the total of only those reads that have a subsystems match
+		$class->{$id}->{$a[9]} += $a[$weight_column];
 		$ac->{$a[9]} = 1;
-		$lvl1->{$id}->{$a[10]} += $a[14];
+		$lvl1->{$id}->{$a[10]} += $a[$weight_column];
 		$al1->{$a[10]} = 1;
-		$lvl2->{$id}->{"$a[10]; $a[11]"} += $a[14];
+		$lvl2->{$id}->{"$a[10]; $a[11]"} += $a[$weight_column];
 		$al2->{"$a[10]; $a[11]"} = 1;
-		$ss->{$id}->{$a[12]} += $a[14];
+		$ss->{$id}->{$a[12]} += $a[$weight_column];
 		$ass->{$a[12]} = 1;
-		$all->{$id}->{"$a[9]; $a[10]; $a[11]; $a[12]"} += $a[14];
+		$all->{$id}->{"$a[9]; $a[10]; $a[11]; $a[12]"} += $a[$weight_column];
 		$aall->{"$a[9]; $a[10]; $a[11]; $a[12]"} = 1;
 	}
 	close IN;
 }
 
+
+if ($opts{v}) {
+	print STDERR Dumper($all);
+}
 
 my @allsub = sort {$a cmp $b} keys %allsub;
 mkdir "$opts{s}", 0755;

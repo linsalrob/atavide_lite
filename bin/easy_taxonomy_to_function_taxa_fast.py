@@ -72,6 +72,8 @@ def get_taxonomy(list_ids, known_taxonomies, logger):
             t = str(t)
             logger.debug(f"Converted {t} to str for {i}")
         known_taxonomies[i] = t
+    if logger:
+        logger.debug(known_taxonomies)
     return known_taxonomies
 
 

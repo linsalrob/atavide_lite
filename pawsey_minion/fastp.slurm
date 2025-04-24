@@ -34,5 +34,6 @@ READS=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)
 
 mkdir -p fastq_fastp
 echo "fastp -n 1 -l 100 -i fastq/$READS -o output/$READS --adapter_fasta ~/atavide_lite/adapters/IlluminaAdapters.fa " >&2
-fastp -n 1 -l 100 -i fastq/$READS -o fastq_fastp/$READS --adapter_fasta ~/atavide_lite/adapters/IlluminaAdapters.fa
+#fastp -n 1 -l 100 -i fastq/$READS -o fastq_fastp/$READS --adapter_fasta ~/atavide_lite/adapters/IlluminaAdapters.fa
+fastp -n 2 -l 50 -i fastq/$READS -o fastq_fastp/$READS --adapter_fasta ~/atavide_lite/adapters/IlluminaAdapters.fa
 

@@ -23,6 +23,8 @@ mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseq
 find fastq -type f -printf "%f\n" > reads.txt
 
 export NUM_R1_READS=$(wc -l reads.txt | cut -f 1 -d ' ')
+echo $NUM_R1_READS
+
 SRC=~/atavide_lite/pawsey_minion
 cp $SRC/DEFINITIONS.sh .
 
@@ -49,25 +51,4 @@ VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --export=ATAVIDE_CONDA=
 CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/checkm.slurm vamb/bins/ vamb/checkm)
 
 ```
-
-
-These are the jobs without any dependencies, in case you run them one at a time:
-
-```
-JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/fastp.slurm)
-HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/host_removal.slurm)
-FAJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/fastq2fasta.slurm)
-MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_easy_taxonomy.slurm)
-sbatch --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_taxonomy.slurm
-sbatch --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/read_fate.slurm
-SSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
-sbatch --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/count_subsystems.slurm
-MEGAHITJOB=$(sbatch  --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA --array=1-$NUM_R1_READS:1 $SRC/megahit.slurm)
-VCJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb_concat.slurm)
-VMJOB=$(sbatch --parsable  --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb_minimap.slurm)
-VAMBJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb.slurm)
-CHECKMJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/checkm.slurm vamb/bins/ vamb/checkm)
-
-```
-
 

@@ -21,10 +21,21 @@ A simpler version of atavide that relies only on slurm or PBS scripts. Some of t
 
 # different versions
 
+## Paired vs Single End
+
+In our modern processing, we have:
+ - Paired end reads from MGI or Illumina sequencing. Those files usually end `_R1.fastq.gz` and `_R2.fastq.gz`, and the code looks for those. 
+ - Single end reads from ONT sequencing. These files end `.fastq.gz`
+
+We have two versions of the pipeline that work with _either_ paired end or single end. 
+
+**However:** If you download some sequences from SRA, ENA, or DDBJ they may have paired end reads that end `_1.fastq.gz` and `_2.fastq.gz` in which case you should change the names (see the [README](pawsey_slurm/README.md) for a simple command). You might also have single reads that are Illumina sequencing, in which case, you should use the [pawsey minion](pawsey_minion/) pipeline to process that data.
+
 See the verions:
-   - [slurm](slurm/README.md) - designed to work on Flinders deepthought infrastructure
-   - [pbs](pbs/README.md) - designed to work on the NCI infrastructrue for now
-   - [minion pawsey](minion_pawsey)
+   - [pawsey slurm](pawsey_slurm) -- use this for paired end (R1 and R2) reads. Although it's designed to run on Pawsey's setonix, it will probably work on any system with a `/scratch` drive
+   - [pawsey minion](pawsey_minion) -- use this for single end reads. Also designed to run on Pawsey's setonix.
+   - [slurm](slurm/README.md) - designed to work on Flinders deepthought infrastructure. This is esoteric and probably not portable.
+   - [pbs](pbs/README.md) - designed to work on the NCI infrastructrue. 
 
 Currently the pipeline depends on these software
 
@@ -40,6 +51,8 @@ You can install all of these with:
 ```
 mamba env create -f ~/atavide_lite/atavide_lite.yaml
 ```
+
+Note: if you are using an ephemeral system like Pawsey, we also have a mechanism for making temporary conda installations. See  the [pawsey slurm](pawsey_slurm/README.md) or [pawsey minion](pawsey_minion/README.md) READMEs.
 
 
 If you use atavide light, please [cite it](citation.cff) and then please also [cite the other papers](references.bib) that describe these great tools.

@@ -6,6 +6,7 @@ This is the same scripts as in [../slurm](../slurm) but I've "optimised" this to
 # If you are processing a lot of SRA runs, you will run into 16S libraries. You can screen for them with
 
 ```
+mkdir -p slurm_output/sixteen_s
 sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/16S_detection.slurm
 
 ```

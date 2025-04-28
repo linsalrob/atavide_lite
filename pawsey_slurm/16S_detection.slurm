@@ -47,7 +47,7 @@ else
 	done
 fi
 
-QC=fastq_fastp
+FQ=fastq
 
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 R2=${R1/_R1/_R2}
@@ -68,8 +68,8 @@ if [[ ! -e $SIXS ]]; then
 	exit 2
 fi
 
-echo -e "minimap2 -t 16 --split-prefix=tmp$$ -a -xsr $SIXS $QC/$R1 $QC/$R2 | samtools view -bh | samtools sort -o 16S/bam/$O -" >&2;
-minimap2 -t 16 --split-prefix=tmp$$ -a -xsr $SIXS $QC/$R1 $QC/$R2 | samtools view -bh | samtools sort -o 16S/bam/$O -
+echo -e "minimap2 -t 16 --split-prefix=tmp$$ -a -xsr $SIXS $FQ/$R1 $FQ/$R2 | samtools view -bh | samtools sort -o 16S/bam/$O -" >&2;
+minimap2 -t 16 --split-prefix=tmp$$ -a -xsr $SIXS $FQ/$R1 $FQ/$R2 | samtools view -bh | samtools sort -o 16S/bam/$O -
 samtools index 16S/bam/$O
 
 

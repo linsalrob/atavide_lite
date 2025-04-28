@@ -3,6 +3,16 @@
 This is the same scripts as in [../slurm](../slurm) but I've "optimised" this to run on Pawsey. They are not optimised at all, but they run!
 
 
+# If you are processing a lot of SRA runs, you will run into 16S libraries. You can screen for them with
+
+```
+sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/16S_detection.slurm
+
+```
+grep 'primary mapped' slurm_output/sixteen_s/*out | perl -ne 'm/(\d+\.\d+)\%/; print "$1\n"' | sort -g | (sed -u 10q ; echo ; tail)
+grep 'primary mapped' slurm_output/sixteen_s/*out | perl -ne 'm/(\d+\.\d+)\%/; print "$1\n"' | awk '{s+=$1} END {print s/NR}'
+```
+
 # Create a new conda environment:
 
 ```

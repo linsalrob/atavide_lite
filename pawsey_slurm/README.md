@@ -3,9 +3,10 @@
 This is the same scripts as in [../slurm](../slurm) but I've "optimised" this to run on Pawsey. They are not optimised at all, but they run!
 
 
-# If you are processing a lot of SRA runs, you will run into 16S libraries. You can screen for them with
+# If you are processing a lot of SRA runs, you will run into 16S libraries. You can screen for them with this command that works on the fastq directory
 
 ```
+export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' ')
 mkdir -p slurm_output/sixteen_s
 sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/16S_detection.slurm
 

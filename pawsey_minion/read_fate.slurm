@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=ReadFate
-#SBATCH --time=0-1
+#SBATCH --time=0-10
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=64G

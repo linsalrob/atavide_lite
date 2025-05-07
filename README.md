@@ -1,7 +1,7 @@
 [![Edwards Lab](https://img.shields.io/badge/Bioinformatics-EdwardsLab-03A9F4)](https://edwards.sdsu.edu/research)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![GitHub language count](https://img.shields.io/github/languages/count/linsalrob/atavide_lite)
-[![DOI](https://www.zenodo.org/badge/671497428.svg)](https://www.zenodo.org/badge/latestdoi/671497428)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15356766.svg)](https://doi.org/10.5281/zenodo.15356766)
 
 # atavide lite
 

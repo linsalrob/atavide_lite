@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=mmTax
-#SBATCH --time=0-1
+#SBATCH --time=0-2
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=12G

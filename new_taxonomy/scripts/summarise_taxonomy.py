@@ -49,7 +49,13 @@ def parse_taxonomy(taxfile, output_directory):
             # just based on the most abundant
             #
             #
-            kng, phy, cls, orr, fam, gen, sp = p[8].split(";")
+
+            taxcol = -1
+            if ';p' not in p[taxcol]:
+                print(f"We expected the taxonomy to be in the {taxcol} th column, but it was not: {l.strip()}", file=sys.stderr)
+                continue
+
+            kng, phy, cls, orr, fam, gen, sp = p[taxcol].split(";")
 
 
             tax['kingdom'][kng] = tax['kingdom'].get(kng, 0) + 1

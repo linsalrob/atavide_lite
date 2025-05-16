@@ -38,7 +38,7 @@ for F in *_2.fastq.gz; do mv $F ${F/_2/_R2}; done
 
 ```
 mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm slurm_output/fastp_slurm
-find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt
+find fastq -name \*_R1\* -printf "%f\n" > R1_reads.txt
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' ')
 echo $NUM_R1_READS
 

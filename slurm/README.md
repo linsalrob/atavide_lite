@@ -53,10 +53,10 @@ mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseq
 Several of the steps will use the file `R1_reads.txt` to know which reads we have. Of course, `snakemake` doesn't need this, but at the moment I'm being very conservative and running each command separately via `slurm`. In addition, this allows me to use `$BGFS` which I don't know how to use with `snakemake`!
 
 ```
-find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt
+find fastq -name \*_R1\* -printf "%f\n" > R1_reads.txt
 NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' ')
 echo There are $NUM_R1_READS R1 readsA
-if [[ $(find fastq -name \*R2\* | awk 's++{} END {print s}') != $NUM_R1_READS ]]; then echo "There are a different number of R1 and R2 reads"; fi
+if [[ $(find fastq -name \*_R2\* | awk 's++{} END {print s}') != $NUM_R1_READS ]]; then echo "There are a different number of R1 and R2 reads"; fi
 ```
 
 
@@ -180,7 +180,7 @@ sbatch --parsable  --dependency=afterok:$VMAP $SRC/vamb_group.slurm
 
 ```
 mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm slurm_output/fastp_slurm
-find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt
+find fastq -name \*_R1\* -printf "%f\n" > R1_reads.txt
 
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' '); echo "There are $NUM_R1_READS reads"
 SRC=~/atavide_lite/slurm

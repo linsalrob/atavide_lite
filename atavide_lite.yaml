@@ -6,7 +6,7 @@ channels:
 dependencies:
    - samtools>=1.20
    - fastp
-   - minimap2
+   - minimap2>=2.29
    - checkm-genome
    - mmseqs2
    - megahit

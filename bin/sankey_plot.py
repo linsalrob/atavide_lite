@@ -7,6 +7,7 @@ import sys
 import argparse
 import logging
 from atavide_lib import stream_fastq
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 __author__ = 'Rob Edwards'
 
@@ -16,6 +17,18 @@ def count_fastq(fastq_file, logger=None):
     count = sum(1 for _ in stream_fastq(fastq_file))
     return count
 
+def count_all_for_read(r):
+    """
+    Given a read, count the number of sequences in the fastq files,
+    but we do it in parallel
+    """
+
+    return (
+        count_fastq(os.path.join(definitions["SOURCE"], r), logger=logging),
+        count_fastq(os.path.join("fastq_fastp", r), logger=logging),
+        count_fastq(os.path.join(definitions["HOST"], r), logger=logging),
+        count_fastq(os.path.join(definitions["NO_HOST"], r), logger=logging)
+    )
 
 def read_defintions(definitions_file, logger=None):
     """
@@ -62,29 +75,30 @@ if __name__ == "__main__":
     logging.info(f"Read filess: {len(reads)}")
 
     definitions = read_defintions(args.definitions, logger=logging)
-    r2_end = None
-    if 'FILEEND' in definitions:
+
+    reverse_reads = set()
+    if args.paired and 'FILEEND' in definitions:
         r2_end = definitions["FILEEND"].replace("R1", "R2")
+        for r in reads:
+            r2_file = r.replace(definitions["FILEEND"], r2_end)
+            reverse_reads.add(r2_file)
 
     # read the fastq files
     raw_fastq = 0
     trimmed_fastq = 0
     host = 0
     no_host = 0
-    for r in reads:
-        logging.info(f"Reading files for {r}")
-        raw_fastq += count_fastq(os.path.join(definitions["SOURCE"], r), logger=logging)
-        trimmed_fastq += count_fastq(os.path.join("fastq_fastp", r), logger=logging)
-        host += count_fastq(os.path.join(definitions["HOST"], r), logger=logging)
-        no_host += count_fastq(os.path.join(definitions["NO_HOST"], r), logger=logging)
+    with ThreadPoolExecutor() as executor:
+        futures = {executor.submit(count_all_for_read, r): r for r in reads, reverse_reads}
 
-        if r2_end and args.paired:
-            logging.info(f"Reading paired end reads for {r}")
-            r2_file = r.replace(definitions["FILEEND"], r2_end)
-            raw_fastq += count_fastq(os.path.join(definitions["SOURCE"], r2_file), logger=logging)
-            trimmed_fastq += count_fastq(os.path.join("fastq_fastp", r2_file), logger=logging)
-            host += count_fastq(os.path.join(definitions["HOST"], r2_file), logger=logging)
-            no_host += count_fastq(os.path.join(definitions["HOSTREMOVED"], r2_file), logger=logging)
+        for future in as_completed(futures):
+            r = futures[future]
+            logging.info(f"Reading files for {r}")
+            c_raw, c_trimmed, c_host, c_no_host = future.result()
+            raw_fastq += c_raw
+            trimmed_fastq += c_trimmed
+            host += c_host
+            no_host += c_no_host
 
     # now read the taxonomy outputs
     tax = {'Bacteria': 0, 'Archaea': 0, 'Eukaryota': 0, 'Viruses': 0, 'Multidomain': 0}
@@ -122,3 +136,12 @@ sequence similarity [{tax['Archaea']}] Archaea
 sequence similarity [{tax['Viruses']}] Virus
 sequence similarity [{tax['Multidomain']}] Multiclass
 """)
+
+
+
+
+
+
+
+
+

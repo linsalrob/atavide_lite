@@ -88,9 +88,8 @@ if __name__ == "__main__":
     trimmed_fastq = 0
     host = 0
     no_host = 0
-<<<<<<< HEAD
     with ThreadPoolExecutor() as executor:
-        futures = {executor.submit(count_all_for_read, r): r for r in reads, reverse_reads}
+        futures = {executor.submit(count_all_for_read, r): r for r in reads.union(reverse_reads)}
 
         for future in as_completed(futures):
             r = futures[future]
@@ -100,22 +99,6 @@ if __name__ == "__main__":
             trimmed_fastq += c_trimmed
             host += c_host
             no_host += c_no_host
-=======
-    for r in reads:
-        logging.info(f"Reading files for {r}")
-        raw_fastq += count_fastq(os.path.join(definitions["SOURCE"], r), logger=logging)
-        trimmed_fastq += count_fastq(os.path.join("fastq_fastp", r), logger=logging)
-        host += count_fastq(os.path.join(definitions["HOST"], r), logger=logging)
-        no_host += count_fastq(os.path.join(definitions["HOSTREMOVED"], r), logger=logging)
-
-        if r2_end and args.paired:
-            logging.info(f"Reading paired end reads for {r}")
-            r2_file = r.replace(definitions["FILEEND"], r2_end)
-            raw_fastq += count_fastq(os.path.join(definitions["SOURCE"], r2_file), logger=logging)
-            trimmed_fastq += count_fastq(os.path.join("fastq_fastp", r2_file), logger=logging)
-            host += count_fastq(os.path.join(definitions["HOST"], r2_file), logger=logging)
-            no_host += count_fastq(os.path.join(definitions["HOSTREMOVED"], r2_file), logger=logging)
->>>>>>> origin/main
 
     # now read the taxonomy outputs
     tax = {'Bacteria': 0, 'Archaea': 0, 'Eukaryota': 0, 'Viruses': 0, 'Multidomain': 0}

@@ -13,7 +13,7 @@ __author__ = 'Rob Edwards'
 
 def count_fastq(fastq_file, logger=None):
     if logger:
-        logger.warn(f"Counting sequences in {fastq_file}")
+        logger.warning(f"Counting sequences in {fastq_file}")
     count = sum(1 for _ in stream_fastq(fastq_file))
     return count
 
@@ -27,7 +27,7 @@ def count_all_for_read(r):
         count_fastq(os.path.join(definitions["SOURCE"], r), logger=logging),
         count_fastq(os.path.join("fastq_fastp", r), logger=logging),
         count_fastq(os.path.join(definitions["HOST"], r), logger=logging),
-        count_fastq(os.path.join(definitions["NO_HOST"], r), logger=logging)
+        count_fastq(os.path.join(definitions["HOSTREMOVED"], r), logger=logging)
     )
 
 def read_defintions(definitions_file, logger=None):
@@ -88,6 +88,7 @@ if __name__ == "__main__":
     trimmed_fastq = 0
     host = 0
     no_host = 0
+<<<<<<< HEAD
     with ThreadPoolExecutor() as executor:
         futures = {executor.submit(count_all_for_read, r): r for r in reads, reverse_reads}
 
@@ -99,6 +100,22 @@ if __name__ == "__main__":
             trimmed_fastq += c_trimmed
             host += c_host
             no_host += c_no_host
+=======
+    for r in reads:
+        logging.info(f"Reading files for {r}")
+        raw_fastq += count_fastq(os.path.join(definitions["SOURCE"], r), logger=logging)
+        trimmed_fastq += count_fastq(os.path.join("fastq_fastp", r), logger=logging)
+        host += count_fastq(os.path.join(definitions["HOST"], r), logger=logging)
+        no_host += count_fastq(os.path.join(definitions["HOSTREMOVED"], r), logger=logging)
+
+        if r2_end and args.paired:
+            logging.info(f"Reading paired end reads for {r}")
+            r2_file = r.replace(definitions["FILEEND"], r2_end)
+            raw_fastq += count_fastq(os.path.join(definitions["SOURCE"], r2_file), logger=logging)
+            trimmed_fastq += count_fastq(os.path.join("fastq_fastp", r2_file), logger=logging)
+            host += count_fastq(os.path.join(definitions["HOST"], r2_file), logger=logging)
+            no_host += count_fastq(os.path.join(definitions["HOSTREMOVED"], r2_file), logger=logging)
+>>>>>>> origin/main
 
     # now read the taxonomy outputs
     tax = {'Bacteria': 0, 'Archaea': 0, 'Eukaryota': 0, 'Viruses': 0, 'Multidomain': 0}

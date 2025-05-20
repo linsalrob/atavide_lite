@@ -12,7 +12,7 @@ __author__ = 'Rob Edwards'
 
 def count_fastq(fastq_file, logger=None):
     if logger:
-        logger.warn(f"Counting sequences in {fastq_file}")
+        logger.warning(f"Counting sequences in {fastq_file}")
     count = sum(1 for _ in stream_fastq(fastq_file))
     return count
 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         raw_fastq += count_fastq(os.path.join(definitions["SOURCE"], r), logger=logging)
         trimmed_fastq += count_fastq(os.path.join("fastq_fastp", r), logger=logging)
         host += count_fastq(os.path.join(definitions["HOST"], r), logger=logging)
-        no_host += count_fastq(os.path.join(definitions["NO_HOST"], r), logger=logging)
+        no_host += count_fastq(os.path.join(definitions["HOSTREMOVED"], r), logger=logging)
 
         if r2_end and args.paired:
             logging.info(f"Reading paired end reads for {r}")

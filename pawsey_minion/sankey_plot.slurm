@@ -5,8 +5,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=64GB
-#SBATCH -o sankey_plot-%j.out
-#SBATCH -e sankey_plot-%j.err
+#SBATCH -o slurm_output/sankey_plot-%j.out
+#SBATCH -e slurm_output/sankey_plot-%j.err
 
 set -euo pipefail
 

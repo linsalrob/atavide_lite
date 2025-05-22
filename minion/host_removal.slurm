@@ -31,24 +31,27 @@ READS=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)
 
 echo "Processing $READS" >&2;
 
-mkdir -p $HOST $HOSTREMOVED
+mkdir -p $BGFS/$HOST $BGFS/$HOSTREMOVED
 
 O=${READS/$FILEEND/.bam}
 if [[ $O == $READS ]]; then
 	echo "ERROR: OUTPUT $O and INPUT $READS are the same. Are you sure the files end $FILEEND?" >&2;
 	exit 1;
 fi
-TMPDIR=$(mktemp -d -p /scratch/$PAWSEY_PROJECT/$USER/tmp)
-echo -e "minimap2 -t 16 --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -\n" >&2;
-minimap2 -t 64 --secondary=no --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -
-samtools index $HOST/$O
+
+TMPDIR=$(mktemp -d -p $BGFS)
+echo -e "minimap2 -t 16 --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $BGFS/$HOST/$O -\n" >&2;
+minimap2 -t 64 --secondary=no --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $BGFS/$HOST/$O -
+samtools index $BGFS/$HOST/$O
 
 
 # Reads that match the host
-samtools fastq -F 3588 $HOST/$O | gzip -c > $HOST/$READS
+samtools fastq -F 3588 $BGFS/$HOST/$O | gzip -c > $BGFS/$HOST/$READS
 
 
 # Reads that do not match the host
 
-samtools fastq -F 3584 -f 4 $HOST/$O | gzip -c > $HOSTREMOVED/$READS
+samtools fastq -F 3584 -f 4 $BGFS/$HOST/$O | gzip -c > $BGFS/$HOSTREMOVED/$READS
 
+rsync -a $BGFS/$HOSTREMOVED/ $HOSTREMOVED/
+rsync -a $BGFS/$HOST/ $HOST/

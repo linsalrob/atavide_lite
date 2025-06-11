@@ -46,7 +46,6 @@ mkdir -p 16S/bam
 
 for R1 in $(cat R1_reads.txt); do
 	R2=${R1/_R1/_R2}
-	echo "Processing $R1 and $R2" >&2;
 
 
 	O=${R1/$FILEEND/.bam}
@@ -54,7 +53,13 @@ for R1 in $(cat R1_reads.txt); do
 		echo "ERROR: OUTPUT $O and INPUT $R1 are the same. Are you sure the R1 files end $FILEEND?" >&2;
 		exit 1;
 	fi
-
+	
+	if [[ -e 16S/bam/$O ]]; then
+		echo "Skipping $R1 as the output file 16S/bam/$O already exists" >&2;
+		continue;
+	fi
+	
+	echo "Processing $R1 and $R2" >&2;
 	echo -e "minimap2 -t 16 --split-prefix=tmp$$ -a -xsr $SIXS $FQ/$R1 $FQ/$R2 | samtools view -bh | samtools sort -o 16S/bam/$O -" >&2;
 	minimap2 -t 16 --split-prefix=tmp$$ -a -xsr $SIXS $FQ/$R1 $FQ/$R2 | samtools view -bh | samtools sort -o 16S/bam/$O -
 	samtools index 16S/bam/$O

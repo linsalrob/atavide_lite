@@ -3,7 +3,7 @@
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=128G
+#SBATCH --mem=12G
 #SBATCH -o slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.out
 #SBATCH -e slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.err
 

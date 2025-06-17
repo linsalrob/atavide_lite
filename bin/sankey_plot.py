@@ -169,7 +169,7 @@ if __name__ == "__main__":
             logging.info(f"Read files for {r}")
             c_raw, c_trimmed, c_host, c_no_host = future.result()
             count_data[r] = {'fastq': c_raw, 'trimmed': c_trimmed, 'host': c_host, 'no_host': c_no_host}
-            serialise(args.countdata)
+            serialise(count_data, args.countdata)
             raw_fastq += c_raw
             trimmed_fastq += c_trimmed
             host += c_host

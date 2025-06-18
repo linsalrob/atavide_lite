@@ -1,16 +1,21 @@
 # Generate a better taxonomy information for atavide
 
-We're going to use [taxonkit](https://bioinf.shenwei.me/taxonkit/) since they have put the work in to make it work
+We're going to use [taxonkit](https://bioinf.shenwei.me/taxonkit/) since they have put the hard work in to make it work well!
 
 # taxonkit
 
 ## data
 
-You need to download the NCBI data. You should then set the $TAXONKIT_DB environment 
+You need to download the NCBI taxonomy data. You should then set the $TAXONKIT_DB environment variable to
+point to the source of that data.
 
-taxonkit only requires names.dmp, nodes.dmp, delnodes.dmp and merged.dmp
+`taxonkit` only requires the following files: `names.dmp`, `nodes.dmp`, `delnodes.dmp`, and `merged.dmp`
 
-## set an environment variable
+_Note:_ There was a hiccup when NCBI updated their taxonomy format, but pytaxonkit has a fix for that, 
+so you either need to use the latest version of pytaxonkit or to use an older version of the NCBI taxonomy data. 
+You can find more details at this [pytaxonkit issue](https://github.com/bioforensics/pytaxonkit/issues/41)
+
+## Set an environment variable for taxonkit
 
 ```
 DATE=`date +%Y%m`
@@ -19,11 +24,14 @@ mkdir -p $TAXONKIT_DB
 cp names.dmp nodes.dmp delnodes.dmp merged.dmp $TAXONKIT_DB
 ```
 
-# snakemake
+# Snakemake
 
-You need snakemake version 7 to run this. Don't use version 8 at the moment, because it breaks a lot of things.
+This code will run with snakemake version 8 or higher, but you may need to install the 
+`snakemake-executor-plugin-cluster-generic` plugin to run it on a cluster (that is included
+in the `atavide_lite.yaml` conda environment).
 
-If you have a directory `mmseqs`, and in that directory you have a bunch of samples, each one is a directory, and in those you have the output from `mmseqs easy-taxonomy` like this:
+If you have a directory `mmseqs`, and in that directory you have a bunch of samples, each 
+one is a directory, and in those you have the output from `mmseqs easy-taxonomy` like this:
 
 ```
 mmseqs/
@@ -41,13 +49,16 @@ Then you can run the command:
 snakemake --profile slurm -s ~/GitHubs/atavide_lite/summarise_taxonomy/taxonomy.smk
 ```
 
-and it should make the `*.lca.taxonomy.tsv.gz` files for you
+and it will make the `*.lca.taxonomy.tsv.gz` files for you
 
 
 Once the snakemake has run, you can use this command:
 
 ```
-python ~/GitHubs/atavide_lite/summarise_taxonomy/scripts/join_taxonomies.py -t taxonomy -o taxonomy_summary/
+python ~/GitHubs/atavide_lite/summarise_taxonomy/scripts/join_taxonomies.py \
+   -t taxonomy -o taxonomy_summary/
 ```
 
-to create the summary file. I wasted a day trying to incorporate that into the snakemake, but failed, so just run it post-facto
+to create the summary file. 
+
+The slurm scripts run both these commands, so you don't need to run them separately.

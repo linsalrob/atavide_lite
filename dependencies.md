@@ -1,12 +1,21 @@
 # Software Dependencies
 
+checkm-genome
 fastp 
-minimap2
-mmseqs
 megahit
 megahit_toolkit 
-samtools
+minimap2>=2.29
+mmseqs2
+parallel
+pigz
+pytaxonkit
+rclone
 rsync
+samtools>=1.20
+snakemake
+snakemake-executor-plugin-cluster-generic
+sra-tools (for analysing SRA data)
+taxonkit
 vamb 
 
 # Compiled code
@@ -15,26 +24,10 @@ There are two compiled applications,
 `~/atavide_lite/bin/fastq2fasta` and 
 `~/atavide_lite/bin/fastg2gfa`
 
-You can compile this code:
+You can compile that code with the makefile we've provided.
 
 ```
 cd ~/atavide_lite/bin/
 make
 ```
-
-
-
-# Scripts
-
-You will need to these scripts, but they should come with the git repo
-	
-~/atavide_lite/bin/vamb_create_fasta.py
-~/atavide_lite/bin/count_subsystems.pl
-~/atavide_lite/bin/vamb_concatenate.py 
-~/atavide_lite/bin/easy_taxonomy_to_function.py
-~/atavide_lite/bin/mmseqs_report_to_table.py
-
-
-
-
 

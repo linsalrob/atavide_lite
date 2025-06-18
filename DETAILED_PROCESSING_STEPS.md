@@ -365,7 +365,7 @@ We have some optional steps that we run on some data, mainly when we run on data
 
 ## 16S detection
 
-We have a 16S detection pipeline that uses the [16SMicrobial.fasta.gz](broken link!) from 
+We have a 16S detection pipeline that uses the [16SMicrobial.fasta.gz](https://open.flinders.edu.au/ndownloader/files/55453691) from 
 [partie](https://github.com/linsalrob/partie/) to determine whether a run from the SRA is a 16S sample
 or a metagenome.
 

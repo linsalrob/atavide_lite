@@ -1,3 +1,16 @@
+# Executables and scripts
+
+These are additional scripts that we need to use for atavide lite. 
+
+Please make the binary files with the following commands before you start using atavide lite. 
+
+```bash
+make all
+```
+
+Most of the standalone scripts layer additional information into the output files from other code.
+
+
 # Dependencies
 
 These are some of the dependencies that `atavide\_light` depends upon. You can compile the `C` code by using the [Makefile](Makefile) by typing just `make`.

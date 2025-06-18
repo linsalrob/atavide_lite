@@ -1,8 +1,9 @@
 # Process a metagenome through Rob's 2023 pipeline
 
-This pipeline consists of several separate slurm/perl/python scripts, and we probably want to clean it up at some point. 
+This pipeline consists of several separate slurm/python scripts.
 
-For this version, you will need a file `DEFINITIONS.sh` that defines some variables that the scripts use. Notably, the `$FILEEND` variable is used to remove the `.fastq.gz` and other parts of the filename so that you end up with meaningful names. We use this for the R1 filename only.
+You will need a file `DEFINITIONS.sh` that defines some variables that the scripts use. Notably, the `$FILEEND` variable is used 
+to remove the `.fastq.gz` and other parts of the filename so that you end up with meaningful names. We use this for the R1 filename only.
 
 For example, you might want one of these:
 
@@ -32,7 +33,7 @@ Clone the atavide lite repository to your home directory, and make the compiled 
 git clone https://github.com/linsalrob/atavide_lite.git
 cd atavide_lite/bin
 make
-SRC=~/atavide_lite/slurm
+SRC=~/atavide_lite/deepthought_slurm
 ```
 
 0b. Set up the conda environment
@@ -96,7 +97,7 @@ sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_taxonomy.slurm
 4b. Add the subsystems to the taxonomy
 
 ```
-SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 $SRC/mmseqs_add_subsystems_taxonomy.slurm)
+SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 $SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
 sbatch --dependency=afterok:$SSJOB $SRC/count_subsystems.slurm
 ```
 
@@ -183,7 +184,7 @@ mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseq
 find fastq -name \*_R1\* -printf "%f\n" > R1_reads.txt
 
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' '); echo "There are $NUM_R1_READS reads"
-SRC=~/atavide_lite/slurm
+SRC=~/atavide_lite/deepthought_slurm
 cp $SRC/DEFINITIONS.sh .
 
 # edit the DEFINITIONS file to change the sample name
@@ -194,7 +195,7 @@ HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB 
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)
 sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_taxonomy.slurm
-SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 $SRC/mmseqs_add_subsystems_taxonomy.slurm)
+SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 $SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
 sbatch --dependency=afterok:$SSJOB $SRC/count_subsystems.slurm
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_READS:1 $SRC/megahit.slurm)
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB $SRC/vamb_concat.slurm)

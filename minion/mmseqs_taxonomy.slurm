@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 conda activate atavide_lite
 
 
-snakemake -s ~/GitHubs/atavide_lite/new_taxonomy/taxonomy.smk --profile slurm 
-python ~/GitHubs/atavide_lite/new_taxonomy/scripts/join_taxonomies.py -t taxonomy -o taxonomy_summary/ -n $SAMPLENAME
+snakemake -s ~/GitHubs/atavide_lite/summarise_taxonomy/taxonomy.smk --profile slurm 
+python ~/GitHubs/atavide_lite/summarise_taxonomy/scripts/join_taxonomies.py -t taxonomy -o taxonomy_summary/ -n $SAMPLENAME

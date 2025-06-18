@@ -1,19 +1,21 @@
 
 # A bash script to run atavide_lite on a single R1 and R2 file
 
+
 ##################################################################
 #                                                                #
-# Step 1. Install the software we need!                          #
+# Define your conda environment and the different                #
+# files that you want to use for host, etc here.                 #
+#                                                                #
+#                                                                #
 #                                                                #
 ##################################################################
 
+ATAVIDE_CONDA=atavide_lite
+eval "$(conda shell.bash hook)"
+conda activate $ATAVIDE_CONDA
 
-
-mamba install -y fastp samtools minimap2 megahit mmseqs2
-
-# we create a new environment for VAMB because it has some odd python dependencies
-mamba create -yn vamb vamb
-
+HOSTFILE=$HOME/Downloads/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
 
 ##################################################################
 #                                                                #
@@ -46,10 +48,12 @@ echo "We are processing fastq/$R1 and fastq/$R2"
 #  Step 3. Run fastp to trim adapters and remove low quailty     #
 #          sequencces.                                           #
 #                                                                #
+#  This comes from fastp.slurm                                   #
+#                                                                #
 ##################################################################
 
 mkdir --parents fastq_fastp
-fastp -n 1 -l 100 -i fastq/$R1 -I fastq/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R2 --adapter_fasta ~/GitHubs/atavide_lite/adapters/IlluminaAdapters.fa --thread 8 
+fastp -n 1 -l 100 -i fastq/$R1 -I fastq/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R2 --adapter_fasta $HOME/atavide_lite/adapters/IlluminaAdapters.fa --thread 16
 
 ##################################################################
 #                                                                #
@@ -57,14 +61,20 @@ fastp -n 1 -l 100 -i fastq/$R1 -I fastq/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R
 #          genome. We use the human genome from NCBI             #
 #          see: https://linsalrob.github.io/ComputationalGenomicsManual/Deconseq #
 #                                                                #
+#  This comes from host_removal.slurm                            #
+#                                                                #
 ##################################################################
 
 mkdir human_mapped
-minimap2 -t 8  --split-prefix=tmp$$ -a -xsr  ~/Downloads/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz fastq_fastp/$R1 fastq_fastp/$R2  | samtools view -bh - > human_mapped/output.bam
+minimap2 -t 16 --split-prefix=tmp$$ -a -xsr $HOSTFILE fastq_fastp/$R1 fastq_fastp/$R2 | samtools view -bh | samtools sort -o  human_mapped/output.bam -
+samtools fastq -F 3588 -f 65 host_bamfiles/output.bam | gzip -c > human_mapped/$R1
+samtools fastq -F 3588 -f 129 host_bamfiles/output.bam | gzip -c > human_mapped/$R2
 
 ##################################################################
 #                                                                #
 #  Step 5. Separate human and non-human data using samtools      #
+#                                                                #
+#  This comes from host_removal.slurm                            #
 #                                                                #
 ##################################################################
 

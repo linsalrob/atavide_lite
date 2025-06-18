@@ -41,6 +41,6 @@ python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f $BGFS/${BASE
 echo `date` "easy_taxonomy_to_function_taxa complete" >&2
 
 pigz $BGFS/${BASE}_tophit_report_subsystems_taxa 
-mkdir -p mmseqs/${BASE}_fast
-mv -f $BGFS/${BASE}_tophit_report_subsystems_taxa.gz mmseqs/${BASE}_fast/${BASE}_tophit_report_subsystems_taxa.gz
+mkdir -p mmseqs/${BASE}
+mv -f $BGFS/${BASE}_tophit_report_subsystems_taxa.gz mmseqs/${BASE}/${BASE}_tophit_report_subsystems_taxa.gz
 

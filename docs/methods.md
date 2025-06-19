@@ -1,4 +1,4 @@
-#Metagenomics Analysis With Atavide
+# Metagenomics Analysis With Atavide
 
 To address the limitations of monolithic metagenomic workflows, we developed `atavide_lite`, 
 a modular, script-based pipeline that decouples computational processes to enhance robustness,

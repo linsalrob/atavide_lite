@@ -163,7 +163,7 @@ cython_debug/
 # compiled code
 fastg2gfa
 fastq2fasta
-
+fasta_split
 
 # jetbrains
 .idea/

@@ -15,7 +15,15 @@ for SRR in $(cat reads); do echo $SRR; fasterq-dump $SRR --outdir fasta --fasta-
 
 However, this results in interleaved fasta sequences, so we need to separate them:
 
-We separate the fasta files into R1 and R2 reads using [fasta_split](https://github.com/linsalrob/EdwardsLab/blob/master/bin/fasta_split.c).
+We separate the fasta files into R1 and R2 reads using `fasta_split` which is provided in `bin`. Compile that with `make` and then split the files.
+
+```bash
+for F in $(find fasta_unsplit/ -type f -printf "%f\n"); do 
+	$HOME/atavide_lite/bin/fasta_split fasta_unsplit/$F fasta/${F/.fasta/_R1.fasta} fasta/${F/.fasta/_R2.fasta}; 
+	pigz fasta/${F/.fasta/_R1.fasta} & pigz fasta/${F/.fasta/_R2.fasta};
+	wait
+done
+```
 
 # Step 1. QC and trimming
 
@@ -37,4 +45,6 @@ We have a (pbs script](human.pbs) that trims out the R1 and R2 reads, and create
 ```
 bash ~/GitHubs/atavide_lite/pbs/fasta/human_submit.sh cutadapt
 ```
+
+
 

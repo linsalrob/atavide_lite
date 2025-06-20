@@ -130,3 +130,5 @@ but is available from the compute nodes.
 
 Gadi uses PBS for scheduling a `/g/data` drive that is used for temporary storage. Gadi does not allow array jobs, so 
 we have to run each step separately.
+
+Gadi also has fast local drives that are accessible from compute nodes, and they are at `$PBS_JOBFS`

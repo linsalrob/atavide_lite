@@ -128,4 +128,5 @@ but is available from the compute nodes.
 
 ## NCI's [Gadi](https://nci.org.au/)
 
-Gadi uses PBS for scheduling a `/g/data` drive that is used for temporary storage
+Gadi uses PBS for scheduling a `/g/data` drive that is used for temporary storage. Gadi does not allow array jobs, so 
+we have to run each step separately.

@@ -18,11 +18,21 @@ conda activate bioinformatics
 
 mkdir -p human no_human
 mkdir -p $PBS_JOBFS/human_mapped/ $PBS_JOBFS/human $PBS_JOBFS/no_human
+DB=$HOME/databases/human/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
 
-
-if [[ ${R1:-} ]]; then
+if [[ ${R1:-} ]] && [[ ${R2:-} ]]; then
 	OUTR1=`basename $R1`
-	minimap2 -t 8  --split-prefix=$PBS_JOBFS/tmp$$ -a -xsr  ~/databases/human/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz $R1 \
+	OUTR2=`basename $R2`
+	minimap2 -t 8  --split-prefix=$PBS_JOBFS/tmp$$ -a -xsr  $DB $R1 $R2 \
+		| samtools view -bh - > $PBS_JOBFS/human_mapped/$OUTR1.bam
+	samtools index $PBS_JOBFS/human_mapped/$OUTR1.bam
+	samtools fasta -F 3588 -f 65  $PBS_JOBFS/human_mapped/$OUTR1.bam | pigz -c > $PBS_JOBFS/human/$OUTR1
+	samtools fasta -F 3588 -f 129 $PBS_JOBFS/human_mapped/$OUTR1.bam | pigz -c > $PBS_JOBFS/human/$OUTR2
+	samtools fasta -F 3584 -f 77  $PBS_JOBFS/human_mapped/$OUTR1.bam | pigz -c > $PBS_JOBFS/no_human/$OUTR1
+	samtools fasta -F 3584 -f 141 $PBS_JOBFS/human_mapped/$OUTR1.bam | pigz -c > $PBS_JOBFS/no_human/$OUTR2
+elif [[ ${R1:-} ]]; then
+	OUTR1=`basename $R1`
+	minimap2 -t 8  --split-prefix=$PBS_JOBFS/tmp$$ -a -xsr  $DB $R1 \
 	 | samtools view -bh - > $PBS_JOBFS/human_mapped/$OUTR1.bam
 
 	# reads that match the host
@@ -30,9 +40,7 @@ if [[ ${R1:-} ]]; then
 
 	# reads that don't match the host
 	samtools fasta -F 3584 $PBS_JOBFS/human_mapped/$OUTR1.bam | pigz -c > $PBS_JOBFS/no_human/$OUTR1
-fi
-
-if [[ ${R2:-} ]]; then
+elif [[ ${R2:-} ]]; then
 	OUTR2=`basename $R2`
 	minimap2 -t 8  --split-prefix=$PBS_JOBFS/tmp$$ -a -xsr  ~/databases/human/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz $R2 \
 	 | samtools view -bh - > $PBS_JOBFS/human_mapped/$OUTR2.bam

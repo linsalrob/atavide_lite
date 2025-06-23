@@ -24,4 +24,4 @@ fi
 OUT=${IN/_report.gz/_report_subsystems.gz}
 if [[ -e $OUT ]]; then echo "Nothing to do for $IN writing to $OUT" 2>&1; exit 0; fi
 
-python ~/GitHubs/atavide_lite/bin/easy_taxonomy_to_function.py -f $IN -d /home/584/re3494/databases/uniref.sqlite | gzip -c >  $OUT
+python ~/GitHubs/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f $IN -d /home/584/re3494/databases/uniref.sqlite | gzip -c >  $OUT

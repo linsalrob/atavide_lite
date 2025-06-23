@@ -32,11 +32,12 @@ _Assembly and metagenome-assembled genome (MAG) recovery_. _De novo_ assembly is
 out for each sample independently using megahit, avoiding the memory constraints associated 
 with cross-assemblies. Contigs from all samples are concatenated and binned using `vamb`, which 
 employs a variational autoencoder for clustering based on tetranucleotide frequencies and 
-abundance profiles. Read mapping for abundance estimation is performed using `minimap2`.
+abundance profiles. Read mapping for abundance estimation is performed using `minimap2`. To 
+validate MAG quality, we apply `checkm`, assessing completeness and contamination for bins derived
+from both unsplit and split clusters. 
 
-To validate MAG quality, we apply `checkm`, assessing completeness and contamination for bins derived
-from both unsplit and split clusters. For stratified analyses 
-(e.g. ecological or host-based subsets), we support grouped VAMB binning using a user-defined
+_Common user modifications._ For stratified analyses (e.g. ecological or host-based subsets), we 
+support grouped VAMB binning using a user-defined
 TSV mapping of samples to groups, followed by independent execution of the concatenation, 
 mapping, and binning steps per group.
 

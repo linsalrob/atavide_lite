@@ -8,8 +8,7 @@ fi
 
 SOURCE=$1
 DEST=mmseqs
-SCRIPT=~/GitHubs/atavide_lite/pbs/fasta/mmseqs_easy_taxonomy.pbs
-# qsub -v R1=no_human/SRR19051624_R1.fasta.gz,R2=no_human/SRR19051624_R2.fasta.gz atavide_lite/mmseqs_easy_taxonomy.pbs
+SCRIPT=~/GitHubs/atavide_lite/nci_pbs/fasta/mmseqs_easy_taxonomy.pbs
 
 FAFILEEND="_R1.fasta.gz"
 

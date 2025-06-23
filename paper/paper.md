@@ -10,9 +10,35 @@ authors:
     orcid: 0000-0001-8383-8949
     equal-contrib: false
     affiliation: 1
+  - name: Belinda Martin
+    orcid: 0000-0003-4696-1694
+    affiliation: 1
+  - name: Michael P. Doane
+    orcid: 0000-0001-9820-2193
+    affiliation: 1
+  - name: Bhavya Papudeshi
+    orcid: 0000-0001-5359-3100
+    affiliation: 1
+  - name: Susanna R. Grigson
+    orcid: 0000-0003-4738-3451
+    affiliation: 1
+  - name: George Bouras
+    orcid: 0000-0002-5885-4186
+    affiliation: 1,2
+  - name: Michael J. Roach
+    orcid: 0000-0003-1488-5148
+    affiliation: 1
+  - name: Vijini Mallawaarachchi
+    orcid: 0000-0002-2651-8719
+    affiliation: 1
+  - name: Elizabeth Dinsdale
+    orcid: 0000-0002-2177-203X
+    affiliation: 1
 affiliations:
  - name: Flinders Accelerator for Microbiome Exploration, Flinders University, Bedford Park, South Australia, 5042, Australia
    index: 1
+ - name: The Department of Surgery -- Otolaryngology Head and Neck Surgery, University of Adelaide and the Basil Hetzel Institute for Translational Health Research, Adelaide, South Australia 5070, Australia
+   index: 2
 date: 1 July 2025
 bibliography: paper.bib
 ---

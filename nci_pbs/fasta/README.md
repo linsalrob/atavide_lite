@@ -33,7 +33,7 @@ The code [cutadapt_submit.sh](cutadapt_submit.sh) will submit everything in the 
 
 
 ```
-bash ~/GitHubs/atavide_lite/pbs/fasta/cutadapt_submit.sh fasta_split/
+bash ~/GitHubs/atavide_lite/nci_pbs/fasta/cutadapt_submit.sh fasta_split/
 ```
 
 
@@ -43,8 +43,13 @@ We have a (pbs script](human.pbs) that trims out the R1 and R2 reads, and create
 
 
 ```
-bash ~/GitHubs/atavide_lite/pbs/fasta/human_submit.sh cutadapt
+bash ~/GitHubs/atavide_lite/nci_pbs/fasta/human_submit.sh cutadapt
 ```
 
+# Step 3. Run mmseqs easy-taxonomy against the non-human data
+
+```
+bash ~/GitHubs/atavide_lite/nci_pbs/fasta/mmseqs_et_submit.sh no_human/
+```
 
 

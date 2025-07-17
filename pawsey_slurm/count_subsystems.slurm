@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=64G
-#SBATCH -o count_ss-%j.out
-#SBATCH -e count_ss-%j.err
+#SBATCH -o slurm_output/count_ss-%j.out
+#SBATCH -e slurm_output/count_ss-%j.err
 
 
 if [[ ! -e DEFINITIONS.sh ]]; then

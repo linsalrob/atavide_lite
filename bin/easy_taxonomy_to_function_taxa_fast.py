@@ -66,7 +66,7 @@ def get_taxonomy(list_ids, known_taxonomies, logger):
     """
     Get the taxonomy for a list of ids
     """
-    tax_res = pytaxonkit.lineage(list_ids, prefix=True)
+    tax_res = pytaxonkit.lineage(list_ids, formatstr="d__{domain|acellular root|superkingdom};p__{phylum};c__{class};o__{order};f__{family};g__{genus};s__{species}")
     for i, t in zip(list_ids, tax_res['Lineage']):
         if not isinstance(t, str):
             t = str(t)

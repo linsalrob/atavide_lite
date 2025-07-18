@@ -71,4 +71,17 @@ CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm v
 ```
 
 
+Note: Even with the _fast_ implementation of adding functions to taxonomy, there is still an issue with the code timing out. You can rerun the code
+and it will read the last results and then continue from there.
 
+Check for failed jobs:
+
+```
+grep CANCELLED slurm_output/mmseqs_slurm/*err
+```
+
+Rerun just the failed jobs (in this example, it was #3 and 18 that failed to finish):
+
+```
+SSJOB=$(sbatch --parsable  --array=3,18 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA   $PAWSEY_SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
+```

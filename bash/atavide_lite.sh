@@ -142,7 +142,7 @@ python ~/GitHubs/atavide_lite/summarise_taxonomy/scripts/join_taxonomies.py -t t
 #                                                                #
 ##################################################################
 
-python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f mmseqs/atavide_tophit_report.gz -d $UNIREFUNC > mmseqs/atavide_tophit_report_subsystems_taxa
+python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f mmseqs/atavide_tophit_report.gz -d $UNIREFUNC -o mmseqs/atavide_tophit_report_subsystems_taxa
 pigz mmseqs/atavide_tophit_report_subsystems_taxa
 
 ##################################################################

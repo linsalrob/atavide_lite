@@ -43,6 +43,9 @@ MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FA
 
 # note: If you don't need those two, then submit the next line and use MMSEQSDLD=$JOB; HUMANDLDJOB=$JOB
 
+export NUM_R1_READS=$(wc -l reads.txt | cut -f 1 -d ' ')
+echo $NUM_R1_READS
+
 JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/fastp.slurm)
 HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/host_removal.slurm)
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/fastq2fasta.slurm)

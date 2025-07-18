@@ -42,8 +42,8 @@ fi
 
 mkdir -p $BGFS/mmseqs/$BASE/
 cp mmseqs/$BASE/${BASE}_tophit_report.gz $BGFS/mmseqs/$BASE/
-echo `date` "Running $0 -f $BGFS/mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite > $BGFS/mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa" >&2
-python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f $BGFS/mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite > $BGFS/mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa
+echo `date` "Running ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f $BGFS/mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite -o $BGFS/mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa" >&2
+python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f $BGFS/mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite -o $BGFS/mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa
 echo `date` "easy_taxonomy_to_function_taxa complete" >&2
 
 pigz $BGFS/mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa 

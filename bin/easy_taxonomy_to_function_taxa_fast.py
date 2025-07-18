@@ -82,6 +82,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', help='mmseqs easy_taxonomy tophit_report.gz', required=True)
     parser.add_argument('-d', help='sqlite3 database of trembl, sprot, seed',
                         default="dummy_database.sqlite")
+    parser.add_argument('-o', '--output', help='output file, if not specified, will print to stdout')
     parser.add_argument('-q', '--max_queries', type=int, default=2000,
                         help='maximum number of simultaneous queries (more requires more memory!)',)
     parser.add_argument('-l', '--log', help='log file')
@@ -121,6 +122,37 @@ if __name__ == "__main__":
     logger.info(f"Reading data from {args.f}")
     new_taxonomies = set()
 
+    # if the output file exists we back it up and then later we read it and write it to the new file
+    if args.output and os.path.exists(args.output):
+        backup_file = args.output + ".bak"
+        if os.path.exists(backup_file):
+            os.remove(backup_file)
+        os.rename(args.output, backup_file)
+
+    # set output to stdout if no output file is specified
+    if args.output:
+        if args.output.endswith('.gz'):
+            output_file = gzip.open(args.output, 'wt')
+        else:
+            output_file = open(args.output, 'w')
+    else:
+        output_file = sys.stdout
+
+    # read the backup file and write to the output. We need to remember the first column so we can
+    # skip it later
+    done = set()
+    if args.output and os.path.exists(backup_file):
+        logger.info(f"Reading backup file {backup_file} to output")
+        with gzip.open(backup_file, 'rt') if backup_file.endswith('.gz') else open(backup_file, 'r') as f:
+            for ln in f:
+                p = ln.strip().split("\t")
+                if len(p) < 8:
+                    logger.error(f"Line in backup file {backup_file} is malformed: {ln.strip()}")
+                    continue
+                # remember the first column in done and print everything
+                done.add(p[0])
+                print(ln.strip(), file=output_file)
+
     with gzip.open(args.f, 'rt') if args.f.endswith('.gz') else open(args.f, 'r') as f:
         for ln in f:
             p = ln.strip().split("\t")
@@ -133,6 +165,10 @@ if __name__ == "__main__":
             # (5) taxonomy id eg: 1077464
             # (6) rank eg: subspecies
             # (7) scientific name: Streptococcus oralis subsp.tigurinus
+
+            if p[0] in done:
+                # we have already processed this line
+                continue
 
             m = urs.match(p[0])
             tax = ""
@@ -169,13 +205,13 @@ if __name__ == "__main__":
                             frac = data[k]['count'] / len(ss[fns[k]])
                             for s in ss[fns[k]]:
                                 output = data[k]['results'] + [fns[k]] + s + [str(frac), taxonomy_cache[data[k]['taxid']]]
-                                print("\t".join(output))
+                                print("\t".join(output), file=output_file)
                         else:
                             output = data[k]['results'] + fn_ss + [str(data[k]['count']), taxonomy_cache[data[k]['taxid']]]
-                            print("\t".join(output))
+                            print("\t".join(output), file=output_file)
                     data = {}
             else:
                 print(f"Can't parse ID from {p[0]}", file=sys.stderr)
-                print("\t".join(p + ["", "", "", "", "", "", p[1], ""]))
+                print("\t".join(p + ["", "", "", "", "", "", p[1], ""]), file=output_file)
 
     con.close()

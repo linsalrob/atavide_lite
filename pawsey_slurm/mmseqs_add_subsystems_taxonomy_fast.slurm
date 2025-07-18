@@ -59,8 +59,8 @@ if [[ -e mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa.gz ]]; then
 fi
 
 
-echo `date` "Running $0 -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite > mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa" >&2
-python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite > mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa
+echo `date` "Running ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite -o mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa" >&2
+python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite -o mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa
 echo `date` "easy_taxonomy_to_function_taxa complete" >&2
 
 pigz mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa 

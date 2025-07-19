@@ -53,7 +53,9 @@ rule list_taxonomy:
         mem_mb=16000
     shell:
         """
-        zcat {input.lca} | awk '!s[$2]++ {{print $2}}' | taxonkit lineage | taxonkit reformat -P | awk -F"\t" -v OFS="\t" '{{print $1,$3}}' | gzip -c > {output.tk} 
+        zcat {input.lca} | awk '!s[$2]++ {{print $2}}' | taxonkit lineage | \
+                taxonkit reformat2 -f "d__{{domain|acellular root|superkingdom}};p__{{phylum}};c__{{class}};o__{{order}};f__{{family}};g__{{genus}};s__{{species}}" | \
+                awk -F"\t" -v OFS="\t" '{{print $1,$3}}' | gzip -c > {output.tk} 
         """
 
 

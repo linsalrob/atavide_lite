@@ -123,6 +123,7 @@ if __name__ == "__main__":
     new_taxonomies = set()
 
     # if the output file exists we back it up and then later we read it and write it to the new file
+    backup_file = ""
     if args.output and os.path.exists(args.output):
         backup_file = args.output + ".bak"
         if os.path.exists(backup_file):
@@ -218,4 +219,4 @@ if __name__ == "__main__":
 
     # remove the backup file if it exists
     if args.output and os.path.exists(backup_file):
-        os.remove(backup_file)
+            os.remove(backup_file)

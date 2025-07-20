@@ -127,7 +127,7 @@ find mmseqs -type f  | parallel -j 32 gzip
 #                                                                #
 #  Step 8. Summarise the taxonomy from the mmseqs output         #
 #                                                                #
-#  This comes from mmseqs_taxonomy.slurm                         #
+#  This comes from mmseqs_summarise_taxonomy.slurm               #
 #                                                                #
 ##################################################################
 
@@ -138,7 +138,7 @@ python ~/GitHubs/atavide_lite/summarise_taxonomy/scripts/join_taxonomies.py -t t
 #                                                                #
 #  Step 9. add the subsystems omy from the mmseqs output         #
 #                                                                #
-#  This comes from mmseqs_taxonomy.slurm                         #
+#  This comes from mmseqs_summarise_taxonomy.slurm               #
 #                                                                #
 ##################################################################
 

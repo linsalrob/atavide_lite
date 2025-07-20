@@ -206,7 +206,7 @@ There was a design decision here to use the [pytaxonkit](https://github.com/biof
 additional compute step, but it doesn't take a massive amount of time because its just parsing text files.
 
 ```bash
-sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_taxonomy.slurm
+sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_summarise_taxonomy.slurm
 ```
 
 9. Add the subsystems to the taxonomy
@@ -342,7 +342,7 @@ JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 $SRC/fastp.slurm)
 HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB $SRC/host_removal.slurm)
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)
-sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_taxonomy.slurm
+sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_summarise_taxonomy.slurm
 SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 $SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
 sbatch --dependency=afterok:$SSJOB $SRC/count_subsystems.slurm
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_READS:1 $SRC/megahit.slurm)

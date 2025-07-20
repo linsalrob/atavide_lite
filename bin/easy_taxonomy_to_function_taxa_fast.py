@@ -215,3 +215,7 @@ if __name__ == "__main__":
                 print("\t".join(p + ["", "", "", "", "", "", p[1], ""]), file=output_file)
 
     con.close()
+
+    # remove the backup file if it exists
+    if args.output and os.path.exists(backup_file):
+        os.remove(backup_file)

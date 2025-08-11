@@ -44,23 +44,26 @@ bibliography: paper.bib
 ---
 
 # Summary
-`atavide lite` is a metagenomics processing pipeline that separates the component parts into
-individual steps, allowing users to run only the steps they need. Through experience, we have 
-eschewed the use of all-in-one pipelines, but have created a set of modular steps that can be
-applied to complex, multi-sample, multi-technology datasets. Together, the atavide-lite processes
-combine both read-based and assembly-based approaches to metagenome processing, and can be used
-with paired-end or long-read sequencing data. 
+`atavide lite` is a modular metagenomics processing pipeline designed to handle complex, 
+multi-sample, multi-technology datasets. Instead of a single monolithic workflow, it
+separates processing into discrete, independent steps, allowing users to run only what they need,
+retry failed components without restarting the entire workflow, and optimise
+resource use for their specific environment. The pipeline integrates both read-based 
+and assembly-based approaches, and supports both paired-end short reads and long-read sequencing data.
+
 
 # Statement of need
 
-There are many metagenomics pipelines available, and include both web-based pipelines like MG-RAST 
-`[@Meyer2008-mw:2008]`, and many, many command-line pipelines 
+Numerous metagenomics pipelines exist, from web-based systems like MG-RAST `[@Meyer2008-mw:2008]`, to a proliferation of command-line pipelines 
 `[e.g. @Clarke2019-go:2019; @Laudadio2019-og:2019; @Lu2022-yw:2022; @Garfias-Gallegos2022-cy:2022; @Walker2022-yo:2022; 
 @Blanco-Miguez2023-ej:2023; @Tyagi2024-wl:2024; @Roach2024-qn:2024]`. Workflow management systems like Nextflow 
 `[@Di_Tommaso2017-ir:2017]` and Snakemake `[@Koster2012-qn:2012]` streamlined the creation of pipelines
-for bioinformatics analysis, including metagenomics. However, the two major issues with these pipelines
-is that they are often fragile, susceptible to breaking when processing thousands of datasets, and 
-they struggle to adapt to the nuances of different computational environments.
+for bioinformatics analysis, including metagenomics. However, large-scale, real-world deployments reveal two persistent problems:
+
+1. Fragility at scale When processing thousands of datasets, failures such as incomplete SRA downloads or database search timeouts can halt an entire run.
+
+2. Poor portability across HPC environments: Optimising for one cluster often breaks performance or compatibility on 
+another, especially when each platform has idiosyncratic storage, job scheduling, and runtime constraints.
 
 For example, when processing thousands of samples from the Sequence Read Archive (SRA) 
 `[@Leinonen2011-yd:2011]`, we found that some samples failed to download, and we had to 
@@ -69,19 +72,22 @@ comparing sequence reads to a database of reference sequences using MMSeqs `[@St
 the computation occasionally times out because of limitations of the compute environment, 
 or the computation fails for a variety of other reasons.
 
-Finally, each of the computational platforms we use has nuances for the most
+Our own experience highlighted these issues. Each of the computational platforms we use has nuances for the most
 efficient computational processing. For example, our local HPC has a very fast local disk which
 is available from a non-standard location and is only available to compute nodes. The Australian 
 National Computational Infrastructure's Gadi system does not support large array jobs. The 
 Pawsey Supercomputing Centre's Setonix system regularly deletes files on their "/scratch" 
 disk, but has a large S3 storage system that is available to all compute nodes.
 
-Therefore, we created a set of modular steps that can be run independently, and that are optimised
-for each of the computational platforms we use. We include generic scripts that should be suitable
-for any platform, but we encourage users to adapt the scripts to the nuances of their own
-computational environment.
+atavide_lite addresses these challenges by replacing an "all-or-nothing" execution model with 
+independent, platform-optimised steps. We provide generic scripts that will run on most clusters, 
+plus tuned configurations for the HPC systems we use, and encourage users to adapt them to their 
+own environments. This design improves fault-tolerance, eases debugging, and enables efficient 
+use of heterogeneous compute infrastructures.
 
+# Overview of the pipeline
 
+![atavide_lite schematic by M. Doane](atavide_lite_schematic.png)
 
 # Citations
 

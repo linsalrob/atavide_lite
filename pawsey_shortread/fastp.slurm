@@ -36,5 +36,5 @@ R2=${R1/_R1/_R2}
 
 mkdir -p fastq_fastp fastp_output
 echo "fastp -n 1 -l 100 -i fastq/$R1 -I fastq/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R2 --adapter_fasta $HOME/atavide_lite/adapters//IlluminaAdapters.fa --thread 16" >&2
-fastp -n 1 -l 100 -i fastq/$R1 -I fastq/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R2 -j fastp_output/$R1.json -h fastp_output/$R2.html --adapter_fasta $HOME/atavide_lite/adapters/IlluminaAdapters.fa --thread 16
+fastp -n 1 -l 100 -i fastq/$R1 -I fastq/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R2 -j fastp_output/$R1.json -h fastp_output/$R1.html --adapter_fasta $HOME/atavide_lite/adapters/IlluminaAdapters.fa --thread 16
 

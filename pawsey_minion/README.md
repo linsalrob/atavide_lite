@@ -8,6 +8,13 @@ Notes:
 
 # All commands in one go:
 
+
+Check the environment variables
+```
+echo -e "ATAVIDE_CONDA=$ATAVIDE_CONDA\nSRC=$SRC\nNUM_R1_READS=$NUM_R1_READS"
+```
+
+
 ## create a conda environment
 ```
 TMP=$(for i in {1..12}; do printf "%x" $((RANDOM % 16)); done)

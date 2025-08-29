@@ -110,7 +110,7 @@ Clone the atavide lite repository to your home directory, and make the compiled 
 git clone https://github.com/linsalrob/atavide_lite.git
 cd atavide_lite/bin
 make
-SRC=~/atavide_lite/pawsey_slurm # change this to the most suitable source for you!
+SRC=~/atavide_lite/pawsey_shortread # change this to the most suitable source for you!
 ```
 
 1. Set up the conda environment

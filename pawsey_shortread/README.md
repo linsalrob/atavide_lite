@@ -41,7 +41,7 @@ find fastq -name \*_R1\* -printf "%f\n" > R1_reads.txt
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' ')
 echo $NUM_R1_READS
 
-SRC=~/atavide_lite/slurm
+SRC=~/atavide_lite/deepthought_shortread
 PAWSEY_SRC=~/atavide_lite/pawsey_shortread
 
 cp $SRC/DEFINITIONS.sh .

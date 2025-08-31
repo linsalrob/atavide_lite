@@ -18,9 +18,9 @@ grep 'primary mapped' slurm_output/sixteen_s/*out | perl -ne 'm/(\d+\.\d+)\%/; p
 
 ```
 TMP=$(for i in {1..12}; do printf "%x" $((RANDOM % 16)); done)
-mamba env create --yes --prefix /scratch/pawsey1018/edwa0468/software/miniconda3/$TMP --file ../atavide_lite.yaml
-mamba activate /scratch/pawsey1018/edwa0468/software/miniconda3/$TMP
-export ATAVIDE_CONDA=/scratch/pawsey1018/edwa0468/software/miniconda3/$TMP
+mamba env create --yes --prefix /scratch/$PAWSEY_PROJECT/$USER//software/miniconda3/$TMP --file ../atavide_lite.yaml
+mamba activate /scratch/$PAWSEY_PROJECT/$USER//software/miniconda3/$TMP
+export ATAVIDE_CONDA=/scratch/$PAWSEY_PROJECT/$USER//software/miniconda3/$TMP
 ```
 
 # Renaming files

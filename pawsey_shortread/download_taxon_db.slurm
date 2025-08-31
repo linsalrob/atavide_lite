@@ -7,7 +7,7 @@
 #SBATCH -o slurm_output/taxon_download-%j.out
 #SBATCH -e slurm_output/taxon_download-%j.err
 
-TAXDIR="/home/edwa0468/Databases/NCBI/taxonomy/current"
+TAXDIR="/scratch/$PAWSEY_PROJECT/$USER/Databases/NCBI/taxonomy/current"
 
 mkdir -p $TAXDIR
 cd $TAXDIR;

@@ -35,3 +35,4 @@ else
   echo "All required files are present."
 fi
 
+echo "Done"

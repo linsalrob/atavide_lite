@@ -1,41 +1,25 @@
 #!/bin/bash
 #SBATCH --job-name=MegaHit
-#SBATCH --time=7-0
+#SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=64G
 #SBATCH -o slurm_output/megahit_slurm/megahit-%A_%a.out
 #SBATCH -e slurm_output/megahit_slurm/megahit-%A_%a.err
 
 
-## For an example run on Emma's EagleRay data
-# 
-#  This suggests that we probably don't need 128G// high capacity,
-#  So I downgraded it.
-#
-# Job ID: 2159634
-# Cluster: deepthought
-# User/Group: edwa0468/staff
-# State: COMPLETED (exit code 0)
-# Nodes: 1
-# Cores per node: 32
-# CPU Utilized: 2-02:38:56
-# CPU Efficiency: 91.74% of 2-07:12:32 core-walltime
-# Job Wall-clock time: 01:43:31
-# Memory Utilized: 232.00 KB
-# Memory Efficiency: 0.00% of 128.00 GB
-# 
-# Parameters were
-# #SBATCH --mem=128G
-# #SBATCH --partition=high-capacity
-# #SBATCH --qos=hc-concurrent-jobs
-#
-#
-
 set -euo pipefail
 
-eval "$(conda shell.bash hook)"
-conda activate atavide_lite
+if [[ ! -n "$ATAVIDE_CONDA" ]]; then
+    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
+    exit 2;
+fi
+
+if [[ ! -e R1_reads.txt ]]; then 
+	echo "Please make a file with the R1 reads using this command:" >&2
+	echo "find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt" >&2;
+	exit 2;
+fi
 
 
 if [[ ! -e DEFINITIONS.sh ]]; then
@@ -45,6 +29,8 @@ fi
 
 source DEFINITIONS.sh
 
+eval "$(conda shell.bash hook)"
+conda activate $ATAVIDE_CONDA
 
 
 mkdir --parents megahit
@@ -58,16 +44,11 @@ if [[ -e megahit/$O ]]; then
 	exit 0;
 fi
 
-mkdir $BGFS/input 
 echo "Using $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 for the assembly" >&2;
 
-cp -t $BGFS/input $HOSTREMOVED/$R1 $HOSTREMOVED/$R2
-TMPO=$BGFS/output
+megahit -1 $HOSTREMOVED/$R1 -2 $HOSTREMOVED/$R2 -o megahit/$O -t 64
 
-megahit -1 $BGFS/input/$R1 -2 $BGFS/input/$R2 -o $TMPO -t 8
-
-megahit_toolkit contig2fastg 119 $TMPO/final.contigs.fa > $TMPO/final.graph.fastg; 
-~/atavide_lite/bin/fastg2gfa $TMPO/final.graph.fastg > $TMPO/final.gfa
+megahit_toolkit contig2fastg 119 megahit/$O/final.contigs.fa > megahit/$O/final.graph.fastg; 
+~/atavide_lite/bin/fastg2gfa megahit/$O/final.graph.fastg > megahit/$O/final.gfa
 
 
-rsync -av $TMPO megahit/$O

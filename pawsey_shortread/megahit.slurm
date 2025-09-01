@@ -2,8 +2,8 @@
 #SBATCH --job-name=MegaHit
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=64G
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=220G
 #SBATCH -o slurm_output/megahit_slurm/megahit-%A_%a.out
 #SBATCH -e slurm_output/megahit_slurm/megahit-%A_%a.err
 

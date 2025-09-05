@@ -66,7 +66,7 @@ MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA_VAMB=$ATAVIDE_CONDA_VAMB $PAWSEY_SRC/vamb_concat.slurm)
 # not working yet:
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA_VAMB=$ATAVIDE_CONDA_VAMB $PAWSEY_SRC/vamb_minimap.slurm)
-VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --export=ATAVIDE_CONDA_VAMB=$ATAVIDE_CONDA_VAMB $PAWSEY_SRC/ vamb.slurm)
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --export=ATAVIDE_CONDA_VAMB=$ATAVIDE_CONDA_VAMB $PAWSEY_SRC/vamb.slurm)
 CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $SRC/checkm.slurm vamb/bins/ vamb/checkm)
 
 ```

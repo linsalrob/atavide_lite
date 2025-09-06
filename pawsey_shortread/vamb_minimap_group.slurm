@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=VAMB
-#SBATCH --time=5-0
+#SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=128G
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=32G
 #SBATCH -o slurm_output/vamb_slurm/map_reads-%A_%a.out
 #SBATCH -e slurm_output/vamb_slurm/map_reads-%A_%a.err
 
@@ -49,6 +49,6 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 		fi
 
 		cp $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 fastq
-		minimap2 -t 16 -N 5 -ax sr $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$R1 fastq/$R2 | samtools view -F 3584 -b --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
+		minimap2 -t 32 -N 5 -ax sr $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$R1 fastq/$R2 | samtools view -F 3584 -b --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
 	fi
 done

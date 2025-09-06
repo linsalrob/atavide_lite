@@ -72,16 +72,16 @@ for LN in $(grep -v Sample $1); do
 	FQ=${R1/$FILEEND/};
 
 	
-	if [[ ! -e "megahit/$FQ/output/final.contigs.fa" ]]; then
-		echo "No contigs file, megahit/$FQ/output/final.contigs.fa" >&2;
+	if [[ ! -e "megahit/$FQ/final.contigs.fa" ]]; then
+		echo "No contigs file, megahit/$FQ/final.contigs.fa" >&2;
 		continue
 	fi
 
 	if [[ "${FQPATHS[$GRP]:-UNBOUND}" != "UNBOUND" ]]; then
-		FQPATHS[$GRP]+=" megahit/$FQ/output/final.contigs.fa";
+		FQPATHS[$GRP]+=" megahit/$FQ/final.contigs.fa";
 	else
-		#${FQPATHS[$GRP]} = "megahit/$FQ/output/final.contigs.fa";
-		FQPATHS+=([$GRP]="megahit/$FQ/output/final.contigs.fa");
+		#${FQPATHS[$GRP]} = "megahit/$FQ/final.contigs.fa";
+		FQPATHS+=([$GRP]="megahit/$FQ/final.contigs.fa");
 	fi
 done
 

@@ -3,7 +3,7 @@
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=220G
+#SBATCH --mem=32G
 #SBATCH -o slurm_output/megahit_slurm/megahit-%A_%a.out
 #SBATCH -e slurm_output/megahit_slurm/megahit-%A_%a.err
 
@@ -46,7 +46,7 @@ fi
 
 echo "Using $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 for the assembly" >&2;
 
-megahit -1 $HOSTREMOVED/$R1 -2 $HOSTREMOVED/$R2 -o megahit/$O -t 64
+megahit -1 $HOSTREMOVED/$R1 -2 $HOSTREMOVED/$R2 -o megahit/$O -t 36
 
 megahit_toolkit contig2fastg 119 megahit/$O/final.contigs.fa > megahit/$O/final.graph.fastg; 
 ~/atavide_lite/bin/fastg2gfa megahit/$O/final.graph.fastg > megahit/$O/final.gfa

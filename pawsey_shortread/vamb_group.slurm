@@ -1,24 +1,27 @@
 #!/bin/bash
 #SBATCH --job-name=VAMBgroups
-#SBATCH --time=5-0
+#SBATCH --time=1-0
+#SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=128G
 #SBATCH -o slurm_output/vamb_slurm/vamb_groups-%j.out
 #SBATCH -e slurm_output/vamb_slurm/vamb_groups-%j.err
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:8
 #SBATCH --partition=gpu
 
 set -uo pipefail
 
-if [[ ! -n "$ATAVIDE_CONDA_VAMB" ]]; then
-    echo "Please define the ATAVIDE_CONDA_VAMB environment variable with the location of your ATAVIDE_LITE_VAMB conda installation" >&2;
-    echo "Note: this is based on the atavide_vamb.yaml and is different from the regular atavide conda" >&2;
-    exit 2;
+# Please see the vamb_install.slurm script to create the 
+# virtual environment for vamb. NOTE: Do not use conda, because 
+# we need a rcom install, not nvidia.
+
+VENV_DIR="/scratch/pawsey1018/edwa0468/software/pip/vamb"
+if [[ ! -e "$VENV_DIR" ]]; then 
+	echo "Please run vamb_install.slurm to create the vamb virtual environment" >&2
+	exit 1;
 fi
 
-eval "$(conda shell.bash hook)"
-conda activate $ATAVIDE_CONDA_VAMB
+module load rocm/6.2.4
+source "$VENV_DIR/bin/activate"
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
@@ -45,8 +48,8 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 		continue;
 	fi
 
-	mkdir --parents $OUTDIR
-	vamb -o C -p 16 --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamfiles $OUTDIR/mapped_reads/*bam 
+
+	vamb bin default -o C -p 16 --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamfiles $OUTDIR/mapped_reads/*bam
 	if [[ $? != 0 ]]; then 
 		echo "Running VAMB on $OUTDIR failed." >&2;
 	else

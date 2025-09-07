@@ -8,19 +8,38 @@
 
 # submit this with sbatch --account=${PAWSEY_PROJECT}-gpu vamb_install.slurm
 
+###### NOTES ######
+#
+# This script creates a virtual environment for vamb on a GPU node at Pawsey.
+# There are two (or 3?) things that you need to get working together.
+#
+# vamb needs a specific version of pytorch, and so you need to make
+# sure that the rocm build has that. 
+#
+# You can check the pytorch versions at https://download.pytorch.org/whl/rocm6.2.4 
+# but I found it a bit of trial and error to get the right combination.
+#
+# First, load the right module.
+# Second, install the right pytorch version.
+# Third, we install vamb, but with no dependencies, otherwise it will remove our rocm pytorch
+# and install the NVIDIA one.
+# Fourth, we install the dependencies for vamb, except for torch.
+# Finally, we use pip check to list any missing dependencies.
+#
+# When vamb gets updated, you need to look for the torch version that include +rocm
+# at the end. For example, were using torch-2.6.0+rocm6.2.4-cp312 because we have
+# torch 2.6.0, rocm 6.2.4 python 3.12.
+#
+#
+
+
+
 set -euo pipefail
 
-# ---- 1) Load GPU/ROCm module ----
-# module load rocm/6.4.1 <- note that this doesn't have the correct version of pytorch required by vamb
+# ---- 1) Get the right module here!
 module load rocm/6.2.4
 
-# (Optional but often helpful)
-echo "=== Module list ==="
-module list || true
-
-# ---- 2) Create virtual environment ----
-# NOTE: We need pip >23.2. At the time of writing, the default python module is 3.11.4, which has pip 23.0.1.
-# so we make the venv separately.
+# ---- 2) Create and load the virtual environment 
 VENV_DIR="/scratch/pawsey1018/edwa0468/software/pip/vamb"
 if [[ -e "$VENV_DIR" ]]; then 
 	rm -rf "$VENV_DIR"
@@ -28,15 +47,12 @@ fi
 
 mkdir -p "$VENV_DIR"
 python -m venv "$VENV_DIR"
-
-
-# Activate venv
 source "$VENV_DIR/bin/activate"
 
 # Upgrade packaging tooling
 pip install --upgrade pip setuptools wheel
 
-# ---- 3) Install vamb (without dragging a conflicting torch) ----
+# ---- 3) Install pytorch and then vamb
 # The pytorch module already provides torch/ROCm; avoid pip installing another torch build.
 # This requires pip > 23.2
 pip --version

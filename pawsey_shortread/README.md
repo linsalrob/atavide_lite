@@ -64,8 +64,12 @@ SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $PAWSEY_SRC/sanke
 
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/megahit.slurm)
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA_VAMB=$ATAVIDE_CONDA_VAMB $PAWSEY_SRC/vamb_concat.slurm)
-# not working yet:
+
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA_VAMB=$ATAVIDE_CONDA_VAMB $PAWSEY_SRC/vamb_minimap.slurm)
+
+# This is a santiy check. All the files should be the same length in each directory (but not between directories)
+find vamb_groups/ -name \*.bam | while read -r BAM; do L=$(samtools view -H $BAM | wc -l); echo -e "$L\t$BAM"; done
+
 VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --export=ATAVIDE_CONDA_VAMB=$ATAVIDE_CONDA_VAMB $PAWSEY_SRC/vamb.slurm)
 CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $SRC/checkm.slurm vamb/bins/ vamb/checkm)
 

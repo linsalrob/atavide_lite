@@ -48,5 +48,7 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 		minimap2 -t 32 -N 5 -ax sr $OUTDIR/contigs.mmi --split-prefix mmsplit$$ $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 \
 			| samtools view -F 3584 -b --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
 		samtools index $OUTDIR/mapped_reads/$BAM
+	else
+		echo "Skipped $OUTDIR/mapped_reads/$BAM as it already exists" >&2;
 	fi
 done

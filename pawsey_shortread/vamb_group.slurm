@@ -53,6 +53,6 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 	if [[ $? != 0 ]]; then 
 		echo "Running VAMB on $OUTDIR failed." >&2;
 	else
-		python ~/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters.tsv 20000 $OUTDIR/bins
+		python ~/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters.tsv 1 $OUTDIR/bins
 	fi
 done

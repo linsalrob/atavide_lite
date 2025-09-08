@@ -69,7 +69,7 @@ MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_concat.slurm)
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap.slurm)
 VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu /home/edwa0468/atavide_lite/pawsey_shortread/vamb.slurm
-sbatch --export=ATAVIDE_CONDA=$ATAVIDE_CONDA ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags.slurm 
+sbatch ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags.slurm 
 
 
 ## use this code for GROUPED data
@@ -78,7 +78,7 @@ VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1
 # This is a santiy check. All the files should be the same length in each directory (but not between directories)
 find vamb_groups/ -name \*.bam | while read -r BAM; do L=$(samtools view -H $BAM | wc -l); echo -e "$L\t$BAM"; done
 VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu /home/edwa0468/atavide_lite/pawsey_shortread/vamb_group.slurm
-sbatch --export=ATAVIDE_CONDA=$ATAVIDE_CONDA ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm mice_samples.tsv
+sbatch  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm mice_samples.tsv
 
 CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $SRC/checkm.slurm vamb/bins/ vamb/checkm)
 

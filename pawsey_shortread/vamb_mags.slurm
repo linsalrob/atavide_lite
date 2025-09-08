@@ -9,17 +9,9 @@
 
 set -euo pipefail
 
-
-
-if [[ ! -n "$ATAVIDE_CONDA" ]]; then
-    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
-    exit 2;
-fi
-
 SRC="$HOME/GitHubs/atavide_lite/pawsey_shortread/"
 
-
-VAMBUNSPLIT=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA \
+VAMBUNSPLIT=$(sbatch --parsable \
 	"$SRC/vamb_split.slurm" \
 	vamb/contigs.fna.gz \
 	vamb/vamb/vae_clusters_unsplit.tsv \
@@ -28,7 +20,7 @@ VAMBUNSPLIT=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA \
 
 echo "  -> UNSPLIT job ID: $VAMBUNSPLIT"
 
-VAMBSPLIT=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA \
+VAMBSPLIT=$(sbatch --parsable \
 	"$SRC/vamb_split.slurm" \
 	vamb/contigs.fna.gz \
 	vamb/vamb/vae_clusters_split.tsv \

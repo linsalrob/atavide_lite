@@ -9,13 +9,14 @@
 
 set -euo pipefail
 
-if [[ ! -n "$ATAVIDE_CONDA" ]]; then
-    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
-    exit 2;
+VENV_DIR="/scratch/pawsey1018/edwa0468/software/pip/vamb"
+if [[ ! -e "$VENV_DIR" ]]; then 
+	echo "Please run vamb_install.slurm to create the vamb virtual environment" >&2
+	exit 1;
 fi
 
-eval "$(conda shell.bash hook)"
-conda activate $ATAVIDE_CONDA
+module load rocm/6.2.4
+source "$VENV_DIR/bin/activate"
 
 
 if [[ $# -eq 0 ]]; then 

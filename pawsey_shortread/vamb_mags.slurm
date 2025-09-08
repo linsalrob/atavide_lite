@@ -16,6 +16,7 @@ if [[ ! -n "$ATAVIDE_CONDA" ]]; then
     exit 2;
 fi
 
+SRC="$HOME/GitHubs/atavide_lite/pawsey_shortread/"
 
 
 VAMBUNSPLIT=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA \

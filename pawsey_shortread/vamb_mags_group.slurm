@@ -22,10 +22,8 @@ if [[ ! -n "$ATAVIDE_CONDA" ]]; then
     exit 2;
 fi
 
-
-
 IFS=$'\n'
-SRC=$HOME/GitHubs/atavide_lite/pawsey_shortread/
+SRC="$HOME/GitHubs/atavide_lite/pawsey_shortread/"
 
 for LN in $(grep -v Sample $1); do
 	GRP=$(echo $LN | cut -d$'\t' -f 1)

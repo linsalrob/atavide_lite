@@ -29,7 +29,7 @@ MINBIN=$3
 ODIR=$4
 
 
-echo "Running: ~/atavide_lite/bin/vamb_create_fasta_clusters.py $BGFS/$CONTIGS $BGFS/$CLUSTERS $BGFS/$ODIR" >&2
+echo "Running: ~/atavide_lite/bin/vamb_create_fasta.py $CONTIGS $CLUSTERS $MINBIN $ODIR" >&2
 
-python ~/atavide_lite/bin/vamb_create_fasta_test.py $CONTIGS $CLUSTERS $MINBIN $ODIR
+python ~/atavide_lite/bin/vamb_create_fasta.py $CONTIGS $CLUSTERS $MINBIN $ODIR
 

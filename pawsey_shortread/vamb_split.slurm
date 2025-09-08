@@ -34,3 +34,4 @@ echo "Running: ~/atavide_lite/bin/vamb_create_fasta.py $CONTIGS $CLUSTERS $MINBI
 
 python ~/atavide_lite/bin/vamb_create_fasta.py $CONTIGS $CLUSTERS $MINBIN $ODIR
 
+find $ODIR -type f -name "*.fna" -exec pigz {} \;

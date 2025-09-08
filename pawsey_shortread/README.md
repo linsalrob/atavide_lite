@@ -51,6 +51,7 @@ cp $SRC/DEFINITIONS.sh .
 HUMANDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_human.slurm)
 TAXDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_taxon_db.slurm)
 UNIREFJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA download_uniref50.slurm)
+VAMB_INSTALL=$(sbatch --parsable $PAWSEY_SRC/vamb_install.slurm)
 
 JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/fastp.slurm)
 HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB --dependency=afterok:$HUMANDLDJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/host_removal.slurm)
@@ -63,14 +64,22 @@ COUNTSSJOB=$(sbatch --parsable --dependency=afterok:$SSJOB $PAWSEY_SRC/count_sub
 SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $PAWSEY_SRC/sankey_plot.slurm)
 
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/megahit.slurm)
-VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA_VAMB=$ATAVIDE_CONDA_VAMB $PAWSEY_SRC/vamb_concat.slurm)
 
-VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA_VAMB=$ATAVIDE_CONDA_VAMB $PAWSEY_SRC/vamb_minimap.slurm)
+## use this code for UNGROUPED data
+VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_concat.slurm)
+VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap.slurm)
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu /home/edwa0468/atavide_lite/pawsey_shortread/vamb.slurm
+sbatch --export=ATAVIDE_CONDA=$ATAVIDE_CONDA ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags.slurm 
 
+
+## use this code for GROUPED data
+VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_concat_group.slurm mice.tsv)
+VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap_group.slurm mice.tsv)
 # This is a santiy check. All the files should be the same length in each directory (but not between directories)
 find vamb_groups/ -name \*.bam | while read -r BAM; do L=$(samtools view -H $BAM | wc -l); echo -e "$L\t$BAM"; done
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu /home/edwa0468/atavide_lite/pawsey_shortread/vamb_group.slurm
+sbatch --export=ATAVIDE_CONDA=$ATAVIDE_CONDA ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm mice_samples.tsv
 
-VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --export=ATAVIDE_CONDA_VAMB=$ATAVIDE_CONDA_VAMB $PAWSEY_SRC/vamb.slurm)
 CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $SRC/checkm.slurm vamb/bins/ vamb/checkm)
 
 ```

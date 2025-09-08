@@ -9,14 +9,13 @@
 
 set -euo pipefail
 
-if [[ ! -n "$ATAVIDE_CONDA_VAMB" ]]; then
-    echo "Please define the ATAVIDE_CONDA_VAMB environment variable with the location of your ATAVIDE_LITE_VAMB conda installation" >&2;
-    echo "Note: this is based on the atavide_vamb.yaml and is different from the regular atavide conda" >&2;
+if [[ ! -n "$ATAVIDE_CONDA" ]]; then
+    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
     exit 2;
 fi
 
 eval "$(conda shell.bash hook)"
-conda activate $ATAVIDE_CONDA_VAMB
+conda activate $ATAVIDE_CONDA
 
 mkdir -p vamb
 python ~/atavide_lite/bin/vamb_concatenate.py -m 300 vamb/contigs.fna.gz megahit/*/final.contigs.fa

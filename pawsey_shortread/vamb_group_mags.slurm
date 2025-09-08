@@ -17,10 +17,15 @@ if [[ "$#" -ne 1 ]]; then
 	exit $E_BADARGS;
 fi
 
+if [[ ! -n "$ATAVIDE_CONDA" ]]; then
+    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
+    exit 2;
+fi
+
 
 
 IFS=$'\n'
-SRC="$(dirname -- "$0")"
+SRC=$HOME/GitHubs/atavide_lite/pawsey_shortread/
 
 for LN in $(grep -v Sample $1); do
 	GRP=$(echo $LN | cut -d$'\t' -f 1)
@@ -29,7 +34,8 @@ for LN in $(grep -v Sample $1); do
 
 	echo "Submitting UNSPLIT and SPLIT jobs for group: $GRP using $SRC/vamb_split.slurm"
 
-	VAMBUNSPLIT=$(sbatch --parsable "$SRC/vamb_split.slurm" \
+	VAMBUNSPLIT=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA \
+		"$SRC/vamb_split.slurm" \
 		vamb_groups/$GRP/contigs.fna.gz \
 		vamb_groups/$GRP/vamb/vae_clusters_unsplit.tsv \
 		20000 \
@@ -37,7 +43,8 @@ for LN in $(grep -v Sample $1); do
 
 	echo "  -> UNSPLIT job ID: $VAMBUNSPLIT"
 
-	VAMBSPLIT=$(sbatch --parsable "$SRC/vamb_split.slurm" \
+	VAMBSPLIT=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA \
+		"$SRC/vamb_split.slurm" \
 		vamb_groups/$GRP/contigs.fna.gz \
 		vamb_groups/$GRP/vamb/vae_clusters_split.tsv \
 		20000 \

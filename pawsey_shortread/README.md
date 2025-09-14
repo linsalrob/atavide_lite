@@ -77,6 +77,8 @@ sbatch ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags.slurm
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_concat_group.slurm samples.tsv)
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap_group.slurm samples.tsv)
 # This is a santiy check. All the files should be the same length in each directory (but not between directories)
+# Note: the commit #b570609 should have fixed the issue with inconsistent BAM files which was caused by minimap2 using multi-indexed files
+# and so not properly including the headers
 find vamb_groups/ -name \*.bam | while read -r BAM; do L=$(samtools view -H $BAM | wc -l); echo -e "$L\t$BAM"; done
 VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $PAWSEY_SRC/vamb_group.slurm
 sbatch  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm mice_samples.tsv
@@ -87,6 +89,8 @@ sbatch  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm mice_sampl
 VCRJOB=$(sbatch --export ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_concat_crass.slurm samples.tsv)
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCRJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap_crass.slurm samples.tsv)
 # This is a santiy check. All the files should be the same length in each directory (but not between directories)
+# Note: the commit #b570609 should have fixed the issue with inconsistent BAM files which was caused by minimap2 using multi-indexed files
+# and so not properly including the headers
 find vamb_crass/ -name \*.bam | while read -r BAM; do L=$(samtools view -H $BAM | wc -l); echo -e "$L\t$BAM"; done
 VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $PAWSEY_SRC/vamb_crass.slurm
 sbatch  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm mice_samples.tsv

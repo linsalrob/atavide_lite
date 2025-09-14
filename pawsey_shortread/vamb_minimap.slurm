@@ -43,13 +43,16 @@ if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 	mkdir --parents $OUTDIR $OUTDIR/mapped_reads  fastq
 	mkdir --parents $OUTDIR/mapped_reads
 
-	if [[ -e $OUTDIR/contigs.mmi ]]; then
-		cp $OUTDIR/contigs.mmi $OUTDIR/contigs.mmi
-	else
-		cp $OUTDIR/contigs.fna.gz $OUTDIR
+	if [[ ! -e $OUTDIR/contigs.mmi ]]; then
 		minimap2 -I100G -d $OUTDIR/contigs.mmi $OUTDIR/contigs.fna.gz
 	fi
 
-	cp $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 fastq
-	minimap2 -t 16 -N 5 -ax sr $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$R1 fastq/$R2 | samtools view -F 3584 -b --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
+	# uncompress the fasta file to a temp file
+	temp_fasta=$(mktemp --suffix=.fasta)
+	gunzip -c "$INF" > "$temp_fasta"
+
+	minimap2 -t 16 -N 5 -ax sr $OUTDIR/contigs.mmi --split-prefix mmsplit$$ $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 \
+		| samtools view -F 3584 --threads 16  | samtools view -b -T "$temp_fasta" | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
+
+	rm -f "$temp_fasta"
 fi

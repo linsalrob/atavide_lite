@@ -26,9 +26,9 @@ fi
 
 source DEFINITIONS.sh
 
-# VAMBDIR=vamb_crass
-VAMBDIR=vamb_groups
-
+VAMBDIR=vamb_crass
+# VAMBDIR=vamb_groups
+#
 
 if [[ ! -e $VAMBDIR ]]; then
 	echo "$VAMBDIR does not exist. Please check which directory you want to process" >&2;

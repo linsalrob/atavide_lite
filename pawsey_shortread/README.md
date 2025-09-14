@@ -85,10 +85,10 @@ sbatch  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm mice_sampl
 > assemble using the `megahit_hostremoved.slurm` script above. This will take a while to run, so do it early!
 
 VCRJOB=$(sbatch --export ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_concat_crass.slurm samples.tsv)
-VMJOB=$(sbatch --parsable  --dependency=afterok:$VCRJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap_group.slurm samples.tsv)
+VMJOB=$(sbatch --parsable  --dependency=afterok:$VCRJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap_crass.slurm samples.tsv)
 # This is a santiy check. All the files should be the same length in each directory (but not between directories)
-find vamb_groups/ -name \*.bam | while read -r BAM; do L=$(samtools view -H $BAM | wc -l); echo -e "$L\t$BAM"; done
-VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $PAWSEY_SRC/vamb_group.slurm
+find vamb_crass/ -name \*.bam | while read -r BAM; do L=$(samtools view -H $BAM | wc -l); echo -e "$L\t$BAM"; done
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $PAWSEY_SRC/vamb_crass.slurm
 sbatch  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm mice_samples.tsv
 
 

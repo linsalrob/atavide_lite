@@ -44,7 +44,7 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 
 
 	if [[ ! -e $OUTDIR/mapped_reads ]]; then
-		echo "No mapped_reads found for $OUTDIR. Did you run vamb_minimap_group.slurm" >&2;
+		echo "No mapped_reads found for $OUTDIR. Did you run vamb_minimap_crass.slurm" >&2;
 		continue;
 	fi
 

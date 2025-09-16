@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=VAMBgroups
+#SBATCH --job-name=VAMBcrass
 #SBATCH --time=1-0
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH -o slurm_output/vamb_slurm/vamb_groups-%j.out
-#SBATCH -e slurm_output/vamb_slurm/vamb_groups-%j.err
+#SBATCH -o slurm_output/vamb_slurm/%x-%j.out
+#SBATCH -e slurm_output/vamb_slurm/%x-%j.err
 #SBATCH --gres=gpu:8
 #SBATCH --partition=gpu
 
@@ -49,7 +49,7 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 	fi
 
 
-	vamb bin default -o C -p 16 --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamfiles $OUTDIR/mapped_reads/*bam
+	vamb bin default -o C -p 16 --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamdir $OUTDIR/mapped_reads/
 	if [[ $? != 0 ]]; then 
 		echo "Running VAMB on $OUTDIR failed." >&2;
 	else

@@ -20,6 +20,9 @@ fi
 IFS=$'\n'
 SRC="$HOME/GitHubs/atavide_lite/pawsey_shortread/"
 
+# VAMB_DIR=vamb_group
+VAMB_DIR=vamb_crass
+
 for LN in $(grep -v Sample $1); do
 	GRP=$(echo $LN | cut -d$'\t' -f 1)
 	SMP=$(echo $LN | cut -d$'\t' -f 2)
@@ -29,19 +32,19 @@ for LN in $(grep -v Sample $1); do
 
 	VAMBUNSPLIT=$(sbatch --parsable \
 		"$SRC/vamb_split.slurm" \
-		vamb_groups/$GRP/contigs.fna.gz \
-		vamb_groups/$GRP/vamb/vae_clusters_unsplit.tsv \
+		$VAMB_DIR/$GRP/contigs.fna.gz \
+		$VAMB_DIR/$GRP/vamb/vae_clusters_unsplit.tsv \
 		20000 \
-		vamb_groups/$GRP/vamb/clusters_unsplit)
+		$VAMB_DIR/$GRP/vamb/clusters_unsplit)
 
 	echo "  -> UNSPLIT job ID: $VAMBUNSPLIT"
 
 	VAMBSPLIT=$(sbatch --parsable \
 		"$SRC/vamb_split.slurm" \
-		vamb_groups/$GRP/contigs.fna.gz \
-		vamb_groups/$GRP/vamb/vae_clusters_split.tsv \
+		$VAMB_DIR/$GRP/contigs.fna.gz \
+		$VAMB_DIR/$GRP/vamb/vae_clusters_split.tsv \
 		20000 \
-		vamb_groups/$GRP/vamb/clusters_split)
+		$VAMB_DIR/$GRP/vamb/clusters_split)
 
 	echo "  -> SPLIT job ID: $VAMBSPLIT"
 done

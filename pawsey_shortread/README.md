@@ -83,6 +83,22 @@ VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJ
 sbatch  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm samples.tsv
 
 ## Use this code for CROSSASSEMBLY data
+
+<summary>
+About the cross-assembly approach
+<details>
+In this approach, we do a mega-huge assembly with everyting together, and then map the individual reads back and use the complete
+contigs with mapped reads in VAMB - it appears that VAMB ignores contigs with no mapped reads, but breaks if you have bam files that 
+don't map to any contigs, so we find those and move those out the way.
+
+Then we use the usual VAMB approach to bin the contigs.
+
+</details>
+</summary>
+
+
+
+
 > assemble using the `megahit_hostremoved.slurm` script above. This will take a while to run, so do it early!
 
 VCRJOB=$(sbatch --parsable  --export ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_concat_crass.slurm samples.tsv)

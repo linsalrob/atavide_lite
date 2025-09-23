@@ -47,6 +47,17 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 		echo "No mapped_reads found for $OUTDIR. Did you run vamb_minimap_crass.slurm" >&2;
 		continue;
 	fi
+	
+	# check for empty bamfiles and remove them from mapped_reads
+	for BAM in $(find --bamdir $OUTDIR/mapped_reads/ -name \*bam); do 
+		C=$(samtools idxstats $BAM | awk '{s+=$3} END{print s}'); 
+		if [[ $C == 0 ]]; then
+			EMPDIR=$(dirname $BAM); 
+			mkdir -p $OUTDIR/empty_bamfiles/$EMPDIR; 
+			echo "Moving empty bamfile $BAM to $OUTDIR/empty_bamfiles/$EMPDIR" >&2;
+			mv -t $OUTDIR/empty_bamfiles/$EMPDIR $BAM; 
+		fi;
+	done
 
 
 	vamb bin default -o C -p 16 --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamdir $OUTDIR/mapped_reads/ -m 250

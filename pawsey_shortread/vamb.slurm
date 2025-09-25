@@ -2,8 +2,7 @@
 #SBATCH --job-name=VAMB
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=128G
+#SBATCH --nodes=1
 #SBATCH -o slurm_output/vamb_slurm/vamb-%j.out
 #SBATCH -e slurm_output/vamb_slurm/vamb-%j.err
 #SBATCH --gres=gpu:8

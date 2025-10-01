@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=vamb_setup
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu-dev
 #SBATCH --gres=gpu:1
-#SBATCH --time=00:20:00
+#SBATCH --time=1:00:00
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.err
 

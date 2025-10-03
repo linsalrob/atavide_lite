@@ -39,10 +39,13 @@ declare -A FQPATHS
 
 for LN in $(grep -v Sample $1); do
 	GRP=$(echo $LN | cut -d$'\t' -f 1)
+	echo "GRP: $GRP" >&2
 	SMP=$(echo $LN | cut -d$'\t' -f 2)
+	echo "SMP: $SMP" >&2
 	# check how many reads we have for $SMP. Should be only 1
 	LC=0;
 	LC=$(grep $SMP R1_reads.txt | wc -l) || echo "No matches";
+	echo "LC: $LC" >&2
 	if [[ $LC == 0 ]]; then
 		echo "ERROR: Can't find $SMP in R1_reads.txt. Skipped" >&2;
 		continue;

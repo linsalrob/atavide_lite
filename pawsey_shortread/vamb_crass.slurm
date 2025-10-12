@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=VAMBcrass
-#SBATCH --time=4:00:00
+#SBATCH --time=1-0
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH -o slurm_output/vamb_slurm/%x-%j.out
 #SBATCH -e slurm_output/vamb_slurm/%x-%j.err
 #SBATCH --gres=gpu:8
-#SBATCH --partition=gpu-dev
+#SBATCH --partition=gpu
 
 set -uo pipefail
 
@@ -64,8 +64,8 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 	if [[ $? != 0 ]]; then 
 		echo "Running VAMB on $OUTDIR failed." >&2;
 	else
-		python ~/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_unsplit.tsv 1 $OUTDIR/bins &
-		python ~/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_split.tsv 1 $OUTDIR/bins &
+		python ~/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_unsplit.tsv 20000 $OUTDIR/bins &
+		python ~/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_split.tsv 20000 $OUTDIR/bins &
 		wait
 	fi
 done

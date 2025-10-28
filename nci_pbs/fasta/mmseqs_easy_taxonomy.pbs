@@ -22,16 +22,23 @@ R=`basename ${R1:-}`
 OUT=${R/$FAFILEEND/}
 if [[ -e mmseqs/$OUT/ ]]; then echo "${R1:-} Nothing to do!" >&2; exit 0; fi
 
+DB=$HOME/databases/UniRef50/UniRef50
+
+if [[ ! -e $DB ]]; then
+	echo "No UniRef database found" >&2;
+	exit 1;
+fi
+
 if [[ ${R1:-} ]] &&  [[ ${R2:-} ]]; then
-	mmseqs easy-taxonomy $R1 $R2 /home/584/re3494/databases/UniRef50/UniRef50 $PBS_JOBFS/mmseqs/$OUT $(mktemp -d -p $PBS_JOBFS/tmp) --threads 32
+	mmseqs easy-taxonomy $R1 $R2 $DB $PBS_JOBFS/mmseqs/$OUT $(mktemp -d -p $PBS_JOBFS/tmp) --threads 32
 elif [[ ${R1:-} ]]; then
-	mmseqs easy-taxonomy $R1 /home/584/re3494/databases/UniRef50/UniRef50 $PBS_JOBFS/mmseqs/$OUT $(mktemp -d -p $PBS_JOBFS/tmp) --threads 32
+	mmseqs easy-taxonomy $R1 $DB $PBS_JOBFS/mmseqs/$OUT $(mktemp -d -p $PBS_JOBFS/tmp) --threads 32
 elif [[ ${R2:-} ]]; then
 	FAFILEEND="_R2.fasta.gz"
 	R=`basename ${R2:-}`
 	OUT=${R/$FAFILEEND/}
 	if [[ -e mmseqs/$OUT/ ]]; then echo "${R2:-} Nothing to do!" >&2; exit 0; fi
-	mmseqs easy-taxonomy $R2 /home/584/re3494/databases/UniRef50/UniRef50 $PBS_JOBFS/mmseqs/$OUT $(mktemp -d -p $PBS_JOBFS/tmp) --threads 32
+	mmseqs easy-taxonomy $R2 $DB $PBS_JOBFS/mmseqs/$OUT $(mktemp -d -p $PBS_JOBFS/tmp) --threads 32
 fi
 
 find $PBS_JOBFS/mmseqs/ -type f -exec pigz {} \;

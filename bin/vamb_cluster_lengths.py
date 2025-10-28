@@ -12,8 +12,6 @@ Will read the entire content of the FASTA file into memory - beware.""",
 
 parser.add_argument("fastapath", help="Path to FASTA file")
 parser.add_argument("clusterspath", help="Path to clusters.tsv")
-parser.add_argument("minsize", help="Minimum size of bin in bp", type=int, default=0)
-parser.add_argument("outdir", help="Directory to create")
 
 if len(sys.argv) == 1:
     parser.print_help()
@@ -31,16 +29,18 @@ with vamb.vambtools.Reader(args.fastapath) as file:
 with open(args.clusterspath) as file:
     clusters = vamb.vambtools.read_clusters(file)
 
-clusters = {
-    cluster: contigs
-    for (cluster, contigs) in clusters.items()
-    if sum(lens[c] for c in contigs) >= args.minsize
-}
+cluster_lengths = {}
+for (cluster, contigs) in clusters.items():
+    cluster_lengths[cluster] = sum(lens[c] for c in contigs)
 
-if not clusters:
-    print(f"No bins passed the minimum size threshold of {minsize}", file=sys.stderr)
-    sys.exit(0)
+cluster_lengths_count = {}
+for length in cluster_lengths.values():
+    if length not in cluster_lengths_count:
+        cluster_lengths_count[length] = 0
+    cluster_lengths_count[length] += 1
 
-print(f"Writing {len(clusters)} bins to {args.outdir}", file=sys.stderr)
-with vamb.vambtools.Reader(args.fastapath) as file:
-    vamb.vambtools.write_bins(pathlib.Path(args.outdir), clusters, file, maxbins=None, compress_output=True)
+for c in sorted(cluster_lengths_count.keys()):
+    print(f"{c}\t{cluster_lengths_count[c]}")
+
+
+

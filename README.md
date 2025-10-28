@@ -37,7 +37,7 @@ Our pipeline is designed to be run in a series of steps, and each step can be ru
 we lean heavily on the `--dependency` option in `sbatch` to ensure that each step is run only after the previous step 
 has completed successfully.
 
-1. Run fastp to trim Illumina  or Nanopore barcodes. We provide those in [adapters](adapters/)
+1. Run [fastp](https://github.com/OpenGene/fastp) to trim Illumina or Nanopore barcodes. We provide those in [adapters](adapters/)
 2. Use [minimap2](https://github.com/lh3/minimap2) and [samtools](https://www.htslib.org/) to filter out host and 
 not host reads. Currently, host reads are ignored. Host can be human, sharks, coral, or anything else.
 3. Use [mmseqs](https://github.com/soedinglab/MMseqs2) 
@@ -128,4 +128,7 @@ but is available from the compute nodes.
 
 ## NCI's [Gadi](https://nci.org.au/)
 
-Gadi uses PBS for scheduling a `/g/data` drive that is used for temporary storage
+Gadi uses PBS for scheduling a `/g/data` drive that is used for temporary storage. Gadi does not allow array jobs, so 
+we have to run each step separately.
+
+Gadi also has fast local drives that are accessible from compute nodes, and they are at `$PBS_JOBFS`

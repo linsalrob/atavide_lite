@@ -66,15 +66,15 @@ the appropriate version for your data.
 
 **However:** If you download some sequences from SRA, ENA, or DDBJ they may have paired end reads that 
 end `_1.fastq.gz` and `_2.fastq.gz` in which case you should change the names 
-(see the [README](pawsey_slurm/README.md) for a simple command). 
+(see the [README](pawsey_shortread/README.md) for a simple command). 
 You might also have Illumina sequencing single end reads (which is oldschool!), in which case, 
 you should use the [pawsey minion](pawsey_minion/README.md) pipeline to process that data.
 
 See the verions:
-   - [pawsey slurm](pawsey_slurm) -- use this for paired end (R1 and R2) reads. Although it's designed to run on 
+   - [pawsey shortread](pawsey_shortread) -- use this for paired end (R1 and R2) reads. Although it's designed to run on 
 Pawsey's setonix, it will probably work on any system with a `/scratch` drive
    - [pawsey minion](pawsey_minion) -- use this for single end reads. Also designed to run on Pawsey's setonix.
-   - [deepthought_slurm](deepthought_slurm/README.md) - designed to work on Flinders deepthought infrastructure. This is esoteric 
+   - [deepthought shortread](deepthought_shortread/README.md) - designed to work on Flinders deepthought infrastructure. This is esoteric 
 and probably not portable, because the deepthought system has a `$BGFS` drive that is used for temporary storage.
    - [nci_pbs](nci_pbs/README.md) - designed to work on the NCI infrastructrue. 
 
@@ -102,7 +102,7 @@ You can install all of these with:
 mamba env create -f ~/atavide_lite/atavide_lite.yaml
 ```
 
-Note: if you are using an ephemeral system like Pawsey, we also have a mechanism for making temporary conda installations. See  the [pawsey slurm](pawsey_slurm/README.md) or [pawsey minion](pawsey_minion/README.md) READMEs.
+Note: if you are using an ephemeral system like Pawsey, we also have a mechanism for making temporary conda installations. See  the [pawsey shortread](pawsey_shortread/README.md) or [pawsey minion](pawsey_minion/README.md) READMEs.
 
 
 If you use atavide light, please [cite it](citation.cff) and then please also [cite the other papers](references.bib) that describe these great tools.

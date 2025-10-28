@@ -4,13 +4,32 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=32G
-#SBATCH --partition=short
 #SBATCH -o slurm_output/vamb_slurm/vamb_concat-%j.out
 #SBATCH -e slurm_output/vamb_slurm/vamb_concat-%j.err
 
 set -euo pipefail
+
+if [[ ! -n "$ATAVIDE_CONDA" ]]; then
+    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
+    exit 2;
+fi
+
+if [[ ! -e R1_reads.txt ]]; then 
+	echo "Please make a file with the R1 reads using this command:" >&2
+	echo "find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt" >&2;
+	exit 2;
+fi
+
+
+if [[ ! -e DEFINITIONS.sh ]]; then
+	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
+	exit 2;
+fi
+
+source DEFINITIONS.sh
+
 eval "$(conda shell.bash hook)"
-conda activate atavide_lite_vamb
+conda activate $ATAVIDE_CONDA
 
 # run vamb_concat 
 # we want a tsv file with [category] [sample]
@@ -25,12 +44,6 @@ if [[ "$#" -ne 1 ]]; then
 	exit $E_BADARGS;
 fi
 
-if [[ ! -e DEFINITIONS.sh ]]; then
-	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
-	exit 2;
-fi
-
-source DEFINITIONS.sh
 
 
 IFS=$'\n'
@@ -58,16 +71,16 @@ for LN in $(grep -v Sample $1); do
 	FQ=${R1/$FILEEND/};
 
 	
-	if [[ ! -e "megahit/$FQ/output/final.contigs.fa" ]]; then
-		echo "No contigs file, megahit/$FQ/output/final.contigs.fa" >&2;
+	if [[ ! -e "megahit/$FQ/final.contigs.fa" ]]; then
+		echo "No contigs file, megahit/$FQ/final.contigs.fa" >&2;
 		continue
 	fi
 
 	if [[ "${FQPATHS[$GRP]:-UNBOUND}" != "UNBOUND" ]]; then
-		FQPATHS[$GRP]+=" megahit/$FQ/output/final.contigs.fa";
+		FQPATHS[$GRP]+=" megahit/$FQ/final.contigs.fa";
 	else
-		#${FQPATHS[$GRP]} = "megahit/$FQ/output/final.contigs.fa";
-		FQPATHS+=([$GRP]="megahit/$FQ/output/final.contigs.fa");
+		#${FQPATHS[$GRP]} = "megahit/$FQ/final.contigs.fa";
+		FQPATHS+=([$GRP]="megahit/$FQ/final.contigs.fa");
 	fi
 done
 

@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=mmseqs_ssf
+#SBATCH --job-name=mmseqs_ss
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=128G
+#SBATCH --mem=12G
 #SBATCH -o slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.out
 #SBATCH -e slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.err
 
@@ -18,9 +18,9 @@ eval "$(conda shell.bash hook)"
 conda activate $ATAVIDE_CONDA
 
 
-if [[ ! -e reads.txt ]]; then 
-	echo "Please make a file with the reads using this command:" >&2
-	echo "find fastq -type f -printf "%f\n" > reads.txt" >&2;
+if [[ ! -e R1_reads.txt ]]; then 
+	echo "Please make a file with the R1 reads using this command:" >&2
+	echo "find fastq -name \*R1\* -printf "%f\n" > R1_reads.txt" >&2;
 	exit 2;
 fi
 
@@ -50,7 +50,7 @@ fi
 
 
 
-R1=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)
+R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 BASE=${R1/$FILEEND/}
 
 if [[ -e mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa.gz ]]; then 
@@ -59,7 +59,7 @@ if [[ -e mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa.gz ]]; then
 fi
 
 
-echo `date` "Running ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py  -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite -o mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa" >&2
+echo `date` "Running ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite -o mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa" >&2
 python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite -o mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa
 echo `date` "easy_taxonomy_to_function_taxa complete" >&2
 

@@ -33,6 +33,9 @@ export NUM_R1_READS=$(wc -l reads.txt | cut -f 1 -d ' ')
 echo $NUM_R1_READS
 
 SRC=~/atavide_lite/pawsey_minion
+
+sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/16S_detection_single.slurm
+
 cp $SRC/DEFINITIONS.sh .
 
 # edit the DEFINITIONS file to change the sample name
@@ -41,13 +44,20 @@ cp $SRC/DEFINITIONS.sh .
 HUMANDLDJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/download_human.slurm)
 MMSEQSDLD=$(sbatach --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_download.slurm)
 
+
+HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB,$HUMANDLDJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/host_removal.slurm)
+MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB,$MMSEQSDLD --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_easy_taxonomy.slurm)
+
 # note: If you don't need those two, then submit the next line and use MMSEQSDLD=$JOB; HUMANDLDJOB=$JOB
 
+export NUM_R1_READS=$(wc -l reads.txt | cut -f 1 -d ' ')
+echo $NUM_R1_READS
+
 JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/fastp.slurm)
-HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB,$HUMANDLDJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/host_removal.slurm)
+HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/host_removal.slurm)
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/fastq2fasta.slurm)
-MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB,$MMSEQSDLD --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_easy_taxonomy.slurm)
-sbatch --dependency=afterok:$MMSEQSJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_taxonomy.slurm
+MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_easy_taxonomy.slurm)
+sbatch --dependency=afterok:$MMSEQSJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_summarise_taxonomy.slurm
 sbatch --dependency=afterok:$MMSEQSJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/read_fate.slurm
 SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
 COUNTSSJOB=$(sbatch --parsable --dependency=afterok:$SSJOB $SRC/count_subsystems.slurm)

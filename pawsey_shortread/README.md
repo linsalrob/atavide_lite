@@ -1,0 +1,131 @@
+# Process a metagenome through Rob's 2023 pipeline
+
+This is the same scripts as in [../slurm](../slurm) but I've "optimised" this to run on Pawsey. They are not optimised at all, but they run!
+
+
+# If you are processing a lot of SRA runs, you will run into 16S libraries. You can screen for them with this command that works on the fastq directory
+
+```
+export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' ')
+mkdir -p slurm_output/sixteen_s
+sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/16S_detection_single.slurm
+```
+grep 'primary mapped' slurm_output/sixteen_s/*out | perl -ne 'm/(\d+\.\d+)\%/; print "$1\n"' | sort -g | (sed -u 10q ; echo ; tail)
+grep 'primary mapped' slurm_output/sixteen_s/*out | perl -ne 'm/(\d+\.\d+)\%/; print "$1\n"' | awk '{s+=$1} END {print s/NR}'
+```
+
+# Create a new conda environment:
+
+```
+TMP=$(for i in {1..12}; do printf "%x" $((RANDOM % 16)); done)
+mamba env create --yes --prefix /scratch/$PAWSEY_PROJECT/$USER//software/miniconda3/$TMP --file ../atavide_lite.yaml
+mamba activate /scratch/$PAWSEY_PROJECT/$USER//software/miniconda3/$TMP
+export ATAVIDE_CONDA=/scratch/$PAWSEY_PROJECT/$USER//software/miniconda3/$TMP
+```
+
+# Renaming files
+
+If you download files that have only `_1.fastq.gz` or `_2.fastq.gz` and need to rename them:
+
+```
+for F in *_1.fastq.gz; do mv $F ${F/_1/_R1}; done
+for F in *_2.fastq.gz; do mv $F ${F/_2/_R2}; done
+```
+
+
+# All commands in one go:
+
+```
+mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm slurm_output/fastp_slurm
+find fastq -name \*_R1\* -printf "%f\n" > R1_reads.txt
+export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' ')
+echo $NUM_R1_READS
+
+SRC=~/atavide_lite/deepthought_shortread
+PAWSEY_SRC=~/atavide_lite/pawsey_shortread
+
+cp $SRC/DEFINITIONS.sh .
+
+# edit the DEFINITIONS file to change the sample name
+
+HUMANDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_human.slurm)
+TAXDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_taxon_db.slurm)
+UNIREFJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA download_uniref50.slurm)
+VAMB_INSTALL=$(sbatch --parsable $PAWSEY_SRC/vamb_install.slurm)
+
+JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/fastp.slurm)
+HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB --dependency=afterok:$HUMANDLDJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/host_removal.slurm)
+MEGAHITHR=$(sbatch --parsable --dependency=afterok:$HOSTJOB -export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/megahit_hostremoved.slurm)
+sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/16S_detection_single.slurm
+FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/fastq2fasta.slurm)
+MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB --dependency=afterok:$UNIREFJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_easy_taxonomy.slurm)
+sbatch --dependency=afterok:$MMSEQSJOB --dependency=afterok:$TAXDLDJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_summarise_taxonomy.slurm
+SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA   $PAWSEY_SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
+COUNTSSJOB=$(sbatch --parsable --dependency=afterok:$SSJOB $PAWSEY_SRC/count_subsystems.slurm)
+SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $PAWSEY_SRC/sankey_plot.slurm)
+
+MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/megahit.slurm)
+
+## use this code for UNGROUPED data
+VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_concat.slurm)
+VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap.slurm)
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu /home/edwa0468/atavide_lite/pawsey_shortread/vamb.slurm
+sbatch ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags.slurm 
+
+
+## use this code for GROUPED data
+VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_concat_group.slurm samples.tsv)
+VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap_group.slurm samples.tsv)
+# This is a santiy check. All the files should be the same length in each directory (but not between directories)
+# Note: the commit #b570609 has fixed the issue with inconsistent BAM files which was caused by minimap2 using multi-indexed files and so not properly including the headers
+find vamb_groups/ -name \*.bam | while read -r BAM; do L=$(samtools view -H $BAM | wc -l); echo -e "$L\t$BAM"; done
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $PAWSEY_SRC/vamb_group.slurm
+sbatch  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm samples.tsv
+
+## Use this code for CROSSASSEMBLY data
+
+<summary>
+About the cross-assembly approach
+<details>
+In this approach, we do a mega-huge assembly with everyting together, and then map the individual reads back and use the complete
+contigs with mapped reads in VAMB - it appears that VAMB ignores contigs with no mapped reads, but breaks if you have bam files that 
+don't map to any contigs, so we find those and move those out the way.
+
+Then we use the usual VAMB approach to bin the contigs.
+
+</details>
+</summary>
+
+
+
+
+> assemble using the `megahit_hostremoved.slurm` script above. This will take a while to run, so do it early!
+
+VCRJOB=$(sbatch --parsable  --export ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_concat_crass.slurm samples.tsv)
+VMJOB=$(sbatch --parsable  --dependency=afterok:$VCRJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap_crass.slurm samples.tsv)
+# This is a santiy check. All the files should be the same length in each directory (but not between directories)
+# Note: the commit #b570609 has fixed the issue with inconsistent BAM files which was caused by minimap2 using multi-indexed files and so not properly including the headers
+find vamb_crass/ -name \*.bam | while read -r BAM; do L=$(samtools view -H $BAM | wc -l); echo -e "$L\t$BAM"; done
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $PAWSEY_SRC/vamb_crass.slurm)
+sbatch  --dependency=afterok:$VAMBJOB  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm samples.tsv
+
+
+CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $SRC/checkm.slurm vamb/bins/ vamb/checkm)
+
+```
+
+
+Note: Even with the _fast_ implementation of adding functions to taxonomy, there is still an issue with the code timing out. You can rerun the code
+and it will read the last results and then continue from there.
+
+Check for failed jobs:
+
+```
+grep CANCELLED slurm_output/mmseqs_slurm/*err
+```
+
+Rerun just the failed jobs (in this example, it was #3 and 18 that failed to finish):
+
+```
+SSJOB=$(sbatch --parsable  --array=3,18 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA   $PAWSEY_SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
+```

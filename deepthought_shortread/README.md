@@ -33,7 +33,7 @@ Clone the atavide lite repository to your home directory, and make the compiled 
 git clone https://github.com/linsalrob/atavide_lite.git
 cd atavide_lite/bin
 make
-SRC=~/atavide_lite/deepthought_slurm
+SRC=~/atavide_lite/deepthought_shortread
 ```
 
 0b. Set up the conda environment
@@ -91,7 +91,7 @@ MMSEQSJOB=$(sbatch --parsable --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxon
 4a. Create a taxonomy table
 
 ```
-sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_taxonomy.slurm
+sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_summarise_taxonomy.slurm
 ```
 
 4b. Add the subsystems to the taxonomy
@@ -184,7 +184,7 @@ mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseq
 find fastq -name \*_R1\* -printf "%f\n" > R1_reads.txt
 
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' '); echo "There are $NUM_R1_READS reads"
-SRC=~/atavide_lite/deepthought_slurm
+SRC=~/atavide_lite/deepthought_shortread
 cp $SRC/DEFINITIONS.sh .
 
 # edit the DEFINITIONS file to change the sample name
@@ -194,7 +194,7 @@ JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 $SRC/fastp.slurm)
 HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB $SRC/host_removal.slurm)
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)
-sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_taxonomy.slurm
+sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_summarise_taxonomy.slurm
 SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 $SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
 sbatch --dependency=afterok:$SSJOB $SRC/count_subsystems.slurm
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_READS:1 $SRC/megahit.slurm)

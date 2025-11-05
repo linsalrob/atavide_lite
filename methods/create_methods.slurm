@@ -21,6 +21,12 @@ ST_VER=$(samtools --help 2>&1 | grep Version)
 TK_VER=$(taxonkit 2>&1 | grep Version)
 VB_VER=$(vamb --version 2>/dev/null) || VB_VER="Vamb 5.0.2"
 
+if [[ -e  ~/Databases/UniRef50/UniRef50.version ]]; then
+	UNIREF_VER=$(perl -pe  's/^\s+//; chomp; if ($_) {s/$/; /}' ~/Databases/UniRef50/UniRef50.version)
+else
+	UNIREF_VER="Unknown - please check with mmseqs2"
+fi
+
 cat <<EOF
 
 Each of the metagenomics sequencing runs was processed separately. In the following commands the variable \$READ is used to indicate a specific run name for long read sequences and \$R1 and \$R2 are used to indicate the R1/R2 paired-end runs.
@@ -49,7 +55,7 @@ These commands use the default minimap2 parameters for mapping reads against a r
 
 The sequences were identified from the BAM file created by the previous command and filtered to two separate files using samtools  ($ST_VER) [PMID: 19505943]. Sequences that do not match the flag 3588 -- and thus represent mapped reads which pass the platform/vendor quality check, are not PCR or optical duplicates, and are primary alignments -- were filtered as mapping to the human genome. For short reads, additional samtools flags were used to identify R1 reads (matching flag 65) and R2 reads (matching flag 129). Reads that do not match the flag 3584 -- and thus represent unmapped reads which pass the platform/vendor quality check, are not PCR or optical duplicates, and are primary alignments -- are filtered as unmapped reads [PMID: 19505943], and again, short reads were separated using flags that match 77 for R1 reads and 141 for R2 reads.
 
-Reads that did not map to the human genome were mapped against the UniRef50 [PMID: 17379688]  (version database using MMseqs2 (version $MM_VER) with the following command for long reads:
+Reads that did not map to the human genome were mapped against the UniRef50 ($UNIREF_VER) [PMID: 17379688]  (version database using MMseqs2 (version $MM_VER) with the following command for long reads:
 
 mmseqs easy-taxonomy fasta/\$READS UniRef50 mmseqs/\${READS}_UniRef /tmp --threads 32
 

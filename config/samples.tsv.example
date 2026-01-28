@@ -1,0 +1,22 @@
+# Sample Sheet for atavide_lite Pipeline
+# Tab-delimited file specifying input samples
+#
+# Required columns:
+#   sample_id - Unique identifier for the sample (no spaces)
+#   r1        - Path to R1 reads (can be absolute or relative to FASTQ_DIR)
+#
+# Optional columns:
+#   r2        - Path to R2 reads (for paired-end data; leave empty for single-end)
+#   host_ref  - Sample-specific host reference (overrides HOSTFILE in paths.env)
+#   group     - Group/category for organizing samples (e.g., timepoint, condition)
+#   notes     - Free-text notes or description
+#
+# PAIRED-END EXAMPLES:
+sample_id	r1	r2	host_ref	group	notes
+sample001	/data/fastq/sample001_R1.fastq.gz	/data/fastq/sample001_R2.fastq.gz		control	Patient baseline sample
+sample002	fastq/sample002_R1.fastq.gz	fastq/sample002_R2.fastq.gz		treated	Post-treatment day 7
+sample003	sample003_R1.fastq.gz	sample003_R2.fastq.gz	/data/refs/mouse.fna.gz	mouse_model	Uses mouse host reference
+
+# SINGLE-END EXAMPLES:
+sample_nanopore_001	/data/nanopore/barcode01.fastq.gz				ONT MinION run
+sample_old_illumina	legacy_data/old_sample.fastq.gz			archived	Old single-end Illumina data

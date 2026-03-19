@@ -50,8 +50,8 @@ cp $SRC/DEFINITIONS.sh .
 
 HUMANDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_human.slurm)
 TAXDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_taxon_db.slurm)
-UNIREFJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA download_uniref50.slurm)
-VAMB_INSTALL=$(sbatch --parsable $PAWSEY_SRC/vamb_install.slurm)
+UNIREFJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/download_uniref50.slurm)
+VAMB_INSTALL=$(sbatch --parsable --account=${PAWSEY_PROJECT}-gpu $PAWSEY_SRC/vamb_install.slurm)
 
 JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/fastp.slurm)
 HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB --dependency=afterok:$HUMANDLDJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/host_removal.slurm)

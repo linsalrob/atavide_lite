@@ -143,6 +143,9 @@ if __name__ == "__main__":
                               f"we are using {real_weight_col} for the weights. Did we mix taxa formats??", file=sys.stderr)
                         weight_column = real_weight_col
                     elif not weight_column:
+                        if args.verbose:
+                            print(f"{colours.GREEN}Assuming {real_weight_col} is the weight column{colours.ENDC}",
+                                  file=sys.stderr)
                         weight_column = real_weight_col
 
                 total[sample_id] = total.get(sample_id, 0) + float(p[weight_column]) ## this is the total of all reads

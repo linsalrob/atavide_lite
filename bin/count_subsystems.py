@@ -103,10 +103,14 @@ if __name__ == "__main__":
             ss_file = tax_ss_file
             weight_column = 13
             input_format = 'new'
+            if args.verbose:
+                print(f"Reading 'new' format input in {sample} from {ss_file}", file=sys.stderr)
         elif os.path.exists(ori_ss_file):
             ss_file = ori_ss_file
             weight_column = 14
             input_format = 'old'
+            if args.verbose:
+                print(f"Reading 'old' format input in {sample} from {ss_file}", file=sys.stderr)
         else:
             sys.stderr.write(f"Skipping {sample} because there is no subsystems file\n")
             continue
@@ -141,9 +145,9 @@ if __name__ == "__main__":
                             break
                         except ValueError:
                             pass
-                        if weight_column != real_weight_col:
-                            print(f"We have a subsystem taxonomy version conflict in {ss_file}. We predict it has the `{input_format}` format from mmseqs_add_subsystems_taxonomy, but the weight column appears to be in the wrong spot. Tell Rob to fix this", file=sys.stderr)
-                            weight_column = real_weight_col
+                    if weight_column != real_weight_col:
+                        print(f"We have a subsystem taxonomy version conflict in {ss_file}. We predict it has the `{input_format}` format from mmseqs_add_subsystems_taxonomy, but the weight column appears to be in the wrong spot. Tell Rob to fix this", file=sys.stderr)
+                        weight_column = real_weight_col
 
                 total[sample_id] = total.get(sample_id, 0) + float(p[weight_column]) ## this is the total of all reads
                 # if we don't have p[9] --> top level, we don't count ss.

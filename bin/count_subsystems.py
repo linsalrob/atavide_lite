@@ -53,6 +53,7 @@ import re
 import sys
 import argparse
 from atavide_lib import colours
+from collections import defaultdict
 
 __author__ = 'Rob Edwards'
 
@@ -82,13 +83,20 @@ if __name__ == "__main__":
                 metadata[sub.sub('', p[0])] = p[1]
 
     all_samples = set()
-    total = {}; ss_total = {}
-    ss_class = {}; all_classes = set()
-    ss_lvl1 = {}; all_lvl1 = set()
-    ss_lvl2 = {}; all_lvl2 = set()
-    ss_sub = {}; all_sub = set()
-    ss_all = {}; all_subsystems = set()
-    ss_fn = {}; all_fn = set()
+    total = {}
+    ss_total = defaultdict(dict)
+    ss_class = defaultdict(dict)
+    all_classes = set()
+    ss_lvl1 = defaultdict(dict)
+    all_lvl1 = set()
+    ss_lvl2 = defaultdict(dict)
+    all_lvl2 = set()
+    ss_sub = defaultdict(dict)
+    all_sub = set()
+    ss_all = defaultdict(dict)
+    all_subsystems = set()
+    ss_fn = defaultdict(dict)
+    all_fn = set()
 
     weight_column = None
     for sample in os.listdir(args.directory):
@@ -115,13 +123,6 @@ if __name__ == "__main__":
 
         all_samples.add(sample_id)
         total[sample_id] = 0
-        ss_total[sample_id] = 0
-        ss_class[sample_id] = 0
-        ss_lvl1[sample_id] = 0
-        ss_lvl2[sample_id] = 0
-        ss_sub[sample_id] = 0
-        ss_all[sample_id] = 0
-        ss_fn[sample_id] = 0
         with gzip.open(ss_file, 'rt') as f:
             for lcount,l in enumerate(f):
                 p = l.strip().split("\t")

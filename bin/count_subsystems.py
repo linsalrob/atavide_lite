@@ -1,24 +1,52 @@
 """
 Colate the subsystems output from the mmseqs output into single files for different levels.
 
-Columns in the subsystems file:
- 0       UniRef50_L1JF06
- 1       1
- 2       0.636
- 3       0.636
- 4       0.338
- 5       131567
- 6       no rank
- 7       cellular organisms
- 8       Phytoene synthase (EC 2.5.1.32) --> original function
- 9       Metabolism  --> CLASS
- 10      Fatty Acids, Lipids, and Isoprenoids --> Level 1
- 11      Steroids and Hopanoids --> Level 2
- 12      Hopanoid biosynthesis --> Subsystem
- 13      Phytoene synthase (EC 2.5.1.32) --> Function
- 14      0.5 --> Weighted count
+Input format:
+
+The original format we used was this, but note that the function is in columns 8 & 13. 
+0       UniRef50_L1JF06
+1       1
+2       0.636
+3       0.636
+4       0.338
+5       131567
+6       no rank
+7       cellular organisms
+8       Phytoene synthase (EC 2.5.1.32)
+9       Metabolism  --> CLASS
+10      Fatty Acids, Lipids, and Isoprenoids --> Level 1
+11      Steroids and Hopanoids --> Level 2
+12      Hopanoid biosynthesis --> Subsystem 
+13      Phytoene synthase (EC 2.5.1.32) --> Function
+14      0.5 --> Weighted count
+
+Then we updated the format and added the taxa in column 15. Then we updated the format again when we added mmseqs_add_subsystems_taxonomy_fast.slurm and
+removed the redundant duplicate of the format.
+
+Now the format is:
+0       UniRef50_A0A5J4P836
+1       12
+2       0.954
+3       7.245
+4       0.653
+5       85831
+6       species
+7       Bacteroides acidifaciens
+8       Pyruvate,phosphate dikinase (EC 2.7.9.1)                8 --> Function
+9       Energy                                                  9 --> Class
+10      Energy and Precursor Metabolites Generation            10 --> Level 1
+11      Central Metabolism                                     11 --> Level 2
+12      Glycolysis and Gluconeogenesis                         12 --> Subsystem
+13      4.0                                                    13 --> Weighted count
+14      k__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides;s__Bacteroides acidifaciens --> taxonomy
+        
+This version should works on either format from mmseqs_add_subsystems_taxonomy_fast.slurm 
+which has one less column (I removed the redundant function column). 
+Its a bit of a mess because it means we have incompatible formats floating around
+However, you can change the format essentially by changing the weight_column variable
 
 """
+
 import gzip
 import os
 import re
@@ -32,6 +60,8 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--directory', help='directory of mmseqs outputs [mmseqs]', default='mmseqs')
     parser.add_argument('-s', '--subsystems', help='subsystems output directory [subsystems]', default='subsystems')
     parser.add_argument('-m', '--metadata', help='metadata file. If you provide this we strip of _S34 (or whatever) and then try and rename your columns')
+    parser.add_argument('-n', '--name', help='sample name for the file outputs', default='atavide')
+
 
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
@@ -48,6 +78,7 @@ if __name__ == "__main__":
             for l in f:
                 p = l.strip().split("\t")
                 metadata[p[0]] = sub.sub('', p[1])
+                metadata[sub.sub('', p[0])] = p[1]
 
     all_samples = set()
     total = {}; ss_total = {}
@@ -66,10 +97,16 @@ if __name__ == "__main__":
         ori_ss_file = os.path.join(args.directory, sample, f"{sample}_tophit_report_subsystems.gz")
         ss_file = None
 
+        weight_column = None
         if os.path.exists(tax_ss_file):
+            # this should be the new format file
             ss_file = tax_ss_file
+            weight_column = 13
+            input_format = 'new'
         elif os.path.exists(ori_ss_file):
             ss_file = ori_ss_file
+            weight_column = 14
+            input_format = 'old'
         else:
             sys.stderr.write(f"Skipping {sample} because there is no subsystems file\n")
             continue
@@ -81,48 +118,69 @@ if __name__ == "__main__":
             sample_id = metadata[sample_id]
 
         all_samples.add(sample_id)
+        total[sample_id] = {}
+        ss_total[sample_id] = {}
+        ss_class[sample_id] = {}
+        ss_lvl1[sample_id] = {}
+        ss_lvl2[sample_id] = {}
+        ss_sub[sample_id] = {}
+        ss_all[sample_id] = {}
+        ss_fn[sample_id] = {}
         with gzip.open(ss_file, 'rt') as f:
-            for l in f:
+            for lcount,l in enumerate(f):
                 p = l.strip().split("\t")
                 if len(p) < 15:
                     sys.stderr.write(f"Error: {sample} has {len(p)} columns, not 15 or 16\n")
                     sys.exit(-1)
+                # check the file format
+                if lcount == 0:
+                    for idx in [13, 14]:
+                        try:
+                            float(p[idx])
+                            real_weight_col = idx
+                            break
+                        except ValueError:
+                            pass
+                        if weight_column != real_weight_col:
+                            print(f"We have a subsystem taxonomy version conflict in {ss_file}. We predict it has the `{input_format}` format from mmseqs_add_subsystems_taxonomy, but the weight column appears to be in the wrong spot. Tell Rob to fix this", file=sys.stderr)
+                            weight_column = real_weight_col
 
-                total[sample_id] = total.get(sample_id, 0) + float(p[14]) ## this is the total of all reads
+                total[sample_id] = total.get(sample_id, 0) + float(p[weight_column]) ## this is the total of all reads
                 # if we don't have p[9] --> top level, we don't count ss.
                 if p[9]:
-                    ss_total[sample_id] = ss_total.get(sample_id, 0) + float(p[14]) ## this is the total of only those reads that have a subsystems match
+                    myval = float(p[weight_column]) 
+                    ss_total[sample_id] = ss_total.get(sample_id, 0) + myval ## this is the total of only those reads that have a subsystems match
 
                     if sample_id not in ss_class:
                         ss_class[sample_id] = {}
-                    ss_class[sample_id][p[9]] = ss_class[sample_id].get(p[9], 0) + float(p[14])
+                    ss_class[sample_id][p[9]] = ss_class[sample_id].get(p[9], 0) + myval  
                     all_classes.add(p[9])
 
                     if sample_id not in ss_lvl1:
                         ss_lvl1[sample_id] = {}
-                    ss_lvl1[sample_id][p[10]] = ss_lvl1[sample_id].get(p[10], 0) + float(p[14])
+                    ss_lvl1[sample_id][p[10]] = ss_lvl1[sample_id].get(p[10], 0) + myval
                     all_lvl1.add(p[10])
 
                     if sample_id not in ss_lvl2:
                         ss_lvl2[sample_id] = {}
-                    ss_lvl2[sample_id][f"{p[10]}; {p[11]}"] = ss_lvl2[sample_id].get(f"{p[10]}; {p[11]}", 0) + float(p[14])
+                    ss_lvl2[sample_id][f"{p[10]}; {p[11]}"] = ss_lvl2[sample_id].get(f"{p[10]}; {p[11]}", 0) + myval
                     all_lvl2.add(f"{p[10]}; {p[11]}")
 
                     if sample_id not in ss_sub:
                         ss_sub[sample_id] = {}
-                    ss_sub[sample_id][p[12]] = ss_sub[sample_id].get(p[12], 0) + float(p[14])
+                    ss_sub[sample_id][p[12]] = ss_sub[sample_id].get(p[12], 0) + myval
                     all_sub.add(p[12])
 
                     if sample_id not in ss_fn:
                         ss_fn[sample_id] = {}
-                    all_with_fn = f"{p[9]}; {p[10]}; {p[11]}; {p[12]}; {p[13]}"
-                    ss_fn[sample_id][all_with_fn] = ss_fn[sample_id].get(all_with_fn, 0) + float(p[14])
+                    all_with_fn = f"{p[9]}; {p[10]}; {p[11]}; {p[12]}; {p[8]}"
+                    ss_fn[sample_id][all_with_fn] = ss_fn[sample_id].get(all_with_fn, 0) + myval
                     all_fn.add(all_with_fn)
 
                     if sample_id not in ss_all:
                         ss_all[sample_id] = {}
                     all_with_sub = f"{p[9]}; {p[10]}; {p[11]}; {p[12]}"
-                    ss_all[sample_id][all_with_sub] = ss_all[sample_id].get(all_with_sub, 0) + float(p[14])
+                    ss_all[sample_id][all_with_sub] = ss_all[sample_id].get(all_with_sub, 0) + myval
                     all_subsystems.add(all_with_sub)
 
     # now we have all the data, let's write it out
@@ -133,7 +191,7 @@ if __name__ == "__main__":
         print('Writing raw counts', file=sys.stderr)
 
     sorted_samples = sorted(all_samples)
-    with open(f"{args.subsystems}/class_raw.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_class_raw.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_classes):
             out.write(ss)
@@ -141,7 +199,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_class[sample].get(ss, 0)))
             out.write("\n")
 
-    with open(f"{args.subsystems}/level1_raw.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_level1_raw.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_lvl1):
             out.write(ss)
@@ -149,7 +207,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_lvl1[sample].get(ss, 0)))
             out.write("\n")
 
-    with open(f"{args.subsystems}/level2_raw.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_level2_raw.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_lvl2):
             out.write(ss)
@@ -157,7 +215,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_lvl2[sample].get(ss, 0)))
             out.write("\n")
 
-    with open(f"{args.subsystems}/subsystems_raw.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_subsystems_raw.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_sub):
             out.write(ss)
@@ -165,7 +223,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_sub[sample].get(ss, 0)))
             out.write("\n")
 
-    with open(f"{args.subsystems}/all_raw.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_all_raw.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_subsystems):
             out.write(ss)
@@ -173,7 +231,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_all[sample].get(ss, 0)))
             out.write("\n")
 
-    with open(f"{args.subsystems}/all_fn_raw.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_all_fn_raw.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_fn):
             out.write(ss)
@@ -195,7 +253,7 @@ if __name__ == "__main__":
     for sample in total:
         total[sample] /= 1e6
 
-    with open(f"{args.subsystems}/class_norm_all.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_class_norm_all.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_classes):
             out.write(ss)
@@ -203,7 +261,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_class[sample].get(ss, 0) / total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/level1_norm_all.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_level1_norm_all.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_lvl1):
             out.write(ss)
@@ -211,7 +269,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_lvl1[sample].get(ss, 0) / total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/level2_norm_all.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_level2_norm_all.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_lvl2):
             out.write(ss)
@@ -219,7 +277,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_lvl2[sample].get(ss, 0) / total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/subsystems_norm_all.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_subsystems_norm_all.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_sub):
             out.write(ss)
@@ -227,7 +285,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_sub[sample].get(ss, 0) / total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/all_norm_all.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_all_norm_all.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_subsystems):
             out.write(ss)
@@ -235,7 +293,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_all[sample].get(ss, 0) / total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/all_fn_norm_all.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_all_fn_norm_all.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_fn):
             out.write(ss)
@@ -254,7 +312,7 @@ if __name__ == "__main__":
     for sample in ss_total:
         ss_total[sample] /= 1e6
 
-    with open(f"{args.subsystems}/class_norm_ss.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_class_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_classes):
             out.write(ss)
@@ -262,7 +320,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_class[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/level1_norm_ss.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_level1_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_lvl1):
             out.write(ss)
@@ -270,7 +328,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_lvl1[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/level2_norm_ss.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_level2_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_lvl2):
             out.write(ss)
@@ -278,7 +336,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_lvl2[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/subsystems_norm_ss.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_subsystems_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_sub):
             out.write(ss)
@@ -286,7 +344,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_sub[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/all_norm_ss.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_all_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_subsystems):
             out.write(ss)
@@ -294,7 +352,7 @@ if __name__ == "__main__":
                 out.write("\t" + str(ss_all[sample].get(ss, 0) / ss_total[sample]))
             out.write("\n")
 
-    with open(f"{args.subsystems}/all_fn_norm_ss.tsv", 'w') as out:
+    with open(f"{args.subsystems}/{args.name}_all_fn_norm_ss.tsv", 'w') as out:
         out.write("\t" + "\t".join(sorted_samples) + "\n")
         for ss in sorted(all_fn):
             out.write(ss)
@@ -310,15 +368,15 @@ if __name__ == "__main__":
 
 Currently we perform three normalizations:
 
-1. *_raw.tsv
+1. {args.name}_*_raw.tsv
 
 This is the non-normalised data, so just the raw counts. For each sequence, if it appears in one subsystem we incremenet that count by 1, but if it occurs in more than one subsystem, we increment that count by 1/n (1/2 for 2 subsystems, 1/3 for 3 subsystems, etc).
 
-2. *_norm_all.tsv
+2. {args.name}_*_norm_all.tsv
 
 This data is normalised for _all_ reads, regardless of whether they are in a subsystem or not. This makes smaller numbers. 
 
-3. *_norm_ss.tsv
+3. {args.name}_*_norm_ss.tsv
 
 This data is normalised only to the number of reads that match to subsystems, so if there is a lot of other stuff we ignore it.
 

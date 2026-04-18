@@ -52,6 +52,7 @@ import os
 import re
 import sys
 import argparse
+from atavide_lib import colours
 
 __author__ = 'Rob Edwards'
 
@@ -89,6 +90,7 @@ if __name__ == "__main__":
     ss_all = {}; all_subsystems = set()
     ss_fn = {}; all_fn = set()
 
+    weight_column = None
     for sample in os.listdir(args.directory):
 
         # mmseqs/SAGCFN_22_00789_S34/SAGCFN_22_00789_S34_tophit_report_subsystems.gz
@@ -97,20 +99,10 @@ if __name__ == "__main__":
         ori_ss_file = os.path.join(args.directory, sample, f"{sample}_tophit_report_subsystems.gz")
         ss_file = None
 
-        weight_column = None
         if os.path.exists(tax_ss_file):
-            # this should be the new format file
             ss_file = tax_ss_file
-            weight_column = 13
-            input_format = 'new'
-            if args.verbose:
-                print(f"Reading 'new' format input in {sample} from {ss_file}", file=sys.stderr)
         elif os.path.exists(ori_ss_file):
             ss_file = ori_ss_file
-            weight_column = 14
-            input_format = 'old'
-            if args.verbose:
-                print(f"Reading 'old' format input in {sample} from {ss_file}", file=sys.stderr)
         else:
             sys.stderr.write(f"Skipping {sample} because there is no subsystems file\n")
             continue
@@ -122,21 +114,21 @@ if __name__ == "__main__":
             sample_id = metadata[sample_id]
 
         all_samples.add(sample_id)
-        total[sample_id] = {}
-        ss_total[sample_id] = {}
-        ss_class[sample_id] = {}
-        ss_lvl1[sample_id] = {}
-        ss_lvl2[sample_id] = {}
-        ss_sub[sample_id] = {}
-        ss_all[sample_id] = {}
-        ss_fn[sample_id] = {}
+        total[sample_id] = 0
+        ss_total[sample_id] = 0
+        ss_class[sample_id] = 0
+        ss_lvl1[sample_id] = 0
+        ss_lvl2[sample_id] = 0
+        ss_sub[sample_id] = 0
+        ss_all[sample_id] = 0
+        ss_fn[sample_id] = 0
         with gzip.open(ss_file, 'rt') as f:
             for lcount,l in enumerate(f):
                 p = l.strip().split("\t")
                 if len(p) < 15:
-                    sys.stderr.write(f"Error: {sample} has {len(p)} columns, not 15 or 16\n")
+                    print(f"{colours.RED}Error: {sample} has {len(p)} columns, not 15 or 16{colours.ENDC}", file=sys.stderr)
                     sys.exit(-1)
-                # check the file format
+                # check the input file format
                 if lcount == 0:
                     for idx in [13, 14]:
                         try:
@@ -145,8 +137,11 @@ if __name__ == "__main__":
                             break
                         except ValueError:
                             pass
-                    if weight_column != real_weight_col:
-                        print(f"We have a subsystem taxonomy version conflict in {ss_file}. We predict it has the `{input_format}` format from mmseqs_add_subsystems_taxonomy, but the weight column appears to be in the wrong spot. Tell Rob to fix this", file=sys.stderr)
+                    if weight_column and weight_column != real_weight_col:
+                        print(f"{colours.PINK}WARNING: Originally we were using {weight_column} as the weights, and now"
+                              f"we are using {real_weight_col} for the weights. Did we mix taxa formats??", file=sys.stderr)
+                        weight_column = real_weight_col
+                    elif not weight_column:
                         weight_column = real_weight_col
 
                 total[sample_id] = total.get(sample_id, 0) + float(p[weight_column]) ## this is the total of all reads

@@ -366,7 +366,7 @@ if __name__ == "__main__":
 
 
     with open(f"{args.subsystems}/README.md", 'w') as out:
-        out.write("""
+        out.write(f"""
 # NORMALIZATIONS
 
 Currently we perform three normalizations:

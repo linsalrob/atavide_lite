@@ -132,3 +132,32 @@ Gadi uses PBS for scheduling a `/g/data` drive that is used for temporary storag
 we have to run each step separately.
 
 Gadi also has fast local drives that are accessible from compute nodes, and they are at `$PBS_JOBFS`
+
+<a id='selecting-taxa'></a>
+# Selecting taxa
+
+In some cases, you may want to omit selected taxa from your downstream analyses. For example, you may want to remove all reads that are assigned to a particular taxonomic group, such as
+Pseudomonas, to determine whether any signal you discover is solely because of the reads that map to that taxa, rather than other trends in the data.
+
+There are a couple of steps that you need to run to do this. These assume the pipeline has been run.
+
+In this example, I remove everything at `f__Pseudomonadaceae` and below.
+
+First, we create a set of subsystems files without the taxa.
+
+```bash
+python ~/GitHubs/atavide_lite/bin/count_subsystems_selective.py -d mmseqs -s subsystems_no_pseudo -n no_pseudo -t f__Pseudomonadaceae -v
+```
+
+This makes a new directory, `subsystems_no_pseudo` that has the subsytem count files, but without `f__Pseudomonadaceae`.
+
+Second, we make a new taxonomy summary file without the taxa. We have to do this in two steps, but they are quite quick!
+
+```bash
+python ~/GitHubs/atavide_lite/bin/taxonomy_selected.py -d taxonomy -o taxonomy_no_pseudo -t f__Pseudomonadaceae -v
+python ~/GitHubs/atavide_lite/summarise_taxonomy/scripts/join_taxonomies.py -t taxonomy_no_pseudo -o taxonomy_no_pseudo_summary -n no_pseudomonas -v
+```
+
+The first makes a copy of the per-sample taxonomy files originally in `taxonomy` and puts them in `taxonomy_no_pseudo` but without the `f__Pseudomonadaceae` reads. 
+The second makes the summary directory with kingdom, phylum, class, etc. summaries without the `f__Pseudomonadaceae` reads.
+

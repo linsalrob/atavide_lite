@@ -23,7 +23,7 @@ last_serialised = time.time()
 def serialise(data, count_data_file):
     """Serialise the data to a file.
     We do this every SERIALISE_EVERY seconds to avoid losing data."""
-    print("SERIALISING to {count_data_file} at {datetime.now()}", file=sys.stderr)
+    print(f"SERIALISING to {count_data_file} at {datetime.now()}", file=sys.stderr)
 
     # check the file names and reate the backup files
     if count_data_file.endswith(".gz"):

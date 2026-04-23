@@ -23,6 +23,7 @@ last_serialised = time.time()
 def serialise(data, count_data_file):
     """Serialise the data to a file.
     We do this every SERIALISE_EVERY seconds to avoid losing data."""
+    print("SERIALISING to {count_data_file} at {datetime.now()}", file=sys.stderr)
 
     # check the file names and reate the backup files
     if count_data_file.endswith(".gz"):
@@ -38,7 +39,7 @@ def serialise(data, count_data_file):
 
     if now - last_serialised >= SERIALISE_EVERY:
         readable = datetime.fromtimestamp(now).strftime("%Y-%m-%d %H:%M:%S")
-        logging.info(f"Serialising data to {count_data_file} at {readable}")
+        logging.info("Serialising data to %s at %s", count_data_file, readable)
         # Rotate backups
         if os.path.exists(backup1):
             shutil.move(backup1, backup2)
@@ -169,7 +170,7 @@ if __name__ == "__main__":
             logging.info(f"Read files for {r}")
             c_raw, c_trimmed, c_host, c_no_host = future.result()
             count_data[r] = {'fastq': c_raw, 'trimmed': c_trimmed, 'host': c_host, 'no_host': c_no_host}
-            serialise(args.countdata)
+            serialise(args.countdata, "tmpcountdata.txt.gz")
             raw_fastq += c_raw
             trimmed_fastq += c_trimmed
             host += c_host
@@ -192,13 +193,19 @@ if __name__ == "__main__":
 
     # now read the taxonomy outputs
     tax = {'Bacteria': 0, 'Archaea': 0, 'Eukaryota': 0, 'Viruses': 0, 'Multidomain': 0}
-    if os.path.exists(os.path.join("taxonomy_summary", "kingdom.raw.tsv.gz")):
-        kingdom_file = "kingdom.raw.tsv.gz" # old format
-    elif os.path.exists(os.path.join("taxonomy_summary", f"{definitions['SAMPLENAME']}_kingdom.raw.tsv.gz")):
-        kingdom_file = f"{definitions['SAMPLENAME']}_kingdom.raw.tsv.gz" # new format
-    else:
-        print(f"Error: No kingdom taxonomy file found in {os.path.join('taxonomy_summary')}", file=sys.stderr)
 
+    kingdom_file = None
+    for filename in os.listdir("taxonomy_summary"):
+        if "kingdom.raw.tsv" in filename:
+            kingdom_file = filename
+            break  
+
+    if not kingdom_file:
+        print(f"Error: No kingdom taxonomy file found in 'taxonomy_summary'", file=sys.stderr)
+        print(f"ERROR: can't continue", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Reading taxonomy from {kingdom_file}", file=sys.stderr)
     with gzip.open(os.path.join("taxonomy_summary", kingdom_file), 'rt') as tax_file:
         for line in tax_file:
             if line.startswith("#") or not line.strip():

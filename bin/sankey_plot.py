@@ -23,7 +23,7 @@ last_serialised = time.time()
 def serialise(data, count_data_file):
     """Serialise the data to a file.
     We do this every SERIALISE_EVERY seconds to avoid losing data."""
-    print("SERIALISING to {count_data_file} at {datetime.now()}", file=sys.stderr)
+    logging.info("Serialising data to %s at %s", count_data_file, datetime.now())
 
     # check the file names and reate the backup files
     if count_data_file.endswith(".gz"):
@@ -38,8 +38,6 @@ def serialise(data, count_data_file):
     now = time.time()
 
     if now - last_serialised >= SERIALISE_EVERY:
-        readable = datetime.fromtimestamp(now).strftime("%Y-%m-%d %H:%M:%S")
-        logging.info("Serialising data to %s at %s", count_data_file, readable)
         # Rotate backups
         if os.path.exists(backup1):
             shutil.move(backup1, backup2)

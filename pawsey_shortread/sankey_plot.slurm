@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=pawsey1018
 #SBATCH --job-name=sankey_plot
-#SBATCH --time=1-0
+#SBATCH --time=0-1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=64GB

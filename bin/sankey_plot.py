@@ -114,6 +114,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', help='output file', default="sankey_plot.txt")
     parser.add_argument('-j', '--json', help='json output', default='sankey_data.json')
     parser.add_argument('--paired', help='Paired end reads', action='store_true')
+    parser.add_argument('-t', '--threads', help='number of threads to use (default: number of CPUs)', type=int, default=os.cpu_count())
     parser.add_argument('-l', '--log', help='log file')
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
@@ -160,7 +161,8 @@ if __name__ == "__main__":
     trimmed_fastq = 0
     host = 0
     no_host = 0
-    with ThreadPoolExecutor() as executor:
+    logging.info(f"Using {args.threads} threads")
+    with ThreadPoolExecutor(max_workers=args.threads) as executor:
         futures = {executor.submit(count_all_for_read, r): r for r in unprocessed_reads}
 
         for future in as_completed(futures):

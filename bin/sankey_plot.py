@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 import shutil
 from atavide_lib import stream_fastq
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 __author__ = 'Rob Edwards'
 
@@ -71,7 +71,7 @@ def count_fastq(fastq_file, logger=None):
     count = sum(1 for _ in stream_fastq(fastq_file))
     return count
 
-def count_all_for_read(r):
+def count_all_for_read(r, definitions):
     """
     Given a read, count the number of sequences in the fastq files,
     but we do it in parallel
@@ -161,9 +161,9 @@ if __name__ == "__main__":
     trimmed_fastq = 0
     host = 0
     no_host = 0
-    logging.info(f"Using {args.threads} threads")
-    with ThreadPoolExecutor(max_workers=args.threads) as executor:
-        futures = {executor.submit(count_all_for_read, r): r for r in unprocessed_reads}
+    logging.info(f"Using {args.threads} processes")
+    with ProcessPoolExecutor(max_workers=args.threads) as executor:
+        futures = {executor.submit(count_all_for_read, r, definitions): r for r in unprocessed_reads}
 
         for future in as_completed(futures):
             r = futures[future]

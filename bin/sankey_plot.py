@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 import shutil
 from atavide_lib import stream_fastq
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 __author__ = 'Rob Edwards'
 
@@ -23,6 +23,7 @@ last_serialised = time.time()
 def serialise(data, count_data_file):
     """Serialise the data to a file.
     We do this every SERIALISE_EVERY seconds to avoid losing data."""
+    logging.info("Serialising data to %s at %s", count_data_file, datetime.now())
 
     # check the file names and reate the backup files
     if count_data_file.endswith(".gz"):
@@ -37,8 +38,6 @@ def serialise(data, count_data_file):
     now = time.time()
 
     if now - last_serialised >= SERIALISE_EVERY:
-        readable = datetime.fromtimestamp(now).strftime("%Y-%m-%d %H:%M:%S")
-        logging.info(f"Serialising data to {count_data_file} at {readable}")
         # Rotate backups
         if os.path.exists(backup1):
             shutil.move(backup1, backup2)
@@ -72,7 +71,7 @@ def count_fastq(fastq_file, logger=None):
     count = sum(1 for _ in stream_fastq(fastq_file))
     return count
 
-def count_all_for_read(r):
+def count_all_for_read(r, definitions):
     """
     Given a read, count the number of sequences in the fastq files,
     but we do it in parallel
@@ -115,6 +114,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', help='output file', default="sankey_plot.txt")
     parser.add_argument('-j', '--json', help='json output', default='sankey_data.json')
     parser.add_argument('--paired', help='Paired end reads', action='store_true')
+    parser.add_argument('-t', '--threads', help='number of threads to use (default: number of CPUs)', type=int, default=os.cpu_count())
     parser.add_argument('-l', '--log', help='log file')
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
@@ -161,15 +161,16 @@ if __name__ == "__main__":
     trimmed_fastq = 0
     host = 0
     no_host = 0
-    with ThreadPoolExecutor() as executor:
-        futures = {executor.submit(count_all_for_read, r): r for r in unprocessed_reads}
+    logging.info(f"Using {args.threads} processes")
+    with ProcessPoolExecutor(max_workers=args.threads) as executor:
+        futures = {executor.submit(count_all_for_read, r, definitions): r for r in unprocessed_reads}
 
         for future in as_completed(futures):
             r = futures[future]
             logging.info(f"Read files for {r}")
             c_raw, c_trimmed, c_host, c_no_host = future.result()
             count_data[r] = {'fastq': c_raw, 'trimmed': c_trimmed, 'host': c_host, 'no_host': c_no_host}
-            serialise(args.countdata)
+            serialise(count_data, args.countdata)
             raw_fastq += c_raw
             trimmed_fastq += c_trimmed
             host += c_host
@@ -192,13 +193,19 @@ if __name__ == "__main__":
 
     # now read the taxonomy outputs
     tax = {'Bacteria': 0, 'Archaea': 0, 'Eukaryota': 0, 'Viruses': 0, 'Multidomain': 0}
-    if os.path.exists(os.path.join("taxonomy_summary", "kingdom.raw.tsv.gz")):
-        kingdom_file = "kingdom.raw.tsv.gz" # old format
-    elif os.path.exists(os.path.join("taxonomy_summary", f"{definitions['SAMPLENAME']}_kingdom.raw.tsv.gz")):
-        kingdom_file = f"{definitions['SAMPLENAME']}_kingdom.raw.tsv.gz" # new format
-    else:
-        print(f"Error: No kingdom taxonomy file found in {os.path.join('taxonomy_summary')}", file=sys.stderr)
 
+    kingdom_file = None
+    for filename in os.listdir("taxonomy_summary"):
+        if "kingdom.raw.tsv" in filename:
+            kingdom_file = filename
+            break  
+
+    if not kingdom_file:
+        print(f"Error: No kingdom taxonomy file found in 'taxonomy_summary'", file=sys.stderr)
+        print(f"ERROR: can't continue", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Reading taxonomy from {kingdom_file}", file=sys.stderr)
     with gzip.open(os.path.join("taxonomy_summary", kingdom_file), 'rt') as tax_file:
         for line in tax_file:
             if line.startswith("#") or not line.strip():

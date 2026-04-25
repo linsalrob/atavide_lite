@@ -1,27 +1,8 @@
 """
 Colate the subsystems output from the mmseqs output into single files for different levels.
 
-Input format:
-
-The original format we used was this, but note that the function is in columns 8 & 13. 
-0       UniRef50_L1JF06
-1       1
-2       0.636
-3       0.636
-4       0.338
-5       131567
-6       no rank
-7       cellular organisms
-8       Phytoene synthase (EC 2.5.1.32)
-9       Metabolism  --> CLASS
-10      Fatty Acids, Lipids, and Isoprenoids --> Level 1
-11      Steroids and Hopanoids --> Level 2
-12      Hopanoid biosynthesis --> Subsystem 
-13      Phytoene synthase (EC 2.5.1.32) --> Function
-14      0.5 --> Weighted count
-
-Then we updated the format and added the taxa in column 15. Then we updated the format again when we added mmseqs_add_subsystems_taxonomy_fast.slurm and
-removed the redundant duplicate of the format.
+In this version, we will remove any of the taxa provided, so we neeed
+to at least have the taxa added.
 
 Now the format is:
 0       UniRef50_A0A5J4P836
@@ -40,10 +21,8 @@ Now the format is:
 13      4.0                                                    13 --> Weighted count
 14      k__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides;s__Bacteroides acidifaciens --> taxonomy
         
-This version should works on either format from mmseqs_add_subsystems_taxonomy_fast.slurm 
-which has one less column (I removed the redundant function column). 
-Its a bit of a mess because it means we have incompatible formats floating around
-However, you can change the format essentially by changing the weight_column variable
+
+Note that we also check that the taxa column is the weight_column + 1
 
 """
 
@@ -62,6 +41,7 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--directory', help='directory of mmseqs outputs [mmseqs]', default='mmseqs')
     parser.add_argument('-s', '--subsystems', help='subsystems output directory [subsystems]', default='subsystems')
     parser.add_argument('-m', '--metadata', help='metadata file. If you provide this we strip of _S34 (or whatever) and then try and rename your columns')
+    parser.add_argument('-t', '--taxa', help='taxa to remove. You can supply multiple taxa. e.g. p__Bacteroidota, f__Pseudomonadaceae', action='append', required=False, default=[])
     parser.add_argument('-n', '--name', help='sample name for the file outputs', default='atavide')
 
 
@@ -99,20 +79,15 @@ if __name__ == "__main__":
     all_fn = set()
 
     weight_column = None
+    taxa_column = None
     for sample in os.listdir(args.directory):
 
         # mmseqs/SAGCFN_22_00789_S34/SAGCFN_22_00789_S34_tophit_report_subsystems.gz
 
-        tax_ss_file = os.path.join(args.directory, sample, f"{sample}_tophit_report_subsystems_taxa.gz")
-        ori_ss_file = os.path.join(args.directory, sample, f"{sample}_tophit_report_subsystems.gz")
-        ss_file = None
+        ss_file = os.path.join(args.directory, sample, f"{sample}_tophit_report_subsystems_taxa.gz")
 
-        if os.path.exists(tax_ss_file):
-            ss_file = tax_ss_file
-        elif os.path.exists(ori_ss_file):
-            ss_file = ori_ss_file
-        else:
-            sys.stderr.write(f"Skipping {sample} because there is no subsystems file\n")
+        if not os.path.exists(ss_file):
+            sys.stderr.write(f"Skipping {sample} because there is no subsystems file with the taxa added\n")
             continue
 
         if args.verbose:
@@ -143,12 +118,27 @@ if __name__ == "__main__":
                               f"we are using {real_weight_col} for the weights. Did we mix taxa formats??", file=sys.stderr)
                         weight_column = real_weight_col
                     elif not weight_column:
-                        if args.verbose:
-                            print(f"{colours.GREEN}Assuming {real_weight_col} is the weight column{colours.ENDC}",
-                                  file=sys.stderr)
                         weight_column = real_weight_col
+                    # check the taxa column is where we expect it to be
+                    taxa_column = weight_column + 1
+                    if 'k__' not in p[taxa_column]:
+                        print(f"{colours.RED}Error: We expected the taxa column to be column {taxa_column} based on the weight column, but it doesn't look like a taxa column. Please check your input files{colours.ENDC}", file=sys.stderr)
+                        sys.exit(-1)
+                    if args.verbose:
+                        print(f"{colours.GREEN}Using {real_weight_col} as the weight column and {taxa_column} for taxonomy {colours.ENDC}",
+                              file=sys.stderr)
+
 
                 total[sample_id] = total.get(sample_id, 0) + float(p[weight_column]) ## this is the total of all reads
+                # skip this read if it is in one of the taxa we want to remove
+                toskip = False
+                for taxon in args.taxa:
+                    if taxon in p[taxa_column]:
+                        toskip = True
+                        break
+                if toskip:
+                    continue
+
                 # if we don't have p[9] --> top level, we don't count ss.
                 if p[9]:
                     myval = float(p[weight_column]) 

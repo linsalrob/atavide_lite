@@ -153,7 +153,7 @@ pigz mmseqs/atavide_tophit_report_subsystems_taxa
 #                                                                #
 ##################################################################
 
-perl ~/atavide_lite/bin/count_subsystems.pl -d mmseqs -n $SAMPLENAME
+python ~/atavide_lite/bin/count_subsystems.py -d mmseqs -n $SAMPLENAME
 find subsystems -type f -exec pigz {} \;
 
 ##################################################################

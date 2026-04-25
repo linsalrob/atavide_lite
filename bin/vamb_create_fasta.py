@@ -1,7 +1,46 @@
+"""
+DEPRECATED: This script depends on the VAMB Python module and is subject to
+breaking changes between VAMB versions.
+
+Please use vamb_create_fasta_clusters.py instead, which is VAMB-version
+independent and does not require importing the vamb module.
+
+Usage:
+    python bin/vamb_create_fasta_clusters.py -f FASTA -c CLUSTERS -o OUTDIR [-m MINSIZE]
+
+This script is kept for backwards compatibility but may not work with all
+VAMB versions. See docs/compat.md for more information about VAMB compatibility.
+"""
+
 import sys
 import argparse
-import vamb
 import pathlib
+
+# Check VAMB version before importing
+try:
+    import vamb
+    try:
+        VAMB_VERSION = vamb.__version__
+    except AttributeError:
+        VAMB_VERSION = "unknown"
+        print("Warning: Could not determine VAMB version", file=sys.stderr)
+        print("This script is tested with VAMB 4.0.0+", file=sys.stderr)
+except ImportError:
+    print("Error: VAMB module not found", file=sys.stderr)
+    print("", file=sys.stderr)
+    print("RECOMMENDED: Use vamb_create_fasta_clusters.py instead,", file=sys.stderr)
+    print("which does not require the VAMB module.", file=sys.stderr)
+    print("", file=sys.stderr)
+    print("If you want to use this script, install VAMB:", file=sys.stderr)
+    print("  conda install vamb=4.1.0", file=sys.stderr)
+    sys.exit(1)
+
+# Warn if not tested version
+if VAMB_VERSION != "unknown":
+    major_version = int(VAMB_VERSION.split('.')[0]) if '.' in VAMB_VERSION else 0
+    if major_version < 4:
+        print(f"Warning: VAMB {VAMB_VERSION} detected. This script is tested with VAMB 4.x", file=sys.stderr)
+        print("Consider using vamb_create_fasta_clusters.py for better compatibility", file=sys.stderr)
 
 parser = argparse.ArgumentParser(
     description="""Command-line bin creator.

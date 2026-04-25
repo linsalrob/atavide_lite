@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/  # Commented out - we use lib/ for shell helper scripts
 lib64/
 parts/
 sdist/

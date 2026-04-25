@@ -31,6 +31,51 @@ to ammend the scripts for your cluster, please submit a pull request, or open an
 In our experience, each cluster has enough [minor differences](#system-nuances) that it is easier
 to maintain individual scripts for each cluster, rather than trying to make a single script that works on all clusters.
 
+---
+
+## Quick Start (Conceptual)
+
+1. **Copy and edit configuration files**:
+   ```bash
+   # Copy example configuration
+   cp config/paths.env.example config/paths.env
+   cp config/samples.tsv.example config/samples.tsv
+   
+   # Edit with your paths and samples
+   nano config/paths.env
+   nano config/samples.tsv
+   ```
+
+2. **Set up your environment**:
+   ```bash
+   # Create conda environment
+   mamba env create -f atavide_lite.yaml
+   conda activate atavide_lite
+   
+   # Or load system modules (if using HPC modules)
+   module load fastp minimap2 samtools mmseqs2 megahit
+   ```
+
+3. **Run the pipeline for your system**:
+   - [Pawsey (paired-end)](pawsey_shortread/README.md)
+   - [Pawsey (single-end)](pawsey_minion/README.md)
+   - [Deepthought](deepthought_shortread/README.md)
+   - [NCI Gadi](nci_pbs/README.md)
+
+4. **Verify outputs**: See [Directory Contract](docs/directory_contract.md) for expected outputs and validation
+
+---
+
+## Documentation
+
+- **[Directory Contract](docs/directory_contract.md)** - Input/output documentation for each pipeline step
+- **[Known Good Versions](docs/known_good_versions.md)** - Tested software versions for reproducibility
+- **[Compatibility Guide](docs/compat.md)** - Handling version differences (especially VAMB)
+- **[Development Notes](docs/dev_notes.md)** - Developer guidance and code standards
+- **[Detailed Processing Steps](DETAILED_PROCESSING_STEPS.md)** - In-depth explanation of each step
+
+---
+
 # Pipeline steps
 
 Our pipeline is designed to be run in a series of steps, and each step can be run independently. In our day to day work

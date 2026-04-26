@@ -140,13 +140,36 @@ def _curl_retr(path):
     raise last_exc
 
 
-def download_linkout(linkout_file=None, verbose=False):
+def _format_eta(seconds):
+    """Return a human-readable ETA string for *seconds* (a float).
+
+    Examples
+    --------
+    >>> _format_eta(90)
+    '~1m 30s remaining'
+    >>> _format_eta(3700)
+    '~1h 1m remaining'
+    """
+    seconds = int(seconds)
+    if seconds < 60:
+        return f'~{seconds}s remaining'
+    minutes, secs = divmod(seconds, 60)
+    if minutes < 60:
+        return f'~{minutes}m {secs:02d}s remaining'
+    hours, mins = divmod(minutes, 60)
+    return f'~{hours}h {mins}m remaining'
+
+
+def download_linkout(linkout_file=None, save_linkout=None, verbose=False):
     """Download (or read from disk) and parse the patric_uniprot_linkout file.
 
     Parameters
     ----------
     linkout_file : str or None
         If given, read from this local file instead of downloading.
+    save_linkout : str or None
+        If given, save the downloaded bytes to this path before parsing.
+        Ignored when *linkout_file* is provided (no download occurs).
     verbose : bool
 
     Returns
@@ -173,6 +196,15 @@ def download_linkout(linkout_file=None, verbose=False):
                 file=sys.stderr,
             )
             sys.exit(1)
+
+        if save_linkout:
+            raw = buf.getvalue()
+            with open(save_linkout, 'wb') as fh:
+                fh.write(raw)
+            if verbose:
+                print(f"Saved linkout file to {save_linkout}", file=sys.stderr)
+            buf = io.BytesIO(raw)
+
         opener = gzip.open(buf, 'rt')
 
     patric_to_uniprot = {}
@@ -411,6 +443,7 @@ def download_subsystems(
 
     completed = 0
     found = 0
+    start_time = time.monotonic()
 
     with ProcessPoolExecutor(max_workers=workers) as executor:
         futures = {
@@ -420,17 +453,20 @@ def download_subsystems(
         for future in as_completed(futures):
             genome_id, result = future.result()
             completed += 1
+            elapsed = time.monotonic() - start_time
+            avg_per_genome = elapsed / completed
+            eta = _format_eta(avg_per_genome * (total - completed))
             if result is not None:
                 subsystem_data.update(result)
                 found += 1
                 if verbose and found % 100 == 0:
                     print(
                         f"  [{completed}/{total}] Downloaded subsystems for "
-                        f"{found} genomes so far...",
+                        f"{found} genomes so far... {eta}",
                         file=sys.stderr,
                     )
             elif verbose and completed % 500 == 0:
-                print(f"  [{completed}/{total}] processed...", file=sys.stderr)
+                print(f"  [{completed}/{total}] processed... {eta}", file=sys.stderr)
 
             if intermediate_path:
                 _append_to_intermediate(
@@ -501,6 +537,16 @@ if __name__ == '__main__':
         default=None,
     )
     parser.add_argument(
+        '-s', '--save-linkout',
+        help=(
+            'save the downloaded linkout file to this path '
+            '(ignored when -l / --linkout is given) '
+            '[Default: %(default)s]'
+        ),
+        default='patric_uniprot_linkout.gz',
+        dest='save_linkout',
+    )
+    parser.add_argument(
         '-t', '--workers',
         help='number of parallel worker processes [Default: %(default)s]',
         type=int,
@@ -546,6 +592,7 @@ if __name__ == '__main__':
     # Step 1: obtain the UniProt <-> patric_id mapping
     patric_to_uniprot, genome_ids = download_linkout(
         linkout_file=args.linkout,
+        save_linkout=args.save_linkout,
         verbose=args.verbose,
     )
 

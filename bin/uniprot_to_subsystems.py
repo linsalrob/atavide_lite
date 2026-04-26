@@ -40,12 +40,15 @@ Genome IDs are shuffled into a random order before downloading (use
 therefore tend to download disjoint sets of genomes, reducing redundant work.
 Be aware that running many instances at once increases the risk of overloading
 the BV-BRC FTP server; always use a reasonable --delay value.
+Dependencies
+------------
+Requires ``pycurl`` (``pip install pycurl``).
 """
 
-import ftplib
 import gzip
 import io
 import os
+import pycurl
 import random
 import sys
 import argparse
@@ -55,6 +58,9 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 __author__ = 'Rob Edwards'
 
 FTP_HOST = 'ftp.bv-brc.org'
+FTP_BASE_URL = 'ftp://' + FTP_HOST
+FTP_USER = 'anonymous'
+FTP_PASS = 'guest'
 LINKOUT_PATH = '/linkouts/uniprot/patric_uniprot_linkout.gz'
 SUBSYSTEM_PATH_TEMPLATE = '/genomes/{genome_id}/{genome_id}.PATRIC.subsystem.tab'
 
@@ -62,71 +68,75 @@ SUBSYSTEM_PATH_TEMPLATE = '/genomes/{genome_id}/{genome_id}.PATRIC.subsystem.tab
 _FTP_RETRIES = 3          # number of attempts before giving up
 _FTP_RETRY_DELAY = 5.0   # seconds to wait between retry attempts
 
-
-class ReusableFTP_TLS(ftplib.FTP_TLS):
-    """
-        Explicit FTPS with shared TLS session support.
-
-        This is required, because we are using ftps
-    """
-    def ntransfercmd(self, cmd, rest=None):
-        conn, size = super().ntransfercmd(cmd, rest)
-        if self._prot_p:
-            # Wrap the data connection socket with the existing control channel session
-            conn = self.context.wrap_socket(conn, 
-                                            server_hostname=self.host, 
-                                            session=self.sock.session)
-        return conn, size
+# pycurl error codes that indicate the remote file does not exist (FTP 550).
+# These are treated as permanent failures and are not retried.
+_CURL_NOT_FOUND_ERRORS = frozenset([
+    pycurl.E_REMOTE_FILE_NOT_FOUND,   # 78
+    pycurl.E_FTP_COULDNT_RETR_FILE,   # 19 – also raised on a 550 response
+])
 
 
-def _connect():
-    """Open and return an anonymous FTP connection to FTP_HOST.
+def _curl_retr(path):
+    """Download *path* from the BV-BRC FTP server using pycurl.
 
-    Note: We use FTP_TLS for the ftps:// connection.
-    """
-    ftps = ReusableFTP_TLS(FTP_HOST, timeout=60)
-    ftps.login('anonymous', 'guest')
-    ftps.prot_p()
-    return ftps
+    pycurl / libcurl is used in preference to ``ftplib`` because libcurl
+    handles persistent FTPS connections and TLS session reuse natively,
+    avoiding the session-reuse bug present in older versions of ``ftplib``.
 
+    The connection uses:
 
-def _ftp_retr(path):
-    """Download *path* from the BV-BRC FTP server with retry logic.
+    * Anonymous credentials (``anonymous`` / ``guest``).
+    * Extended passive mode (EPSV) so the client opens the data channel;
+      this works behind NAT and HPC firewalls that block active-mode FTP.
+    * Opportunistic TLS (``FTPSSL_TRY``): TLS is used when the server
+      offers it and falls back to plain FTP otherwise.
 
     Parameters
     ----------
     path : str
-        Absolute path on the FTP server.
+        Absolute path on the FTP server (e.g.
+        ``/linkouts/uniprot/patric_uniprot_linkout.gz``).
 
     Returns
     -------
     io.BytesIO
-        Buffer containing the raw file bytes.
+        Buffer positioned at offset 0 containing the raw file bytes.
 
     Raises
     ------
-    ftplib.error_perm
-        Re-raised if the server returns a permanent error (e.g. 550 file not
-        found) — callers interpret this as "file does not exist".
-    Exception
-        Re-raised after *_FTP_RETRIES* failed attempts for any other error.
+    pycurl.error
+        Re-raised without retry when the server reports that the file does
+        not exist (``E_REMOTE_FILE_NOT_FOUND`` / ``E_FTP_COULDNT_RETR_FILE``).
+        All other errors are retried up to *_FTP_RETRIES* times before
+        re-raising.
     """
+    url = FTP_BASE_URL + path
     last_exc = None
     for attempt in range(1, _FTP_RETRIES + 1):
+        buf = io.BytesIO()
+        c = pycurl.Curl()
         try:
-            ftp = _connect()
-            buf = io.BytesIO()
-            ftp.retrbinary(f'RETR {path}', buf.write)
-            ftp.quit()
+            c.setopt(pycurl.URL, url)
+            c.setopt(pycurl.USERPWD, f'{FTP_USER}:{FTP_PASS}')
+            c.setopt(pycurl.WRITEDATA, buf)
+            # Use extended passive mode so the data channel is always
+            # opened by the client (firewall-friendly).
+            c.setopt(pycurl.FTP_USE_EPSV, True)
+            # Try TLS; fall back to plain FTP if the server does not
+            # support it.  libcurl handles TLS session reuse internally.
+            c.setopt(pycurl.FTP_SSL, pycurl.FTPSSL_TRY)
+            c.perform()
             buf.seek(0)
             return buf
-        except ftplib.error_perm:
-            # Permanent error (e.g. 550 – file not found); do not retry.
-            raise
-        except Exception as exc:
+        except pycurl.error as exc:
+            if exc.args[0] in _CURL_NOT_FOUND_ERRORS:
+                # Permanent "file not found" – do not retry.
+                raise
             last_exc = exc
             if attempt < _FTP_RETRIES:
                 time.sleep(_FTP_RETRY_DELAY)
+        finally:
+            c.close()
     raise last_exc
 
 
@@ -152,12 +162,12 @@ def download_linkout(linkout_file=None, verbose=False):
         opener = gzip.open(linkout_file, 'rt') if linkout_file.endswith('.gz') else open(linkout_file, 'r')
     else:
         if verbose:
-            print(f"Connecting to {FTP_HOST} to download linkout file...", file=sys.stderr)
+            print(f"Connecting to {FTP_BASE_URL} to download linkout file...", file=sys.stderr)
         try:
-            buf = _ftp_retr(LINKOUT_PATH)
+            buf = _curl_retr(LINKOUT_PATH)
         except Exception as exc:
             print(
-                f"Error: could not download linkout file from {FTP_HOST}{LINKOUT_PATH}: {exc}\n"
+                f"Error: could not download linkout file from {FTP_BASE_URL}{LINKOUT_PATH}: {exc}\n"
                 f"Hint: if you have already downloaded the file, pass it with -l / --linkout "
                 f"to skip the FTP step.",
                 file=sys.stderr,
@@ -218,9 +228,12 @@ def _download_one_genome(genome_id, delay):
     path = SUBSYSTEM_PATH_TEMPLATE.format(genome_id=genome_id)
 
     try:
-        buf = _ftp_retr(path)
-    except ftplib.error_perm:
-        # 550 – file does not exist; this is expected for many genomes
+        buf = _curl_retr(path)
+    except pycurl.error as exc:
+        if exc.args[0] in _CURL_NOT_FOUND_ERRORS:
+            # File does not exist for this genome; expected for many genomes.
+            return genome_id, None
+        sys.stderr.write(f"Warning: could not download {path}: {exc}\n")
         return genome_id, None
     except Exception as exc:
         sys.stderr.write(f"Warning: could not download {path}: {exc}\n")

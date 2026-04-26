@@ -59,11 +59,61 @@ LINKOUT_PATH = '/linkouts/uniprot/patric_uniprot_linkout.gz'
 SUBSYSTEM_PATH_TEMPLATE = '/genomes/{genome_id}/{genome_id}.PATRIC.subsystem.tab'
 
 
+_FTP_RETRIES = 3          # number of attempts before giving up
+_FTP_RETRY_DELAY = 5.0   # seconds to wait between retry attempts
+
+
 def _connect():
-    """Open and return an anonymous FTP connection to FTP_HOST."""
+    """Open and return an anonymous FTP connection to FTP_HOST.
+
+    Passive mode (PASV) is enabled explicitly so that the connection works
+    behind NAT / firewalls that block the server-initiated data channel used
+    by active-mode FTP (the Python default).
+    """
     ftp = ftplib.FTP(FTP_HOST, timeout=60)
     ftp.login()
+    ftp.set_pasv(True)
     return ftp
+
+
+def _ftp_retr(path):
+    """Download *path* from the BV-BRC FTP server with retry logic.
+
+    Parameters
+    ----------
+    path : str
+        Absolute path on the FTP server.
+
+    Returns
+    -------
+    io.BytesIO
+        Buffer containing the raw file bytes.
+
+    Raises
+    ------
+    ftplib.error_perm
+        Re-raised if the server returns a permanent error (e.g. 550 file not
+        found) — callers interpret this as "file does not exist".
+    Exception
+        Re-raised after *_FTP_RETRIES* failed attempts for any other error.
+    """
+    last_exc = None
+    for attempt in range(1, _FTP_RETRIES + 1):
+        try:
+            ftp = _connect()
+            buf = io.BytesIO()
+            ftp.retrbinary(f'RETR {path}', buf.write)
+            ftp.quit()
+            buf.seek(0)
+            return buf
+        except ftplib.error_perm:
+            # Permanent error (e.g. 550 – file not found); do not retry.
+            raise
+        except Exception as exc:
+            last_exc = exc
+            if attempt < _FTP_RETRIES:
+                time.sleep(_FTP_RETRY_DELAY)
+    raise last_exc
 
 
 def download_linkout(linkout_file=None, verbose=False):
@@ -89,11 +139,16 @@ def download_linkout(linkout_file=None, verbose=False):
     else:
         if verbose:
             print(f"Connecting to {FTP_HOST} to download linkout file...", file=sys.stderr)
-        ftp = _connect()
-        buf = io.BytesIO()
-        ftp.retrbinary(f'RETR {LINKOUT_PATH}', buf.write)
-        ftp.quit()
-        buf.seek(0)
+        try:
+            buf = _ftp_retr(LINKOUT_PATH)
+        except Exception as exc:
+            print(
+                f"Error: could not download linkout file from {FTP_HOST}{LINKOUT_PATH}: {exc}\n"
+                f"Hint: if you have already downloaded the file, pass it with -l / --linkout "
+                f"to skip the FTP step.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         opener = gzip.open(buf, 'rt')
 
     patric_to_uniprot = {}
@@ -149,10 +204,7 @@ def _download_one_genome(genome_id, delay):
     path = SUBSYSTEM_PATH_TEMPLATE.format(genome_id=genome_id)
 
     try:
-        ftp = _connect()
-        buf = io.BytesIO()
-        ftp.retrbinary(f'RETR {path}', buf.write)
-        ftp.quit()
+        buf = _ftp_retr(path)
     except ftplib.error_perm:
         # 550 – file does not exist; this is expected for many genomes
         return genome_id, None

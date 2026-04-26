@@ -63,17 +63,31 @@ _FTP_RETRIES = 3          # number of attempts before giving up
 _FTP_RETRY_DELAY = 5.0   # seconds to wait between retry attempts
 
 
+class ReusableFTP_TLS(ftplib.FTP_TLS):
+    """
+        Explicit FTPS with shared TLS session support.
+
+        This is required, because we are using ftps
+    """
+    def ntransfercmd(self, cmd, rest=None):
+        conn, size = super().ntransfercmd(cmd, rest)
+        if self._prot_p:
+            # Wrap the data connection socket with the existing control channel session
+            conn = self.context.wrap_socket(conn, 
+                                            server_hostname=self.host, 
+                                            session=self.sock.session)
+        return conn, size
+
+
 def _connect():
     """Open and return an anonymous FTP connection to FTP_HOST.
 
-    Passive mode (PASV) is enabled explicitly so that the connection works
-    behind NAT / firewalls that block the server-initiated data channel used
-    by active-mode FTP (the Python default).
+    Note: We use FTP_TLS for the ftps:// connection.
     """
-    ftp = ftplib.FTP(FTP_HOST, timeout=60)
-    ftp.login()
-    ftp.set_pasv(True)
-    return ftp
+    ftps = ReusableFTP_TLS(FTP_HOST, timeout=60)
+    ftps.login('anonymous', 'guest')
+    ftps.prot_p()
+    return ftps
 
 
 def _ftp_retr(path):

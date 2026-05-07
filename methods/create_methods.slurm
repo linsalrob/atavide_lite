@@ -14,6 +14,9 @@ if [[ ! -n "$ATAVIDE_CONDA" ]]; then
     exit 2;
 fi
 
+eval "$(conda shell.bash hook)"
+conda activate $ATAVIDE_CONDA
+
 
 FP_VER=$(fastp -v 2>&1 | cut -d ' ' -f 2)
 MM_VER=$(minimap2 --version)

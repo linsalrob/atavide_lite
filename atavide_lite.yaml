@@ -2,7 +2,6 @@ name: atavide_lite
 channels:
    - conda-forge
    - bioconda
-   - defaults
 dependencies:
    - samtools>=1.20
    - fastp

@@ -50,7 +50,8 @@ cp $SRC/DEFINITIONS.sh .
 
 HUMANDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_human.slurm)
 TAXDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_taxon_db.slurm)
-UNIREFJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA download_uniref50.slurm)
+UNIREFJOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/download_uniref50.slurm)
+UNIREF100JOB=$(sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/download_uniref100.slurm)
 VAMB_INSTALL=$(sbatch --parsable $PAWSEY_SRC/vamb_install.slurm)
 
 JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/fastp.slurm)
@@ -59,6 +60,7 @@ MEGAHITHR=$(sbatch --parsable --dependency=afterok:$HOSTJOB -export=ATAVIDE_COND
 sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/16S_detection_single.slurm
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/fastq2fasta.slurm)
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB --dependency=afterok:$UNIREFJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_easy_taxonomy.slurm)
+MMSEQS100JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB --dependency=afterok:$UNIREF100JOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_easy_taxonomy100.slurm)
 sbatch --dependency=afterok:$MMSEQSJOB --dependency=afterok:$TAXDLDJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_summarise_taxonomy.slurm
 SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA   $PAWSEY_SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
 COUNTSSJOB=$(sbatch --parsable --dependency=afterok:$SSJOB $PAWSEY_SRC/count_subsystems.slurm)
@@ -72,6 +74,7 @@ MEGAHITHR=$(sbatch --parsable --dependency=afterok:$HOSTJOB -export=ATAVIDE_COND
 sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/16S_detection_single.slurm
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/fastq2fasta.slurm)
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_easy_taxonomy.slurm)
+MMSEQS100JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_easy_taxonomy100.slurm)
 sbatch --dependency=afterok:$MMSEQSJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_summarise_taxonomy.slurm
 SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA   $PAWSEY_SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
 COUNTSSJOB=$(sbatch --parsable --dependency=afterok:$SSJOB $PAWSEY_SRC/count_subsystems.slurm)

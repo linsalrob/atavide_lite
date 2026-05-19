@@ -12,13 +12,13 @@
 ###############################################################
 
 
-#SBATCH --job-name=mmseqsLT
+#SBATCH --job-name=mmseqsET100
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=220G
-#SBATCH -o slurm_output/mmseqs_slurm/mmseqsET-%A_%a.out
-#SBATCH -e slurm_output/mmseqs_slurm/mmseqsET-%A_%a.err
+#SBATCH -o slurm_output/mmseqs_slurm/%x-%A_%a.out
+#SBATCH -e slurm_output/mmseqs_slurm/%x-%A_%a.err
 
 eval "$(conda shell.bash hook)"
 

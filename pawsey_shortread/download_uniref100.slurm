@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=MMSeqsDld
+#SBATCH --job-name=MMSeqsDld100
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=128G
-#SBATCH -o mmseqsdld-%j.out
-#SBATCH -e mmseqsdld-%j.err
+#SBATCH -o %x-%j.out
+#SBATCH -e %x-%j.err
 
 # Use `mmseqs databases` to find information about the preformatted databases
 # NOTE: Do not download the NT database unless you _really_ need it. The database is huge!

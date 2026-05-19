@@ -64,6 +64,19 @@ SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READ
 COUNTSSJOB=$(sbatch --parsable --dependency=afterok:$SSJOB $PAWSEY_SRC/count_subsystems.slurm)
 SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $PAWSEY_SRC/sankey_plot.slurm)
 
+# If you don't need the human / tax / uniref download
+
+JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/fastp.slurm)
+HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/host_removal.slurm)
+MEGAHITHR=$(sbatch --parsable --dependency=afterok:$HOSTJOB -export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/megahit_hostremoved.slurm)
+sbatch --parsable --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/16S_detection_single.slurm
+FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/fastq2fasta.slurm)
+MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_easy_taxonomy.slurm)
+sbatch --dependency=afterok:$MMSEQSJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/mmseqs_summarise_taxonomy.slurm
+SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA   $PAWSEY_SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
+COUNTSSJOB=$(sbatch --parsable --dependency=afterok:$SSJOB $PAWSEY_SRC/count_subsystems.slurm)
+SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $PAWSEY_SRC/sankey_plot.slurm)
+
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/megahit.slurm)
 
 ## use this code for UNGROUPED data

@@ -42,7 +42,7 @@ def join(files, raw_output, norm_output):
 
     with gzip.open(norm_output, 'wt') as out:
 
-        print("\t".join(["taxonomy"] + [sample_names[f] for f in files]), file=out)
+        print("\t".join(["taxonomy"] + [sample_names.get(f, "0") for f in files]), file=out)
         for t in sorted(alltax):
             print(t, file=out, end="")
             for f in files:

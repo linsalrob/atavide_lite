@@ -50,7 +50,7 @@ source DEFINITIONS.sh
 R=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 
 TMPDIR=/scratch/$PAWSEY_PROJECT/$USER/tmp
-OUTDIR=mmseqs_uniref100/${R/$FILEEND/}
+OUTDIR=mmseqs_uniref100/mmseqs/${R/$FILEEND/}
 mkdir --parents $OUTDIR $TMPDIR
 
 # convert fastq to fasta

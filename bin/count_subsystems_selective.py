@@ -251,7 +251,7 @@ if __name__ == "__main__":
         for ss in sorted(all_classes):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_class[sample].get(ss, 0) / total[sample]))
+                out.write("\t" + (str(ss_class[sample].get(ss, 0) / total[sample]) if total[sample] > 0 else "0"))
             out.write("\n")
 
     with open(f"{args.subsystems}/{args.name}_level1_norm_all.tsv", 'w') as out:
@@ -259,7 +259,7 @@ if __name__ == "__main__":
         for ss in sorted(all_lvl1):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_lvl1[sample].get(ss, 0) / total[sample]))
+                out.write("\t" + (str(ss_lvl1[sample].get(ss, 0) / total[sample]) if total[sample] > 0 else "0"))
             out.write("\n")
 
     with open(f"{args.subsystems}/{args.name}_level2_norm_all.tsv", 'w') as out:
@@ -267,7 +267,7 @@ if __name__ == "__main__":
         for ss in sorted(all_lvl2):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_lvl2[sample].get(ss, 0) / total[sample]))
+                out.write("\t" + (str(ss_lvl2[sample].get(ss, 0) / total[sample]) if total[sample] > 0 else "0"))
             out.write("\n")
 
     with open(f"{args.subsystems}/{args.name}_subsystems_norm_all.tsv", 'w') as out:
@@ -275,7 +275,7 @@ if __name__ == "__main__":
         for ss in sorted(all_sub):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_sub[sample].get(ss, 0) / total[sample]))
+                out.write("\t" + (str(ss_sub[sample].get(ss, 0) / total[sample]) if total[sample] > 0 else "0"))
             out.write("\n")
 
     with open(f"{args.subsystems}/{args.name}_all_norm_all.tsv", 'w') as out:
@@ -283,7 +283,7 @@ if __name__ == "__main__":
         for ss in sorted(all_subsystems):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_all[sample].get(ss, 0) / total[sample]))
+                out.write("\t" + (str(ss_all[sample].get(ss, 0) / total[sample]) if total[sample] > 0 else "0"))
             out.write("\n")
 
     with open(f"{args.subsystems}/{args.name}_all_fn_norm_all.tsv", 'w') as out:
@@ -291,7 +291,7 @@ if __name__ == "__main__":
         for ss in sorted(all_fn):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_fn[sample].get(ss, 0) / total[sample]))
+                out.write("\t" + (str(ss_fn[sample].get(ss, 0) / total[sample]) if total[sample] > 0 else "0"))
             out.write("\n")
 
 
@@ -310,7 +310,7 @@ if __name__ == "__main__":
         for ss in sorted(all_classes):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_class[sample].get(ss, 0) / ss_total[sample]))
+                out.write("\t" + (str(ss_class[sample].get(ss, 0) / ss_total[sample]) if ss_total.get(sample, 0) > 0 else "0"))
             out.write("\n")
 
     with open(f"{args.subsystems}/{args.name}_level1_norm_ss.tsv", 'w') as out:
@@ -318,7 +318,7 @@ if __name__ == "__main__":
         for ss in sorted(all_lvl1):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_lvl1[sample].get(ss, 0) / ss_total[sample]))
+                out.write("\t" + (str(ss_lvl1[sample].get(ss, 0) / ss_total[sample]) if ss_total.get(sample, 0) > 0 else "0"))
             out.write("\n")
 
     with open(f"{args.subsystems}/{args.name}_level2_norm_ss.tsv", 'w') as out:
@@ -326,7 +326,7 @@ if __name__ == "__main__":
         for ss in sorted(all_lvl2):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_lvl2[sample].get(ss, 0) / ss_total[sample]))
+                out.write("\t" + (str(ss_lvl2[sample].get(ss, 0) / ss_total[sample]) if ss_total.get(sample, 0) > 0 else "0"))
             out.write("\n")
 
     with open(f"{args.subsystems}/{args.name}_subsystems_norm_ss.tsv", 'w') as out:
@@ -334,7 +334,7 @@ if __name__ == "__main__":
         for ss in sorted(all_sub):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_sub[sample].get(ss, 0) / ss_total[sample]))
+                out.write("\t" + (str(ss_sub[sample].get(ss, 0) / ss_total[sample]) if ss_total.get(sample, 0) > 0 else "0"))
             out.write("\n")
 
     with open(f"{args.subsystems}/{args.name}_all_norm_ss.tsv", 'w') as out:
@@ -342,7 +342,7 @@ if __name__ == "__main__":
         for ss in sorted(all_subsystems):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_all[sample].get(ss, 0) / ss_total[sample]))
+                out.write("\t" + (str(ss_all[sample].get(ss, 0) / ss_total[sample]) if ss_total.get(sample, 0) > 0 else "0"))
             out.write("\n")
 
     with open(f"{args.subsystems}/{args.name}_all_fn_norm_ss.tsv", 'w') as out:
@@ -350,7 +350,7 @@ if __name__ == "__main__":
         for ss in sorted(all_fn):
             out.write(ss)
             for sample in sorted_samples:
-                out.write("\t" + str(ss_fn[sample].get(ss, 0) / ss_total[sample]))
+                out.write("\t" + (str(ss_fn[sample].get(ss, 0) / ss_total[sample]) if ss_total.get(sample, 0) > 0 else "0"))
             out.write("\n")
 
 

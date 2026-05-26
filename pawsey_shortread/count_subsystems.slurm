@@ -15,5 +15,6 @@ fi
 
 source DEFINITIONS.sh
 
+export PYTHONPATH=$PYTHONPATH:$HOME/GitHubs/atavide_lite
 python ~/atavide_lite/bin/count_subsystems.py -d mmseqs -n $SAMPLENAME
 find subsystems -type f -exec pigz {} \;

@@ -68,6 +68,9 @@ def deserialise(count_data_file):
 def count_fastq(fastq_file, logger=None):
     if logger:
         logger.warning(f"Counting sequences in {fastq_file}")
+    if not os.path.exists(fastq_file):
+        logger.warning(f"ERROR: {fastq_file} does not exist. 0 sequences reported")
+        return 0
     count = sum(1 for _ in stream_fastq(fastq_file))
     return count
 

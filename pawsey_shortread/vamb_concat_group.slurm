@@ -9,10 +9,14 @@
 
 set -euo pipefail
 
-if [[ ! -n "$ATAVIDE_CONDA" ]]; then
-    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
-    exit 2;
+VENV_DIR="/scratch/$PAWSEY_ACCOUNT/$USER/software/pip/vamb"
+if [[ ! -e "$VENV_DIR" ]]; then 
+	echo "Please run vamb_install.slurm to create the vamb virtual environment" >&2
+	exit 1;
 fi
+
+module load rocm/6.2.4
+source "$VENV_DIR/bin/activate"
 
 if [[ ! -e R1_reads.txt ]]; then 
 	echo "Please make a file with the R1 reads using this command:" >&2

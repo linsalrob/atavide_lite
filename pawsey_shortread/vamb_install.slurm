@@ -31,6 +31,8 @@
 # torch 2.6.0, rocm 6.2.4 python 3.12.
 #
 #
+#
+# Note 2: vamb requires pytorch 2.6.0 which requires python3.11 or python3.12!
 
 
 
@@ -46,7 +48,7 @@ if [[ -e "$VENV_DIR" ]]; then
 fi
 
 mkdir -p "$VENV_DIR"
-python -m venv "$VENV_DIR"
+python3.12 -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
 # Upgrade packaging tooling

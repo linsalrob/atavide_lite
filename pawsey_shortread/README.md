@@ -82,11 +82,20 @@ SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $PAWSEY_SRC/sanke
 
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/megahit.slurm)
 
+# Using VAMB to bin reads.
+
+Note: if you used the megahit_host_removed the output will be in megahit_all_reads. We cheat, and move that into a directory called `megahit` so we have
+`megahit/megahit_all_reads/contigs.fna` as our input file before we continue.
+
+
 ## use this code for UNGROUPED data
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_concat.slurm)
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap.slurm)
-VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu /home/edwa0468/atavide_lite/pawsey_shortread/vamb.slurm
-sbatch ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags.slurm 
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu /home/edwa0468/atavide_lite/pawsey_shortread/vamb.slurm)
+
+
+
+> sbatch ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags.slurm 
 
 
 ## use this code for GROUPED data

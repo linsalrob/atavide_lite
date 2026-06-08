@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=VAMB
-#SBATCH --time=5-0
+#SBATCH --time=1-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=128G

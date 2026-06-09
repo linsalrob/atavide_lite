@@ -42,7 +42,7 @@ set -euo pipefail
 module load rocm/6.2.4
 
 # ---- 2) Create and load the virtual environment 
-VENV_DIR="/scratch/pawsey1018/edwa0468/software/pip/vamb"
+VENV_DIR="/scratch/$PAWSEY_ACCOUNT/$USER/software/pip/vamb"
 if [[ -e "$VENV_DIR" ]]; then 
 	rm -rf "$VENV_DIR"
 fi

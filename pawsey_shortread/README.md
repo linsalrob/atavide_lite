@@ -93,6 +93,7 @@ VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_COND
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $PAWSEY_SRC/vamb_minimap.slurm)
 VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu /home/edwa0468/atavide_lite/pawsey_shortread/vamb.slurm)
 
+CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/checkm.slurm vamb/bins/ vamb/checkm)
 
 
 > sbatch ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags.slurm 
@@ -135,7 +136,7 @@ VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJ
 sbatch  --dependency=afterok:$VAMBJOB  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm samples.tsv
 
 
-CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $SRC/checkm.slurm vamb/bins/ vamb/checkm)
+CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA  $PAWSEY_SRC/checkm.slurm vamb/bins/ vamb/checkm)
 
 ```
 

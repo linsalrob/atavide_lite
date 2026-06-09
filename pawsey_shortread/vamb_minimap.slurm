@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=VAMB
-#SBATCH --time=1-0
+#SBATCH --time=0-8
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=1
 #SBATCH --mem=128G
 #SBATCH -o slurm_output/vamb_slurm/map_reads-%A_%a.out
 #SBATCH -e slurm_output/vamb_slurm/map_reads-%A_%a.err
@@ -47,12 +47,10 @@ if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 		minimap2 -I100G -d $OUTDIR/contigs.mmi $OUTDIR/contigs.fna.gz
 	fi
 
-	# uncompress the fasta file to a temp file
-	temp_fasta=$(mktemp --suffix=.fasta)
-	gunzip -c "$INF" > "$temp_fasta"
 
-	minimap2 -t 16 -N 5 -ax sr $OUTDIR/contigs.mmi --split-prefix mmsplit$$ $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 \
-		| samtools view -F 3584 --threads 16  | samtools view -b -T "$temp_fasta" | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
+	minimap2 -t $SLURM_CPUS_PER_TASK -N 5 -ax sr "$OUTDIR/contigs.mmi" --split-prefix "mmsplit$$" "$HOSTREMOVED/$R1" "$HOSTREMOVED/$R2" \
+		| samtools view -b -F 3596 --threads $SLURM_CPUS_PER_TASK | samtools sort -@ $SLURM_CPUS_PER_TASK -o "$OUTDIR/mapped_reads/$BAM" -
 
-	rm -f "$temp_fasta"
+	samtools index "$OUTDIR/mapped_reads/$BAM"
+
 fi

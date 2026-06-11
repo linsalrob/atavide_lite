@@ -26,7 +26,7 @@ fi
 
 source DEFINITIONS.sh
 
-find no_human/ -name \*${FILEEND/R1/R2}
+find $HOSTREMOVED -name \*${FILEEND/R1/R2}
 
 # Collect R1 and R2 lists
 R1_FILES=($(find $HOSTREMOVED -name \*${FILEEND} | sort))

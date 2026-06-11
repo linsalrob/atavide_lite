@@ -8,9 +8,6 @@
 #SBATCH -e slurm_output/fastp_slurm/fastp-%A_%a.err
 
 set -euo pipefail
-
-
-set -euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
 # test we have atavide_lite conda installed, and then activate it

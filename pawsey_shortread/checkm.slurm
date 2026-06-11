@@ -8,10 +8,15 @@
 #SBATCH -o slurm_output/checkm-%j.out
 #SBATCH -e slurm_output/checkm-%j.err
 
-if [[ ! -n "$ATAVIDE_CONDA" ]]; then
-    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
-    exit 2;
-fi
+
+set -euo pipefail
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+
+# test we have atavide_lite conda installed, and then activate it
+eval "$(conda shell.bash hook)"
+"$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
+conda activate $ATAVIDE_CONDA
 
 if [[ -z $CHECKM_DATA_PATH ]]; then 
 	CHECKM_DATA_PATH="$ATAVIDE_CONDA/checkm_data"
@@ -22,15 +27,10 @@ if [[ -z $CHECKM_DATA_PATH ]]; then
 	echo "Using $CHECKM_DATA_PATH for checkm data!"
 fi
 
-
 if [[ $# -lt 2 ]]; then
 	echo "$0 <source directory> <destination directory>" >&2
 	exit 1
 fi
-
-set -euo pipefail
-eval "$(conda shell.bash hook)"
-conda activate $ATAVIDE_CONDA
 
 # this %/ removes the trailing / if there is one
 SOURCE=${1%/}

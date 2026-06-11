@@ -7,7 +7,14 @@
 #SBATCH -o slurm_output/vamb_slurm/vamb_concat-%j.out
 #SBATCH -e slurm_output/vamb_slurm/vamb_concat-%j.err
 
+
 set -euo pipefail
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+
+# test we have atavide_lite conda installed, and then activate it
+eval "$(conda shell.bash hook)"
+"$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 
 VENV_DIR="/scratch/$PAWSEY_ACCOUNT/$USER/software/pip/vamb"
 if [[ ! -e "$VENV_DIR" ]]; then 
@@ -32,7 +39,6 @@ fi
 
 source DEFINITIONS.sh
 
-eval "$(conda shell.bash hook)"
 conda activate $ATAVIDE_CONDA
 
 # run vamb_concat 

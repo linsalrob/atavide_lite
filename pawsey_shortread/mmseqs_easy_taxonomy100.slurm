@@ -21,14 +21,14 @@
 #SBATCH -o slurm_output/mmseqs_slurm/%x-%A_%a.out
 #SBATCH -e slurm_output/mmseqs_slurm/%x-%A_%a.err
 
-eval "$(conda shell.bash hook)"
 
-if [[ ! -n "$ATAVIDE_CONDA" ]]; then
-    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
-    exit 2;
-fi
+set -euo pipefail
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
+# test we have atavide_lite conda installed, and then activate it
 eval "$(conda shell.bash hook)"
+"$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
 echo "Start " `date` >&2;
@@ -55,7 +55,7 @@ OUTDIR=mmseqs_uniref100/mmseqs/${R/$FILEEND/}
 mkdir --parents $OUTDIR $TMPDIR
 
 # convert fastq to fasta
-# this throws an unbound error if FAFILEEND is not in DEFINITIONS
+FAFILEEND=${FILEEND/fastq/fasta}
 R1=${R/$FILEEND/$FAFILEEND}
 R2=${R1/_R1/_R2}
 OUTPUT=$OUTDIR/${R/$FILEEND/}

@@ -48,7 +48,7 @@ mkdir -p $OUTDIR
 
 R=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)
 # convert fastq to fasta
-# this throws an unbound error if FAFILEEND is not in DEFINITIONS
+FAFILEEND=${FILEEND/.fastq/.fasta}
 R1=${R/$FILEEND/$FAFILEEND}
 OUTPUT=$OUTDIR/${R/$FILEEND/}
 TMPOUTPUT=${R/$FILEEND/}

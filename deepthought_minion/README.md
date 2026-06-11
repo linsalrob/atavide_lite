@@ -147,6 +147,18 @@ created by this command for directions on how to make the figure.
 SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $SRC/sankey_plot.slurm)
 ```
 
+## VAMB for binning
+
+If you have the assembly from above, you can use VAMB for binning the contigs
+
+```
+VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb_concat.slurm)
+VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb_minimap.slurm)
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb.slurm)
+CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/checkm.slurm vamb/bins/ vamb/checkm)
+```
+
+
 
 # All commands in one go:
 

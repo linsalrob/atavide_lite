@@ -1,22 +1,22 @@
 #!/bin/bash
 #SBATCH --job-name=VAMB
-#SBATCH --time=5-0
+#SBATCH --time=0-8
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=1
 #SBATCH --mem=128G
 #SBATCH -o slurm_output/vamb_slurm/map_reads-%A_%a.out
 #SBATCH -e slurm_output/vamb_slurm/map_reads-%A_%a.err
 
 # Just the minimap section of VAMB which does not require GPUs and we can do in parallel
 
+
 set -euo pipefail
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
-if [[ ! -n "$ATAVIDE_CONDA" ]]; then
-    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
-    exit 2;
-fi
-
+# test we have atavide_lite conda installed, and then activate it
 eval "$(conda shell.bash hook)"
+"$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
 if [[ ! -e DEFINITIONS.sh ]]; then
@@ -47,12 +47,11 @@ if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 		minimap2 -I100G -d $OUTDIR/contigs.mmi $OUTDIR/contigs.fna.gz
 	fi
 
-	# uncompress the fasta file to a temp file
-	temp_fasta=$(mktemp --suffix=.fasta)
-	gunzip -c "$INF" > "$temp_fasta"
+	# note the original version had -N 5 which keeps 5 secondary alignments. I turned off secondary alignments because
+	# one read mapping was running really slowly!
+	minimap2 -t $SLURM_CPUS_PER_TASK --secondary=no -ax sr "$OUTDIR/contigs.mmi" --split-prefix "mmsplit$$" "$HOSTREMOVED/$R1" "$HOSTREMOVED/$R2" \
+		| samtools view -b -F 3596 --threads $SLURM_CPUS_PER_TASK | samtools sort -@ $SLURM_CPUS_PER_TASK -o "$OUTDIR/mapped_reads/$BAM" -
 
-	minimap2 -t 16 -N 5 -ax sr $OUTDIR/contigs.mmi --split-prefix mmsplit$$ $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 \
-		| samtools view -F 3584 --threads 16  | samtools view -b -T "$temp_fasta" | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
+	samtools index "$OUTDIR/mapped_reads/$BAM"
 
-	rm -f "$temp_fasta"
 fi

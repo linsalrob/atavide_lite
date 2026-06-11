@@ -14,7 +14,7 @@ set -uo pipefail
 # virtual environment for vamb. NOTE: Do not use conda, because 
 # we need a rcom install, not nvidia.
 
-VENV_DIR="/scratch/pawsey1018/edwa0468/software/pip/vamb"
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/pip/vamb"
 if [[ ! -e "$VENV_DIR" ]]; then 
 	echo "Please run vamb_install.slurm to create the vamb virtual environment" >&2
 	exit 1;

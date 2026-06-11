@@ -43,4 +43,4 @@ if not clusters:
 
 print(f"Writing {len(clusters)} bins to {args.outdir}", file=sys.stderr)
 with vamb.vambtools.Reader(args.fastapath) as file:
-    vamb.vambtools.write_bins(pathlib.Path(args.outdir), clusters, file, maxbins=None, compress_output=True)
+    vamb.vambtools.write_bins(pathlib.Path(args.outdir), clusters, file, maxbins=None)

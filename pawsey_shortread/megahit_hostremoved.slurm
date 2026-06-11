@@ -9,15 +9,15 @@
 #SBATCH -e slurm_output/megahit_slurm/%x-%j.err
 
 
+
 set -euo pipefail
-# set -eu
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
-if [[ ! -n "$ATAVIDE_CONDA" ]]; then
-    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
-    exit 2;
-fi
-
+# test we have atavide_lite conda installed, and then activate it
+eval "$(conda shell.bash hook)"
+"$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
+conda activate $ATAVIDE_CONDA
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
@@ -26,16 +26,16 @@ fi
 
 source DEFINITIONS.sh
 
-eval "$(conda shell.bash hook)"
-conda activate $ATAVIDE_CONDA
-
-
-
+find $HOSTREMOVED -name \*${FILEEND/R1/R2}
 
 # Collect R1 and R2 lists
-R1_FILES=($(find $HOSTREMOVED -name \*_R1.fastq.gz | sort))
-R2_FILES=($(find $HOSTREMOVED -name \*_R2.fastq.gz | sort))
-OTHER_FILES=($(find $HOSTREMOVED -name \*.fastq.gz | grep -v -E "_R[12]\.fastq\.gz" | sort)) || true
+R1_FILES=($(find $HOSTREMOVED -name \*${FILEEND} | sort))
+R2_FILES=($(find $HOSTREMOVED -name \*${FILEEND/R1/R2} | sort))
+mapfile -t OTHER_FILES < <(
+    comm -23 \
+        <(find "$HOSTREMOVED" -name "*.fastq.gz" | sort) \
+        <(find "$HOSTREMOVED" \( -name "*${FILEEND}" -o -name "*${FILEEND/R1/R2}" \) | sort)
+)
 
 # Join them into comma-separated strings
 R1_JOINED=$(IFS=,; echo "${R1_FILES[*]}")

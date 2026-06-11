@@ -31,10 +31,17 @@ TKVER=$(taxonkit 2>&1 | grep Version)
 VBVER=$(vamb --version 2>/dev/null) || VBVER="Vamb 5.0.2"
 MHVER=$(megahit -v | cut -f 2 -d ' ')
 
+if [[ -e  ~/Databases/UniRef100/UniRef100.version ]]; then
+	UNIREFVER100=$(perl -pe  's/^\s+//; chomp; if ($_) {s/$/; /}' ~/Databases/UniRef100/UniRef100.version)
+else
+	UNIREFVER100="UniRef100 is Unknown - please check with mmseqs2"
+
+fi
 if [[ -e  ~/Databases/UniRef50/UniRef50.version ]]; then
 	UNIREFVER=$(perl -pe  's/^\s+//; chomp; if ($_) {s/$/; /}' ~/Databases/UniRef50/UniRef50.version)
 else
-	UNIREFVER="Unknown - please check with mmseqs2"
+	UNIREFVER="UniRef50 is Unknown - please check with mmseqs2"
+
 fi
 
 HF=`basename $HOSTFILE`
@@ -69,6 +76,8 @@ These commands use the default minimap2 parameters for mapping reads against a r
 
 The sequences were identified from the BAM file created by the previous command and filtered to two separate files using samtools  ($STVER) [PMID: 19505943]. Sequences that do not match the flag 3588 -- and thus represent mapped reads which pass the platform/vendor quality check, are not PCR or optical duplicates, and are primary alignments -- were filtered as mapping to the human genome. For short reads, additional samtools flags were used to identify R1 reads (matching flag 65) and R2 reads (matching flag 129). Reads that do not match the flag 3584 -- and thus represent unmapped reads which pass the platform/vendor quality check, are not PCR or optical duplicates, and are primary alignments -- are filtered as unmapped reads [PMID: 19505943], and again, short reads were separated using flags that match 77 for R1 reads and 141 for R2 reads.
 
+_DELETE ONE OF THESE_
+
 Reads that did not map to the human genome were mapped against the UniRef50 ($UNIREFVER) [PMID: 17379688]  (version database using MMseqs2 (version $MMVER) with the following command for long reads:
 
 mmseqs easy-taxonomy fasta/\$READS UniRef50 mmseqs/\${READS}_UniRef /tmp --threads 32
@@ -76,6 +85,18 @@ mmseqs easy-taxonomy fasta/\$READS UniRef50 mmseqs/\${READS}_UniRef /tmp --threa
 and a similar command for short-read sequencing
 
 mmseqs easy-taxonomy fasta/\$R1 fasta/\$R2 UniRef50 mmseqs/\${R1}_UniRef /tmp --threads 32
+
+_OR_
+
+Reads that did not map to the human genome were mapped against the UniRef50 ($UNIREFVER100) [PMID: 17379688]  (version database using MMseqs2 (version $MMVER) with the following command for long reads:
+
+mmseqs easy-taxonomy fasta/\$READS UniRef100 mmseqs/\${READS}_UniRef /tmp --threads 32
+
+and a similar command for short-read sequencing
+
+mmseqs easy-taxonomy fasta/\$R1 fasta/\$R2 UniRef100 mmseqs/\${R1}_UniRef /tmp --threads 32
+
+_END DELETE!_
 
 MMseqs2 easy-taxonomy parameters were optimised by the authors for a balance of sensitivity and speed and include a 7-mer double-match prefilter with compositional bias correction, low-complexity masking with TANTAN, and default similarity thresholds (--k-score ~95) that generate sufficient similar k-mers for accurate detection while maintaining computational efficiency. Candidate hits are further filtered by fast ungapped alignment and refined with vectorized Smith-Waterman alignments, after which taxonomic labels are assigned using a lowest common ancestor (LCA) approach described in more detail in their paper and on their website [PMID: 29035372].
 

@@ -52,6 +52,29 @@ subsystems and taxonomic information
 
 We have described all the steps in a [detailed description of the workflows](DETAILED_PROCESSING_STEPS.md)
 
+# installation
+
+We recommend that you download the latest GitHub repository into a directory called `GitHubs` in your home directory:
+
+```
+mkdir $HOME/GitHubs && cd $HOME/GitHubs
+git clone https://github.com/linsalrob/atavide_lite.git
+```
+
+Once you have downloaded the code, please just make the executables in the `bin/` folder:
+
+```
+pushd $HOME/GitHubs/atavide_lite/bin
+make all
+popd
+```
+
+That's all the installation required!
+
+Because this code uses a series of `bash`, `slurm`, or `PBS` scripts, it doesn't really make sense for us to release binaries or make it available on conda.
+
+
+
 # different versions
 
 ## Paired vs Single End

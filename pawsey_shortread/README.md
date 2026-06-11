@@ -164,7 +164,7 @@ MMSEQS100JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:
 
 > Note:
 > Currently the UniRef100 output is in a directory called `mmseqs_uniref100/mmseqs` so that you can run both UniRef50 and UniRef100. If you only run the UniRef100 analysis 
-> (which you probably should) then just move the `mmseqs` directory up to your working directory. e.g. `mv `mmseqs_uniref100/mmseqs ./`
+> (which you probably should) then just move the `mmseqs` directory up to your working directory. e.g. `mv mmseqs_uniref100/mmseqs ./`
 
 ## 11. Summarise the taxonomy from the mmseqs output files
 

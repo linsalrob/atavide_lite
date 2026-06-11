@@ -55,8 +55,7 @@ for R1 in $(sort -R R1_reads.txt); do
 	BAM=${R1/$FILEEND/.bam}
 	echo "R1: $R2 BAM: $BAM" >&2;
 	if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
-		echo "Bam file: '$OUTDIR/mapped_reads/$BAM' not found. Data generated" >&2;
-		# minimap2 -t 16 -N 5 -ax sr $OUTDIR/contigs.mmi --split-prefix mmsplit$$ $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 | samtools view -F 3584 -b --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
+		echo "Bam file: '$OUTDIR/mapped_reads/$BAM' not found. Please check if you want that file" >&2;
 	fi
 done
 

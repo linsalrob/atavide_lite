@@ -18,7 +18,7 @@ eval "$(conda shell.bash hook)"
 ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
-if [[ -z $CHECKM_DATA_PATH ]]; then 
+if [[ -z ${CHECKM_DATA_PATH:-} ]]; then 
 	CHECKM_DATA_PATH="$ATAVIDE_CONDA/checkm_data"
 	if [[ ! -e $CHECKM_DATA_PATH ]]; then
 		echo "Please install the checkm data (e.g. in $CHECKM_DATA_PATH) or set the variable CHECKM_DATA_PATH" >&2;

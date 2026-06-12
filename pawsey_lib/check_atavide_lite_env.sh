@@ -47,8 +47,9 @@ if ! conda run -p "$ENV" --no-capture-output python -c 'import sys; print("Conda
 fi
 
 for exe in samtools fastp minimap2 mmseqs megahit rclone rsync parallel pigz snakemake fasterq-dump taxonkit; do
-    if ! conda run -p "$ENV" bash -lc "command -v $exe >/dev/null"; then
+    if [[ ! -x "$ENV/bin/$exe" ]]; then
         echo "ERROR: missing executable in environment: $exe" >&2
+        echo "Expected to find: $ENV/bin/$exe" >&2
         echo "Please switch to the atavide lite directory, remove $ENV, and recreate the environment with:" >&2
         echo "mamba env remove --prefix $ENV" >&2
         echo "mamba env create --yes --prefix $ENV --file ../atavide_lite.yaml " >&2

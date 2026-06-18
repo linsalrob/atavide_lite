@@ -83,7 +83,7 @@ mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseq
 
 ## 5. Download some databases
 
-We are nearly ready to process the data, but we need some databases like the human genome, the UniRef50 or UniRef100 databases, and so on. We 
+We are nearly ready to process the data, but we need some databases like the human genome, the UniRef100 database, and so on. We 
 can download those simultaneously using the cluster:
 
 ```
@@ -141,9 +141,9 @@ FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 
 ## 10. Run mmseqs.
 
-Note, that initially I was using UniRef50, however I currently use UniRef 100 which gives more hits. Please read [this comparison of UniRef50 vs UniRef100](https://fame.flinders.edu.au/blog/2026/05/24/uniprot)
+Note, that we are using the UniRef 100 which gives more hits than UniRef50. Please read [this comparison of UniRef50 vs UniRef100](https://fame.flinders.edu.au/blog/2026/05/24/uniprot)
 
-For UniRef50:
+For UniRef100:
 
 ```
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)

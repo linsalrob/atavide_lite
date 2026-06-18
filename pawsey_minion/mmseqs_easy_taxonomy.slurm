@@ -2,7 +2,7 @@
 
 ###############################################################
 #                                                             #
-# mmseqs easy taxonomy against UniRef50                       #
+# mmseqs easy taxonomy against UniRef100                      #
 #                                                             #
 # Note that you need a fasta file                             #
 # Also make sure that the reads are labeled /1 /2             #
@@ -31,7 +31,7 @@ conda activate $ATAVIDE_CONDA
 
 echo "Start " `date` >&2;
 
-DB=UniRef50
+DB=UniRef100
 DBSOURCE=/scratch/$PAWSEY_PROJECT/$USER/Databases/$DB
 
 if [[ ! -e $DBSOURCE ]]; then

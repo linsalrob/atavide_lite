@@ -19,7 +19,7 @@ conda activate $ATAVIDE_CONDA
 DATE=`date +%Y%m%d`
 
 TPD=$(mktemp -d -p /scratch/$PAWSEY_PROJECT/$USER/tmp)
-DB=UniRef50
+DB=UniRef100
 mkdir -p $DB.$DATE/
 mmseqs databases --threads 8 $DB $DB.$DATE/$DB $TPD
 rm -rf $TPD

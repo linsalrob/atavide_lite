@@ -1,5 +1,5 @@
 # This definitions file is for use with the HUMAN genomes. 
-# Make sure you change FILEEND
+# Make sure you change FILEEND/FAFILEEND
 
 export SAMPLENAME=xxxyyy
 export FILEEND=.fastq.gz

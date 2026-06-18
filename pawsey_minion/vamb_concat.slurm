@@ -8,13 +8,13 @@
 #SBATCH -e slurm_output/vamb_slurm/vamb_concat-%j.err
 
 set -euo pipefail
-if [[ ! -n "$ATAVIDE_CONDA" ]]; then
-    echo "Please include the ATAVIDE_CONDA location on your slurm submission: --export=ATAVIDE_CONDA=$ATAVIDE_CONDA" >&2
-    exit 2;
-fi
-eval "$(conda shell.bash hook)"
-conda activate $ATAVIDE_CONDA
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
+# test we have atavide_lite conda installed, and then activate it
+eval "$(conda shell.bash hook)"
+"$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
+conda activate $ATAVIDE_CONDA
 
 mkdir -p vamb
 python ~/atavide_lite/bin/vamb_concatenate.py -m 300 vamb/contigs.fna.gz megahit/*/final.contigs.fa

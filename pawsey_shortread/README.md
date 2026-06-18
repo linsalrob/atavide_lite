@@ -145,7 +145,6 @@ popd
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $PAWSEY_SRC/fastq2fasta.slurm)
 ```
 
-
 ## 10. Run mmseqs.
 
 Note, that initially I was using UniRef50, however I currently use UniRef 100 which gives more hits. Please read [this comparison of UniRef50 vs UniRef100](https://fame.flinders.edu.au/blog/2026/05/24/uniprot) for more discussion and comparisons.

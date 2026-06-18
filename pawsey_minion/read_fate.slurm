@@ -8,11 +8,12 @@
 #SBATCH -e slurm_output/read_fate-%j.err
 
 set -euo pipefail
-if [[ ! -n "$ATAVIDE_CONDA" ]]; then
-    echo "Please include the ATAVIDE_CONDA location on your slurm submission: --export=ATAVIDE_CONDA=$ATAVIDE_CONDA" >&2
-    exit 2;
-fi
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+
+# test we have atavide_lite conda installed, and then activate it
 eval "$(conda shell.bash hook)"
+"$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
 mkdir -p Unknowns

@@ -21,16 +21,14 @@ HOSTFILE=$HOME/Databases/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set
 # where is the mmseqs database for UniRef50? This should be a file and not a directory
 UNIREF=$HOME/Databases/UniRef50/UniRef50
 # If you need to download the UniRef50 databases, you can do this
-mkdir UniRef50
-mmseqs2  mmseqs databases --threads 8 UniRef50 UniRef50/UniRef50 $(mktemp -d -p tmp)
+#    mkdir UniRef50
+#    mmseqs2  mmseqs databases --threads 8 UniRef50 UniRef50/UniRef50 $(mktemp -d -p tmp)
 
 # what should we prepend to the output files?
 SAMPLENAME=atavide_lite_example
 
 # where is the UniRef50 functions database? This connects UniRef IDs to subsystems
 UNIREFFUNC=$HOME/Databases/uniref.sqlite 
-
-
 
 
 ##################################################################

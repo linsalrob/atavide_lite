@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=32G
-#SBATCH -o slurm/human_download-%j.out
-#SBATCH -e slurm/human_download-%j.err
+#SBATCH -o slurm/%x-%j.out
+#SBATCH -e slurm/%x-%j.err
 
 DEST=/scratch/$PAWSEY_PROJECT/$USER/Databases/human
 

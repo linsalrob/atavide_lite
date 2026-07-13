@@ -129,7 +129,7 @@ We use these assemblies, e.g. for binning with VAMB. The assemblies are not used
 to complete before submitting the subsequent jobs.
 
 ```
-MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA --array=1-$NUM_READS:1 $SRC/megahit.slurm)
+MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_READS:1 $SRC/megahit.slurm)
 ```
 
 ## 9. Convert to fasta.
@@ -187,10 +187,10 @@ SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $SRC/sankey_plot.
 If you have the assembly from above, you can use VAMB for binning the contigs
 
 ```
-VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb_concat.slurm)
-VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb_minimap.slurm)
-VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb.slurm)
-CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/checkm.slurm vamb/bins/ vamb/checkm)
+VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB $SRC/vamb_concat.slurm)
+VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_READS:1 $SRC/vamb_minimap.slurm)
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB $SRC/vamb.slurm)
+CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/bins/ vamb/checkm)
 ```
 
 
@@ -228,11 +228,11 @@ SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_READS:1
 COUNTSSJOB=$(sbatch --parsable --dependency=afterok:$SSJOB $SRC/count_subsystems.slurm)
 SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $SRC/sankey_plot.slurm)
 
-MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA --array=1-$NUM_READS:1 $SRC/megahit.slurm)
-VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb_concat.slurm)
-VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_READS:1 --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb_minimap.slurm)
-VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/vamb.slurm)
-CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB --export=ATAVIDE_CONDA=$ATAVIDE_CONDA $SRC/checkm.slurm vamb/bins/ vamb/checkm)
+MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_READS:1 $SRC/megahit.slurm)
+VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB $SRC/vamb_concat.slurm)
+VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_READS:1 $SRC/vamb_minimap.slurm)
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB $SRC/vamb.slurm)
+CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/bins/ vamb/checkm)
 
 ```
 

@@ -14,10 +14,11 @@ trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 # test we have atavide_lite conda installed, and then activate it
 eval "$(conda shell.bash hook)"
 "$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
-ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb"
 conda activate $ATAVIDE_CONDA
 
-module load pytorch/2.2.0-rocm5.7.3
+# module load pytorch/2.2.0-rocm5.7.3
+module load pytorch/2.7.1-rocm6.3.3
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2

@@ -13,7 +13,7 @@
 
 
 #SBATCH --job-name=mmseqsET100
-#SBATCH --time=1-0
+#SBATCH --time=06:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=480G

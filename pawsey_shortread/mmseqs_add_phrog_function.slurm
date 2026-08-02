@@ -18,16 +18,15 @@ PHROG_UNIPROT="$PHROG_DIR/phrog_uniprot.tsv.gz"
 # from trying to populate the shared directory at the same time.
 if [[ ! -f "$PHROG_ANNOT" || ! -f "$PHROG_UNIPROT" ]]; then
 	eval "$(conda shell.bash hook)"
-	conda activate rclone
 	mkdir -p "$PHROG_DIR"
 
 	exec 9>"$PHROG_DIR/.phrog_download.lock"
 	flock 9
 	if [[ ! -f "$PHROG_ANNOT" ]]; then
-		rclone copy A18:dbs/phrog/phrog_annot_v4.tsv.gz "$PHROG_DIR/"
+		conda run -n rclone -- rclone copy A18:dbs/phrog/phrog_annot_v4.tsv.gz "$PHROG_DIR/"
 	fi
 	if [[ ! -f "$PHROG_UNIPROT" ]]; then
-		rclone copy A18:dbs/phrog/phrog_uniprot.tsv.gz "$PHROG_DIR/"
+		conda run -n rclone -- rclone copy A18:dbs/phrog/phrog_uniprot.tsv.gz "$PHROG_DIR/"
 	fi
 	flock -u 9
 fi

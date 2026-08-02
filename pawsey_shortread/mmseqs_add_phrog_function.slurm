@@ -3,14 +3,14 @@
 #SBATCH --time=01:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=2G
+#SBATCH --mem=16G
 #SBATCH -o slurm_output/mmseqs_slurm/%x-%A_%a.out
 #SBATCH -e slurm_output/mmseqs_slurm/%x-%A_%a.err
 
 set -euo pipefail
 trap 's=$?; echo "$0: Error on line $LINENO: $BASH_COMMAND" >&2; exit $s' ERR
 
-PHROG_DIR=/home/edwa0468/Databases/phrog
+PHROG_DIR=/scratch/$PAWSEY_PROJECT/$USER/Databases/phrog
 PHROG_ANNOT="$PHROG_DIR/phrog_annot_v4.tsv.gz"
 PHROG_UNIPROT="$PHROG_DIR/phrog_uniprot.tsv.gz"
 

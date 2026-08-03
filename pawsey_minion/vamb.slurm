@@ -14,10 +14,11 @@ trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 # test we have atavide_lite conda installed, and then activate it
 eval "$(conda shell.bash hook)"
 "$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
-ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb"
 conda activate $ATAVIDE_CONDA
 
-module load pytorch/2.2.0-rocm5.7.3
+# module load pytorch/2.2.0-rocm5.7.3
+module load pytorch/2.7.1-rocm6.3.3
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
@@ -35,11 +36,14 @@ if [[ ! -e $OUTDIR/contigs.fna.gz ]]; then
 	exit 1;
 fi
 
+mkdir -p $OUTDIR/mapped_reads
+
 for READS in $(sort -R reads.txt); do
 	BAM=${READS/$FILEEND/.bam}
 	echo "READS: $READS BAM: $BAM" >&2;
-	if [[ -e $OUTDIR/mapped_reads/$BAM ]]; then
+	if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 		echo "Bam file: '$OUTDIR/mapped_reads/$BAM' not found. Data generated" >&2;
+		mkdir -p $OUTDIR/mapped_reads
 		minimap2 -t 16 -N 5 -ax map-ont $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$READS | samtools view -F 3584 -b --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
 	fi
 done

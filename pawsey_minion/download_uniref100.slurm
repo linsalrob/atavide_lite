@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=MMSeqsDld
+#SBATCH --job-name=MMSeqsDld100
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
@@ -9,7 +9,6 @@
 
 # Use `mmseqs databases` to find information about the preformatted databases
 # NOTE: Do not download the NT database unless you _really_ need it. The database is huge!
-
 
 
 set -euo pipefail
@@ -23,14 +22,14 @@ conda activate $ATAVIDE_CONDA
 
 CWD=`pwd`
 
-#DB can also be  UniRef50 UniRef100 GTDB etc
-DB=UniRef50
+#DB can also be  UniRef100 UniRef100 GTDB etc
+DB=UniRef100
 
 
 required_files=(
-	UniRef50  UniRef50.dbtype  UniRef50_h  UniRef50_h.dbtype
-	UniRef50_h.index  UniRef50.index  UniRef50.lookup  UniRef50_mapping
-	UniRef50.source  UniRef50_taxonomy  UniRef50.version
+	UniRef100  UniRef100.dbtype  UniRef100_h  UniRef100_h.dbtype
+	UniRef100_h.index  UniRef100.index  UniRef100.lookup  UniRef100_mapping
+	UniRef100.source  UniRef100_taxonomy  UniRef100.version
 )
 
 missing=0

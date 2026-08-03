@@ -2,7 +2,7 @@
 
 ###############################################################
 #                                                             #
-# mmseqs easy taxonomy against UniRef50                       #
+# mmseqs easy taxonomy against UniRef100                      #
 #                                                             #
 # Note that you need a fasta file                             #
 # Also make sure that the reads are labeled /1 /2             #
@@ -20,18 +20,18 @@
 #SBATCH -o slurm_output/mmseqs_slurm/mmseqsET-%A_%a.out
 #SBATCH -e slurm_output/mmseqs_slurm/mmseqsET-%A_%a.err
 
-
 set -euo pipefail
-if [[ ! -n "$ATAVIDE_CONDA" ]]; then
-    echo "Please include the ATAVIDE_CONDA location on your slurm submission: --export=ATAVIDE_CONDA=$ATAVIDE_CONDA" >&2
-    exit 2;
-fi
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+
+# test we have atavide_lite conda installed, and then activate it
 eval "$(conda shell.bash hook)"
+"$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
 echo "Start " `date` >&2;
 
-DB=UniRef50
+DB=UniRef100
 DBSOURCE=/scratch/$PAWSEY_PROJECT/$USER/Databases/$DB
 
 if [[ ! -e $DBSOURCE ]]; then
@@ -50,7 +50,7 @@ OUTDIR=mmseqs
 
 R=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)
 # convert fastq to fasta
-# this throws an unbound error if FAFILEEND is not in DEFINITIONS
+FAFILEEND=${FILEEND/.fastq/.fasta}
 R1=${R/$FILEEND/$FAFILEEND}
 OUTPUT=$OUTDIR/${R/$FILEEND/}
 TMPOUTPUT=${R/$FILEEND/}

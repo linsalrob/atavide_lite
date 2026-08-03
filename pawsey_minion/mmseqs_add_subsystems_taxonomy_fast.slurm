@@ -8,15 +8,13 @@
 #SBATCH -e slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.err
 
 set -euo pipefail
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
-if [[ ! -n "$ATAVIDE_CONDA" ]]; then
-    echo "Please define the ATAVIDE_CONDA environment variable with the location of your ATAVIDE_LITE conda installation" >&2;
-    exit 2;
-fi
-
+# test we have atavide_lite conda installed, and then activate it
 eval "$(conda shell.bash hook)"
+"$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
-
 
 if [[ ! -e reads.txt ]]; then 
 	echo "Please make a file with the reads using this command:" >&2
@@ -59,8 +57,8 @@ if [[ -e mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa.gz ]]; then
 fi
 
 
-echo `date` "Running $0 -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite > mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa" >&2
-python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite > mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa
+echo `date` "Running ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py  -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite -o mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa" >&2
+python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite -o mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa
 echo `date` "easy_taxonomy_to_function_taxa complete" >&2
 
 pigz mmseqs/$BASE/${BASE}_tophit_report_subsystems_taxa 

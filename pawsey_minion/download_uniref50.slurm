@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=128G
-#SBATCH -o slurm/%x-%j.out
-#SBATCH -e slurm/%x-%j.err
+#SBATCH -o %x-%j.out
+#SBATCH -e %x-%j.err
 
 # Use `mmseqs databases` to find information about the preformatted databases
 # NOTE: Do not download the NT database unless you _really_ need it. The database is huge!

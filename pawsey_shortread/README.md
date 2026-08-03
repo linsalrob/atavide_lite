@@ -17,7 +17,7 @@ mamba env create --yes --prefix /scratch/$PAWSEY_PROJECT/$USER/software/minicond
 
 This creates an `atavide_lite` and `atavide_lite_vamb` conda environments for us to use.
 
-Make sure you build atavide_lit/bin:
+Make sure you build atavide_lite/bin:
 
 ```
 pushd $HOME/GitHubs/atavide_lite/bin

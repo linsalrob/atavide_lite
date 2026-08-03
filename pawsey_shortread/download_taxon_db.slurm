@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=32G
-#SBATCH -o slurm/%x-%j.out
-#SBATCH -e slurm/%x-%j.err
+#SBATCH -o %x-%j.out
+#SBATCH -e %x-%j.err
 
 TAXDIR="/scratch/$PAWSEY_PROJECT/$USER/Databases/NCBI/taxonomy/current"
 

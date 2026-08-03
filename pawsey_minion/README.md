@@ -23,7 +23,7 @@ mamba env create --yes --prefix /scratch/$PAWSEY_PROJECT/$USER/software/minicond
 mamba env create --yes --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb --file ../atavide_lite_vamb.yaml
 ```
 
-Make sure you build atavide_lit/bin:
+Make sure you build atavide_lite/bin:
 
 ```
 pushd $HOME/GitHubs/atavide_lite/bin

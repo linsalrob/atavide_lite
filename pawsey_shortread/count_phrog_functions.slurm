@@ -18,6 +18,6 @@ fi
 source DEFINITIONS.sh
 : "${SAMPLENAME:?SAMPLENAME must be defined in DEFINITIONS.sh}"
 
-export PYTHONPATH="${PYTHONPATH:-}:$HOME/GitHubs/atavide_lite"
+export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}$HOME/GitHubs/atavide_lite"
 python "$HOME/atavide_lite/bin/count_phrog_functions.py" -d mmseqs -n "$SAMPLENAME"
 find phrog_functions -type f -name '*.tsv' -exec pigz {} +

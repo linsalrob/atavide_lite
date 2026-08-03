@@ -120,7 +120,8 @@ def main():
                 current_metadata = (color, annotation, category)
                 if phrog_id in metadata and metadata[phrog_id] != current_metadata:
                     raise SystemExit(
-                        f"FATAL: conflicting annotations were found for {phrog_id}"
+                        f"FATAL: {report}:{line_number} has conflicting annotations "
+                        f"for {phrog_id}"
                     )
                 metadata[phrog_id] = current_metadata
 

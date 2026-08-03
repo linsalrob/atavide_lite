@@ -24,7 +24,7 @@ fi
 source DEFINITIONS.sh
 : "${SAMPLENAME:?SAMPLENAME must be defined in DEFINITIONS.sh}"
 
-export PYTHONPATH="${PYTHONPATH:-}:$HOME/GitHubs/atavide_lite"
+export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}$HOME/GitHubs/atavide_lite"
 
 METADATA_ARGS=()
 if [[ -f sample_metadata.tsv ]]; then

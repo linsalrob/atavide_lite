@@ -36,6 +36,8 @@ if [[ ! -e $OUTDIR/contigs.fna.gz ]]; then
 	exit 1;
 fi
 
+mkdir -p $OUTDIR/mapped_reads
+
 for READS in $(sort -R reads.txt); do
 	BAM=${READS/$FILEEND/.bam}
 	echo "READS: $READS BAM: $BAM" >&2;

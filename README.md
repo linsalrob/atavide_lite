@@ -10,7 +10,7 @@ removal, annotation, assembly and cross-assembly, and individual read based anno
 
 The motivation is based on the more complete [atavide pipeline](https://github.com/linsalrob/atavide) we built that 
 uses snakemake as a workflow manager. We found that solution to be effective, but routine failure at different steps
-was hard to debug and follow. In addition, as we move between compute resources, we need to adjust the time and 
+was hard to debug and follow. In addition, as we move between compute resources, we need to adjust the time, resources, and 
 memory requirements for each step, and that was not easy to do with snakemake.
 
 Our goal is to provide a simple, easy to use, and easy to understand pipeline that can be used for metagenomics data 
@@ -28,10 +28,11 @@ the [National Computational Infrastructure](https://nci.org.au/) Gadi system. Th
 the machines that we use everyday, and so we maintain those scripts to ensure that they work for us. If you would like
 to ammend the scripts for your cluster, please submit a pull request, or open an issue, and we will try to address it.
 
-In our experience, each cluster has enough [minor differences](#system-nuances) that it is easier
-to maintain individual scripts for each cluster, rather than trying to make a single script that works on all clusters.
+In our experience, each cluster has enough [minor differences](#system-nuances) and unique ways to optimise data storage,
+code execution, and system preferences, that it is more robust to maintain individual scripts for each cluster, 
+rather than trying to make a single script that works on all clusters.
 
-# Pipeline steps
+# Pipeline Steps
 
 Our pipeline is designed to be run in a series of steps, and each step can be run independently. In our day to day work
 we lean heavily on the `--dependency` option in `sbatch` to ensure that each step is run only after the previous step 
@@ -48,11 +49,14 @@ could use any version.
 5. Connect in the subsystems from [BV-BRC](https://www.bv-brc.org/), and make a table that includes 
 subsystems and taxonomic information
 6. Create a subsystems taxonomy for the data
-7. Use [vamb](https://github.com/RasmussenLab/vamb) to bin the reads into MAGs
+7. [Optional] We annotate the phage genes using PHROGs, and create a summary of those genes
+8. Use megahit to assemble the reads. We are fans of complete cross-assembly, but this takes time and resources, but megahit
+provides an option that allows us to continue where it left off, so after a few days or weeks the assembly finishes.
+9. Use [vamb](https://github.com/RasmussenLab/vamb) to bin the reads into MAGs
 
 We have described all the steps in a [detailed description of the workflows](DETAILED_PROCESSING_STEPS.md)
 
-# installation
+# Installation
 
 We recommend that you download the latest GitHub repository into a directory called `GitHubs` in your home directory:
 
@@ -75,7 +79,7 @@ Because this code uses a series of `bash`, `slurm`, or `PBS` scripts, it doesn't
 
 
 
-# different versions
+# Different Versions
 
 ## Paired vs Single End
 
@@ -131,14 +135,14 @@ Note: if you are using an ephemeral system like Pawsey, we also have a mechanism
 If you use atavide light, please [cite it](citation.cff) and then please also [cite the other papers](references.bib) that describe these great tools.
 
 <a id='system-nuances'></a>
-# System nuances
+# System Nuances
 
 This is not a comprehensive list of the nuances of each system, but it provides some of the differences that we 
 run into and the motivation for some of the choices we made in the scripts.
 
 ## Flinders' [deepthought](https://doi.org/10.25957/FLINDERS.HPC.DEEPTHOUGHT)
 
-Deepthought uses slurm for scheduling and has a `$BGFS` drive that is used for temporary storage. This is fast local access
+Deepthought uses slurm for scheduling and has a temporary storage drive that is accessible via the `$BGFS` variable. This is fast local access
 that is only available to the compute node that you are running on. It is not shared between nodes. For most
 processing, it is a lot quicker to transfer the data to the `$BGFS` drive, and then run the processing there, and 
 finally copying the files back to the working directory when they are complete. This is especially true for
@@ -147,17 +151,23 @@ processes that use a lot of memory and create temporary files, such as `megahit`
 ## Pawsey Supercomputing Centre's [Setonix](https://pawsey.org.au/)
 
 Setonix uses slurm for scheduling and has a `/scratch` drive that is used for temporary storage, 
-but is available from the compute nodes.
+but is available from the compute nodes. However, data on `/scratch` is deleted after a short time of not being accessed (approximately 21 days).
+Therefore, we need to move data in and out of `/scratch` via Pawsey's acacia file system, and we also need to recreate
+our conda environments from time to time, so we provide easy scripts to do that.
 
 ## NCI's [Gadi](https://nci.org.au/)
 
-Gadi uses PBS for scheduling a `/g/data` drive that is used for temporary storage. Gadi does not allow array jobs, so 
+Gadi uses PBS for scheduling a `/g/data` drive that is used for temporary storage. Gadi does not allow array jobs with more than 10 jobs, so 
 we have to run each step separately.
 
 Gadi also has fast local drives that are accessible from compute nodes, and they are at `$PBS_JOBFS`
 
+# Ways To Modify atavide lite Output
+
+
+
 <a id='selecting-taxa'></a>
-# Selecting taxa
+## Selecting Taxa
 
 In some cases, you may want to omit selected taxa from your downstream analyses. For example, you may want to remove all reads that are assigned to a particular taxonomic group, such as
 Pseudomonas, to determine whether any signal you discover is solely because of the reads that map to that taxa, rather than other trends in the data.

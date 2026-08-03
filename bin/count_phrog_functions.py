@@ -88,10 +88,10 @@ def main():
         with gzip.open(report, "rt", encoding="utf-8") as input_file:
             for line_number, line in enumerate(input_file, start=1):
                 fields = line.rstrip("\r\n").split("\t")
-                if len(fields) != 12:
+                if len(fields) < 2:
                     raise SystemExit(
                         f"FATAL: {report}:{line_number} has {len(fields)} columns; "
-                        "expected 12"
+                        "expected at least 2"
                     )
 
                 try:
@@ -108,6 +108,9 @@ def main():
                     )
 
                 total_hits[sample] += count
+                if len(fields) < 12:
+                    continue
+
                 phrog_id, color, annotation, category = fields[8:12]
                 if not phrog_id:
                     continue

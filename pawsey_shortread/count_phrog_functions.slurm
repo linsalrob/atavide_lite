@@ -43,7 +43,7 @@ if [[ -e "$TMP_OUTPUT" ]]; then
 	exit 2
 fi
 mkdir -p "$TMP_OUTPUT"
-trap 'rm -rf -- "$TMP_OUTPUT"' EXIT
+trap 'status=$?; if [[ $status -eq 0 ]]; then rm -rf -- "$TMP_OUTPUT"; else echo "Preserving temporary output at $TMP_OUTPUT (exit $status)" >&2; fi' EXIT
 
 export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}$HOME/GitHubs/atavide_lite"
 python "$HOME/GitHubs/atavide_lite/bin/count_phrog_functions.py" \

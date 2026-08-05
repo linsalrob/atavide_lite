@@ -110,7 +110,7 @@ A representative shared-node header is:
 #SBATCH --time=01:00:00
 ```
 
-Pawsey recommends integer memory values and currently favours `--mem` over `--mem-per-cpu`. Shared project scratch is under `/scratch/$PAWSEY_PROJECT/$USER` and is subject to a 21-day purge policy. Persistent data are staged through Acacia object storage, with large transfers assigned to `copy`. Environments and databases stored on scratch must be reproducibly recreatable.
+Pawsey recommends integer memory values, an explicit login shell so system modules initialise correctly, and currently favours `--mem` over `--mem-per-cpu`. Resource requests in the actual atavide lite scripts vary by pipeline stage and must remain within the selected partition's limits. Shared project scratch is under `/scratch/$PAWSEY_PROJECT/$USER` and is subject to a 21-day purge policy. Persistent data are staged through Acacia object storage, with large transfers assigned to `copy`. Environments and databases stored on scratch must be reproducibly recreatable; the Pawsey profiles include checks and recreation steps for purged environments.
 
 ## Validate the new profile
 

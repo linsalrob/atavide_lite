@@ -8,6 +8,9 @@
 Atavide lite is a simple, yet complete workflow for metagenomics data analysis, including QC/QA, optional host 
 removal, annotation, assembly and cross-assembly, and individual read based annotations. 
 
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for an inclusive guide to reporting issues,
+adding support for another HPC cluster, using agentic AI carefully, and opening a pull request.
+
 The motivation is based on the more complete [atavide pipeline](https://github.com/linsalrob/atavide) we built that 
 uses snakemake as a workflow manager. We found that solution to be effective, but routine failure at different steps
 was hard to debug and follow. In addition, as we move between compute resources, we need to adjust the time, resources, and 
@@ -26,7 +29,9 @@ that will run on most clusters, and then there are specific scripts for the
 Flinders University's [deepthought](https://doi.org/10.25957/FLINDERS.HPC.DEEPTHOUGHT) cluster, and
 the [National Computational Infrastructure](https://nci.org.au/) Gadi system. These are
 the machines that we use everyday, and so we maintain those scripts to ensure that they work for us. If you would like
-to ammend the scripts for your cluster, please submit a pull request, or open an issue, and we will try to address it.
+to amend the scripts for your cluster, please submit a pull request or open the dedicated **New cluster support** issue
+form. The [cluster support guide](docs/cluster-support.md) explains the information needed to adapt an existing profile
+and uses Pawsey Setonix as a worked example.
 
 In our experience, each cluster has enough [minor differences](#system-nuances) and unique ways to optimise data storage,
 code execution, and system preferences, that it is more robust to maintain individual scripts for each cluster, 
@@ -151,8 +156,15 @@ processes that use a lot of memory and create temporary files, such as `megahit`
 ## Pawsey Supercomputing Centre's [Setonix](https://pawsey.org.au/)
 
 Setonix uses slurm for scheduling and has a `/scratch` drive that is used for temporary storage, 
-but is available from the compute nodes. However, data on `/scratch` is deleted after a short time of not being accessed (approximately 21 days).
-Therefore, we need to move data in and out of `/scratch` via Pawsey's acacia file system, and we also need to recreate
+but is available from the compute nodes. Setonix compute nodes are shared by default, so jobs should request an explicit
+wall time, number of tasks, CPU count, and either memory for shared access or exclusive-node access. Its production partitions
+include `work` (24 hours), `long` (96 hours), `highmem` (96 hours), `gpu` (24 hours), `gpu-highmem` (48 hours), and
+`copy` (48 hours); the GPU partitions require a project account with a `-gpu` suffix. See the
+[cluster support guide](docs/cluster-support.md#worked-example-pawsey-setonix) for resource and queue details and links
+to Pawsey's current policies.
+
+Data on `/scratch` is deleted after a short time of not being accessed (approximately 21 days).
+Therefore, we need to move data in and out of `/scratch` via Pawsey's Acacia object storage, and we also need to recreate
 our conda environments from time to time, so we provide easy scripts to do that.
 
 ## NCI's [Gadi](https://nci.org.au/)
@@ -193,4 +205,3 @@ python ~/GitHubs/atavide_lite/summarise_taxonomy/scripts/join_taxonomies.py -t t
 
 The first makes a copy of the per-sample taxonomy files originally in `taxonomy` and puts them in `taxonomy_no_pseudo` but without the `f__Pseudomonadaceae` reads. 
 The second makes the summary directory with kingdom, phylum, class, etc. summaries without the `f__Pseudomonadaceae` reads.
-

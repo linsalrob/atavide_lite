@@ -39,7 +39,7 @@ affiliations:
    index: 1
  - name: The Department of Surgery -- Otolaryngology Head and Neck Surgery, University of Adelaide and the Basil Hetzel Institute for Translational Health Research, Adelaide, South Australia 5070, Australia
    index: 2
-date: 1 July 2025
+date: 5 August 2026
 bibliography: paper.bib
 ---
 
@@ -54,6 +54,13 @@ and assembly-based approaches, and supports both paired-end short reads and long
 
 # Statement of need
 
+All environments are impacted by microbes and viruses. Over the last two decades great strides have been made in exploring what microbes and viruses are present in a wide swath of environments, and understanding what they are doing, and how they contribute to biogeochemical cycles, health, or disease. 
+
+Driven by decreases in the costs of DNA sequencing, new DNA sequencing technologies, and the availability of abundant,  cheap, computing, metagenomics has emerged as one of the most complete methods to understand the microbes and viruses in any environment. Typically, metagenomics processing starts by size partitioning the microbial components to focus on the bacteria or viruses, and then extracting all the DNA present in the sample. Advanced computational techniques are then applied to explore which microbes and viruses are present (their `taxonomy`) and the functions that they are performing (by annotating their genes). By leveraging the additional information that multiple samples provide, metagenomic binning strives to reconstruct complete, or near-complete, microbial and viral genomes from complex samples. 
+
+`atavide_lite` performs all the computational processing of metagenomics sequence data, starting with raw reads from a DNA sequencing machine, we end up with annotated reads and reassembled genomes.
+
+# State of the field
 Numerous metagenomics pipelines exist, from web-based systems like MG-RAST `[@Meyer2008-mw:2008]`, to a proliferation of command-line pipelines 
 `[e.g. @Clarke2019-go:2019; @Laudadio2019-og:2019; @Lu2022-yw:2022; @Garfias-Gallegos2022-cy:2022; @Walker2022-yo:2022; 
 @Blanco-Miguez2023-ej:2023; @Tyagi2024-wl:2024; @Roach2024-qn:2024]`. Workflow management systems like Nextflow 
@@ -88,10 +95,12 @@ own environments. We provide an issue form that allows users to request configur
 This design improves fault-tolerance, eases debugging, and enables efficient 
 use of heterogeneous compute infrastructures.
 
-# Overview of the pipeline
 
-![atavide_lite schematic by M. Doane](atavide_lite_schematic.png)
 
+
+# Software design
+
+The overall `atavide_pipeline` is presented in \autoref{fig:schematic}.
 
 ## Design decisions
 
@@ -133,35 +142,28 @@ The functional annotations were enriched by mapping the UniProt IDs from the MMs
 
 For the assembly-based approaches, the metagenomes were assembled using megahit `[@Li2015-vg]` which by default employs a succinct _de Bruijn_ graph approach with multiple _k_-mer sizes (21 to 141 in steps of 20), automatic memory optimization, and conservative heuristics for contig pruning to balance assembly sensitivity, contiguity, and computational efficiency. Metagenome-assembled genomes (MAGs) were reconstructed using VAMB `[@Nissen2021-ry]`, a variational autoencoder-based approach that jointly encodes _k_-mer composition and differential coverage profiles of contigs into a low-dimensional latent space. By learning these compressed representations, VAMB effectively separates contigs originating from different microbial genomes and clusters them using a medoid-based algorithm. This deep learning approach has been shown to improve bin purity and completeness compared to conventional binning methods such as MetaBAT `[@Kang2019-zy] or CONCOCT `[@Alneberg2014-bk]`, particularly in complex metagenomic datasets `[@Papudeshi2017-xr]`
 
+# Research impact statement
+
+We routinely use `atavide_lite` to process metagenomics datasets from a wide range of environments and hosts. For example, we studied how microbes migrate through complex environments `[@Grigson2026-wy]` which did not require any host genome removal steps. In contrast, our studies on the microbial and viral communities of the CF airways `[@Carlson-Jones2026-zf; Goddard2026-ee]` and the causes of an undiagnosed illness in Central Africa `[@Wawina-Bokalanga2026-oa]` both required the removal of human genome contamination. Meanwhile, whe we studied the microbes on the surface of elasmobranchs `[@Doane2026-pr]` we eliminated nown shark genomes from our anlaysis. In each of these very different sampling schemes, sequenced with different technologies, we used the same underlying pipelinem.
+
+# AI usage disclosure
+
+We widely use agentic AI in code development. Our typical development pipeline now includes initial project scoping with ChatGPT leading to detailed instructions to write code that are provided to either codex or Claude Code. All commits and pull requests are reviewed with codex and copilot in GitHub, and agentic AI is used to resolve issues. We provide detailed documentation in our GitHub repository for other users to extend `atavide_lite` to new clusters, and encourage them to use agentic AI in doing so.
+
+However, this manuscript was written without AI support.
 
 
 
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
 
 # Figures
 
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](figure.png)
-and referenced from text using \autoref{fig:example}.
-
-Figure sizes can be customized by adding an optional second parameter:
-![Caption for example figure.](figure.png){ width=20% }
+![atavide_lite schematic by M. Doane demonstrating that we start with any type of sequence data, and process them through a similar pipeline for QC, host removal, annotation, assembly, and analysis. \label{fig:schematic}](atavide_lite_schematic.png)
 
 # Acknowledgements
 
-I acknowledge the support of  everyone
+RAE acknowledges funding from the NIH NIDDK RC2DK116713 and awards from the Australian Research Council DP220102915, DP250103825, and FL250100019. This research was supported by the Australian Government’s National Collaborative Research Infrastructure Strategy (NCRIS), with access to computational resources provided by the Pawsey Supercomputer Centre through the National Computational Merit Allocation Scheme, and DNA sequencing supported by Bioplatforms Australia, provided by the South Australian Genomics Centre.
+
+All computations were performed on Flinders HPC Deepthought `[@Flinders-University2021-vr]` or Pawsey’s HPC, Setonix `[@Pawsey-Supercomputing-Research-Centre2023-kj]`
+
 
 # References

@@ -51,6 +51,8 @@ retry failed steps without restarting the entire workflow, and optimise
 resource use for their specific environment. The pipeline integrates both read-based 
 and assembly-based approaches, and supports both paired-end short reads and long-read sequencing data.
 
+Complete documentation for [atavide lite](https://github.com/linsalrob/atavide_lite) is available on [read the docs](https://atavide-lite.readthedocs.io/).
+
 
 # Statement of need
 

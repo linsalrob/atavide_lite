@@ -157,14 +157,14 @@ processes that use a lot of memory and create temporary files, such as `megahit`
 
 Setonix uses slurm for scheduling and has a `/scratch` drive that is used for temporary storage, 
 but is available from the compute nodes. Setonix compute nodes are shared by default, so jobs should request an explicit
-wall time, task and CPU counts, and either memory for shared access or exclusive-node access. Its production partitions
+wall time, number of tasks, CPU count, and either memory for shared access or exclusive-node access. Its production partitions
 include `work` (24 hours), `long` (96 hours), `highmem` (96 hours), `gpu` (24 hours), `gpu-highmem` (48 hours), and
 `copy` (48 hours); the GPU partitions require a project account with a `-gpu` suffix. See the
 [cluster support guide](docs/cluster-support.md#worked-example-pawsey-setonix) for resource and queue details and links
 to Pawsey's current policies.
 
 Data on `/scratch` is deleted after a short time of not being accessed (approximately 21 days).
-Therefore, we need to move data in and out of `/scratch` via Pawsey's acacia file system, and we also need to recreate
+Therefore, we need to move data in and out of `/scratch` via Pawsey's Acacia object storage, and we also need to recreate
 our conda environments from time to time, so we provide easy scripts to do that.
 
 ## NCI's [Gadi](https://nci.org.au/)

@@ -27,7 +27,7 @@ Fork the repository if you do not have write access, clone your fork, and create
 ```bash
 git clone https://github.com/<your-user>/atavide_lite.git
 cd atavide_lite
-git switch -c cluster/<short-cluster-name>
+git switch -c cluster/examplecluster_shortread
 ```
 
 Keep unrelated changes on separate branches. If the work takes time, regularly incorporate upstream changes using the Git workflow you are comfortable with.
@@ -78,7 +78,7 @@ Stage only the intended files, write a concise commit message, and push your bra
 git status --short
 git add examplecluster_shortread
 git commit -m "Add ExampleCluster short-read profile"
-git push -u origin cluster/examplecluster
+git push -u origin cluster/examplecluster_shortread
 ```
 
 Open a pull request against the upstream repository using GitHub's website or GitHub CLI:

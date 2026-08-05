@@ -61,10 +61,10 @@ Driven by decreases in the costs of DNA sequencing, new DNA sequencing technolog
 `atavide_lite` performs all the computational processing of metagenomics sequence data, starting with raw reads from a DNA sequencing machine, we end up with annotated reads and reassembled genomes.
 
 # State of the field
-Numerous metagenomics pipelines exist, from web-based systems like MG-RAST [@Meyer2008-mw:2008], to a proliferation of command-line pipelines 
-[e.g. @Clarke2019-go:2019; @Laudadio2019-og:2019; @Lu2022-yw:2022; @Garfias-Gallegos2022-cy:2022; @Walker2022-yo:2022; 
-@Blanco-Miguez2023-ej:2023; @Tyagi2024-wl:2024; @Roach2024-qn:2024]. Workflow management systems like Nextflow 
-[@Di_Tommaso2017-ir:2017] and Snakemake [@Koster2012-qn:2012] streamlined the creation of pipelines
+
+Numerous metagenomics pipelines exist, from web-based systems like MG-RAST [@Meyer2008-mw], to a proliferation of command-line pipelines 
+[e.g. @Clarke2019-go; @Laudadio2019-og; @Lu2022-yw; @Garfias-Gallegos2022-cy; @Walker2022-yo; @Blanco-Miguez2023-ej; @Tyagi2024-wl; @Roach2024-qn]. Workflow management systems like Nextflow 
+[@Di_Tommaso2017-ir] and Snakemake [@Koster2012-qn] streamlined the creation of pipelines
 for bioinformatics analysis, including metagenomics. 
 
 Most metagenomics pipelines work process sequence data in the same way. Each starts with quality control of the raw _fastq_ files retrieved from the DNA sequencing facility. Quality control includes removing low quality reads, removing adapters and linkers that remain in the sequences, and removing overly short or long reads. Next, if the sample is a host-associated sample, the pipelines remove reads that map to the host genome. At this point,  the pipelines often branch into read-based analysis and contig-based analysis. For read-based analysis, individual reads are annotated for taxonomy and function. The number of reads that map to each category is a proxy for the abundance of that category in the original sample, and so mapped reads are counted and their abundance normalised. For contig-based analysis, the contigs are grouped or binned into sets of contigs that likely came from the same organism, and then those contigs are annotated.
@@ -80,10 +80,10 @@ Managing this many samples across real-world, large-scale deployments reveal two
 another, especially when each platform has idiosyncratic storage, job scheduling, and runtime constraints.
 
 For example, when processing thousands of samples from the Sequence Read Archive (SRA) 
-[@Leinonen2011-yd:2011], we found that some samples failed to download, and we had to 
+[@Leinonen2011-yd], we found that some samples failed to download, and we had to 
 interrupt the pipeline to complete the downloads, fix the issue, and restart the pipeline. 
 When processing our own data, corrupt or inconsistent sequence files (e.g. fastq files with different length sequences or quality scores),
-can crash a run. Similarly, when using large computations, such as comparing sequence reads to a database of reference sequences using MMSeqs [@Steinegger2017-qw:2017], 
+can crash a run. Similarly, when using large computations, such as comparing sequence reads to a database of reference sequences using MMSeqs [@Steinegger2017-qw], 
 the computation occasionally times out because of limitations of the compute environment, the compute fails because of unforeseen software incompatibility,
 or the computation fails for a variety of other reasons. Although pipelines streamline and seemingly simplify the process, our experience showed that complex pipelines fail with different samples at different states, obfuscating the precise cause of the failure.
 
@@ -130,7 +130,7 @@ Next, we create an `R1_reads.txt` or `reads.txt` file and either a `NUM_R1_READS
 
 We start with quality control using _fastp_ [@Chen2018-iw] to remove any sequence with too many `N` bases, remove adapters, and reads that are too short. For ONT data, our defaults are two `N`'s and a minimum length of 50 bp, while for short-read data, our defaults are 1 `N` base and a minimum length of 100 bp.
 
-The second step, if required, is to remove host DNA. `atavide_lite` maps the reads that pass quality control to the host genome using _minimap2_ [@Li2018-qy], and then uses _samtools_ [@Li2009-vs] to filter the reads. Sequences that do not match the flag 3588 -- and thus represent mapped reads which pass the platform/vendor quality check, are not PCR or optical duplicates, and are primary alignments -- are filtered as mapping to the host genome. For short reads, additional samtools flags are used to identify R1 reads (matching flag 65) and R2 reads (matching flag 129). Reads that do not match the flag 3584 -- and thus represent unmapped reads which pass the platform/vendor quality check, are not PCR or optical duplicates, and are primary alignments -- are filtered as unmapped reads[PMID: 19505943] and again, short reads were separated using flags that match 77 for R1 reads and 141 for R2 reads. The matching and unmatching reads are stored separately, although currently we do not use the reads that match the host genome for any downstream analysis.
+The second step, if required, is to remove host DNA. `atavide_lite` maps the reads that pass quality control to the host genome using _minimap2_ [@Li2018-qy], and then uses _samtools_ [@Li2009-vs] to filter the reads. Sequences that do not match the flag 3588 -- and thus represent mapped reads which pass the platform/vendor quality check, are not PCR or optical duplicates, and are primary alignments -- are filtered as mapping to the host genome. For short reads, additional samtools flags are used to identify R1 reads (matching flag 65) and R2 reads (matching flag 129). Reads that do not match the flag 3584 -- and thus represent unmapped reads which pass the platform/vendor quality check, are not PCR or optical duplicates, and are primary alignments -- are filtered as unmapped reads[@Li2009-vs] and again, short reads were separated using flags that match 77 for R1 reads and 141 for R2 reads. The matching and unmatching reads are stored separately, although currently we do not use the reads that match the host genome for any downstream analysis.
 
 Note that the host genome can be any genome or multi-fasta record that the user wants excluded from subsequent analysis, and is defined in the aforementioned `DEFINITIONS.sh` file.
 

@@ -47,7 +47,7 @@ bibliography: paper.bib
 `atavide lite` is a modular metagenomics processing pipeline designed to handle complex, 
 multi-sample, multi-technology datasets. Instead of a single monolithic workflow, it
 separates processing into discrete, independent steps, allowing users to run only what they need,
-retry failed components without restarting the entire workflow, and optimise
+retry failed steps without restarting the entire workflow, and optimise
 resource use for their specific environment. The pipeline integrates both read-based 
 and assembly-based approaches, and supports both paired-end short reads and long-read sequencing data.
 
@@ -67,14 +67,14 @@ Numerous metagenomics pipelines exist, from web-based systems like MG-RAST [@Mey
 [@Di_Tommaso2017-ir] and Snakemake [@Koster2012-qn] streamlined the creation of pipelines
 for bioinformatics analysis, including metagenomics. 
 
-Most metagenomics pipelines work process sequence data in the same way. Each starts with quality control of the raw fastq files retrieved from the DNA sequencing facility. Quality control includes removing low quality reads, removing adapters and linkers that remain in the sequences, and removing overly short or long reads. Next, if the sample is a host-associated sample, the pipelines remove reads that map to the host genome. At this point,  the pipelines often branch into read-based analysis and contig-based analysis. For read-based analysis, individual reads are annotated for taxonomy and function. The number of reads that map to each category is a proxy for the abundance of that category in the original sample, and so mapped reads are counted and their abundance normalised. For contig-based analysis, the contigs are grouped or binned into sets of contigs that likely came from the same organism, and then those contigs are annotated.
+Most metagenomics pipelines process sequence data in the same way. Each starts with quality control of the raw fastq files retrieved from the DNA sequencing facility. Quality control includes removing low quality reads, removing adapters and linkers that remain in the sequences, and removing overly short or long reads. Next, if the sample is a host-associated sample, the pipelines remove reads that map to the host genome. At this point, the pipelines often branch into read-based analysis and contig-based analysis. For read-based analysis, individual reads are annotated for taxonomy and function. The number of reads that map to each category is a proxy for the abundance of that category in the original sample, and so mapped reads are counted and their abundance normalised. For contig-based analysis, the contigs are grouped or binned into sets of contigs that likely originated from the same organism, and then those contigs are annotated.
 
 The continued decrease in the cost of DNA sequencing, together with the ever increasing sequencing throughput and computing power,
 mean that these days we routinely generate metagenomics datasets with hundreds or thousands of samples, and each sample needs to be processed through this pipeline.
 
 Managing this many samples across real-world, large-scale deployments reveal two persistent problems:
 
-1. Fragility at scale When processing thousands of datasets, there are multiple failure points in each metagenomics analysis. 
+1. Fragility at scale: When processing thousands of datasets, there are multiple failure points in each metagenomics analysis. 
 
 2. Poor portability across HPC environments: Optimising for one cluster often breaks performance or compatibility on 
 another, especially when each platform has idiosyncratic storage, job scheduling, and runtime constraints.

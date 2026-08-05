@@ -1,0 +1,161 @@
+name: New cluster support
+description: Request an atavide lite profile for another HPC cluster
+title: "[Cluster]: Support "
+labels:
+  - enhancement
+  - cluster-support
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping us port atavide lite. Please ask your HPC support team for any details you do not know. A complete response should let us adapt one of `deepthought_minion`, `deepthought_shortread`, `pawsey_minion`, or `pawsey_shortread` without guessing cluster policy.
+
+  - type: input
+    id: cluster
+    attributes:
+      label: Cluster and organisation
+      description: Give the cluster name and the organisation that operates it.
+      placeholder: Setonix — Pawsey Supercomputing Research Centre
+    validations:
+      required: true
+
+  - type: input
+    id: docs
+    attributes:
+      label: Cluster documentation
+      description: Link to the scheduler, partition/queue, storage, and software-environment documentation.
+      placeholder: https://example.edu/hpc/running-jobs
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scheduler
+    attributes:
+      label: Scheduler
+      description: Which workload manager accepts batch jobs?
+      options:
+        - Slurm
+        - PBS / PBS Pro / OpenPBS
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data_type
+    attributes:
+      label: Sequencing input to support
+      description: This selects the closest existing profile.
+      options:
+        - Paired-end short reads (adapt `deepthought_shortread` or `pawsey_shortread`)
+        - Single-end or long reads (adapt `deepthought_minion` or `pawsey_minion`)
+        - Both
+    validations:
+      required: true
+
+  - type: dropdown
+    id: closest_profile
+    attributes:
+      label: Closest existing profile
+      description: Select the implementation whose storage and input model is most similar.
+      options:
+        - pawsey_shortread
+        - pawsey_minion
+        - deepthought_shortread
+        - deepthought_minion
+        - Unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: partitions
+    attributes:
+      label: Partitions or queues
+      description: List every usable CPU, high-memory, GPU, long-running, debug, and data-transfer partition/queue. For each, give its purpose, maximum wall time, cores and usable memory per node, maximum nodes, and GPU type/count where relevant.
+      placeholder: |
+        | Name | Purpose | Max wall time | Cores/node | Memory/node | Max nodes | GPUs/node |
+        | --- | --- | --- | --- | --- | --- | --- |
+        | work | CPU production | 24 h | 128 | 230 GiB | ... | — |
+    validations:
+      required: true
+
+  - type: textarea
+    id: resource_mapping
+    attributes:
+      label: Pipeline resource mapping
+      description: Explain which partition/queue should run ordinary steps, MMseqs2 or large assemblies, GPU VAMB, downloads/transfers, and jobs that exceed the normal time limit. Include realistic time, CPU, memory, node, and GPU requests for each class.
+      placeholder: |
+        - Ordinary per-sample jobs: ...
+        - MMseqs2 / memory-heavy jobs: ...
+        - Assembly / long-running jobs: ...
+        - VAMB / GPU jobs: ...
+        - Downloads and data transfers: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: directives
+    attributes:
+      label: Required submission directives and policies
+      description: Provide exact `#SBATCH` or `#PBS` syntax for account/project, partition/queue, QoS, wall time, memory, CPUs/tasks/nodes, GPUs, job arrays, output/error paths, and any required export, reservation, constraint, or exclusive-node attributes. State which are mandatory and include a minimal working batch header.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: qos_limits
+    attributes:
+      label: QoS, accounting, and queue limits
+      description: List allowed/default QoS values, project or account naming rules (including separate GPU accounts), charging rules, maximum running/submitted/array jobs, and any per-user or per-project restrictions. Write “none” only if confirmed by the cluster documentation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: storage
+    attributes:
+      label: Storage and temporary files
+      description: Give paths or environment variables for home, software, shared scratch, node-local scratch, and long-term storage. Include quotas, purge periods, file-count limits, staging commands, and which paths are visible from compute nodes.
+      placeholder: Shared scratch is /scratch/$PROJECT/$USER, visible on compute nodes, and files are purged after ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: software
+    attributes:
+      label: Software environment
+      description: Explain how jobs initialise the shell, load modules, activate Conda/Mamba environments, and access containers. List required compiler/GPU modules and versions, especially those needed by VAMB.
+      placeholder: Include the batch shebang, module commands, environment locations, and GPU runtime/module.
+    validations:
+      required: true
+
+  - type: textarea
+    id: commands
+    attributes:
+      label: Scheduler command differences
+      description: Give commands and syntax for submission, parsable job IDs, arrays and concurrency limits, dependencies, cancellation, status, accounting, and launching parallel tasks (`srun`, `mpirun`, or equivalent).
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: Tested batch script and output
+      description: Paste a minimal batch script that has run successfully on this cluster, plus its scheduler submission command. Remove usernames, project IDs, credentials, and sensitive paths.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: caveats
+    attributes:
+      label: Other cluster-specific requirements
+      description: Describe network restrictions, login-node rules, data transfer nodes, email directives, licensed software, environment variables, filesystem performance advice, maintenance windows, or other details that scripts and documentation must handle.
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I checked these values against current cluster documentation or with the cluster support team.
+          required: true
+        - label: I removed credentials, private project identifiers, and sensitive data from this issue.
+          required: true

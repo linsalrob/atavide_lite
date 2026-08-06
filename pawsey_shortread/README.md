@@ -135,7 +135,21 @@ We use these assemblies, e.g. for binning with VAMB. The assemblies are not used
 to complete before submitting the subsequent jobs.
 
 ```
-MEGAHITHR=$(sbatch --parsable --dependency=afterok:$HOSTJOB $PAWSEY_SRC/megahit_hostremoved.slurm)
+MEGAHITHR=$(sbatch --parsable --dependency=afterok:$HOSTJOB $PAWSEY_SRC/megahit_allreads.slurm)
+```
+
+### 8b. If you want to do individual assemblies, and then merge them with contigger:
+
+First, do the assemblies separately:
+
+```
+MEGAHITJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$HOSTJOB $PAWSEY_SRC/megahit.slurm)
+```
+
+Then, merge the assemblies with contigger:
+
+```
+TBD!
 ```
 
 ## 9. Convert to fasta.
@@ -260,8 +274,8 @@ Then we use the usual VAMB approach to bin the contigs.
 </summary>
 
 
-Assemble using the `megahit_hostremoved.slurm` script above. This will take a while to run, so do it early! Also note that `megahit` can continue if it is interuppted. Make sure the `--continue` flag is active 
-in the `megahit_hostremoved.slurm` script.
+Assemble using the `megahit_allreads.slurm` script above. This will take a while to run, so do it early! Also note that `megahit` can continue if it is interuppted. Make sure the `--continue` flag is active 
+in the `megahit_allreads.slurm` script.
 
 ```
 VCRJOB=$(sbatch --parsable $PAWSEY_SRC/vamb_concat_crass.slurm samples.tsv)
@@ -294,7 +308,7 @@ directory to find the error.
 ```
 JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 $PAWSEY_SRC/fastp.slurm)
 HOSTJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$JOB $PAWSEY_SRC/host_removal.slurm)
-MEGAHITHR=$(sbatch --parsable --dependency=afterok:$HOSTJOB $PAWSEY_SRC/megahit_hostremoved.slurm)
+MEGAHITHR=$(sbatch --parsable --dependency=afterok:$HOSTJOB $PAWSEY_SRC/megahit_allreads.slurm)
 sbatch --parsable $PAWSEY_SRC/16S_detection_single.slurm
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $PAWSEY_SRC/fastq2fasta.slurm)
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB $PAWSEY_SRC/mmseqs_easy_taxonomy.slurm)

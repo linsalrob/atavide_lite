@@ -60,8 +60,7 @@ fi
 
 echo "Running megahit with the following parameters: megahit $FINAL_STRING -o megahit_output" >&2
 
-# megahit $FINAL_STRING --continue -o megahit_output 
-megahit $FINAL_STRING -o megahit_all_reads
+megahit $FINAL_STRING --continue -o megahit_all_reads
 
 
 

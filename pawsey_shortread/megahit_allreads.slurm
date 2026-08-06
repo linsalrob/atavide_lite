@@ -5,8 +5,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=960G
-#SBATCH -o slurm_output/megahit_slurm/%x-%j.out
-#SBATCH -e slurm_output/megahit_slurm/%x-%j.err
+#SBATCH -o slurm_output/%x-%j.out
+#SBATCH -e slurm_output/%x-%j.err
 
 
 

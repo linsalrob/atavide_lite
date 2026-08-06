@@ -111,7 +111,7 @@ Assembly can begin from cleaned reads without waiting for read-based taxonomy:
 ```bash
 ASSEMBLY_JOB=$(sbatch --parsable \
   --dependency="afterok:${HOST_JOB}" \
-  "$ATAVIDE_PROFILE/megahit_hostremoved.slurm")
+  "$ATAVIDE_PROFILE/megahit_allreads.slurm")
 ```
 
 Prepare FASTA for MMseqs2:

@@ -59,7 +59,7 @@ nano DEFINITIONS.sh
 ```
 
 
-# 2. Check the names of your files.
+## 2. Check the names of your files.
 
 We need to be consistent with the names of our files, so we start by looking at the file names.
 
@@ -213,7 +213,19 @@ grep 'primary mapped' slurm_output/sixteen_s/*out | perl -ne 'm/(\d+\.\d+)\%/; p
 grep 'primary mapped' slurm_output/sixteen_s/*out | perl -ne 'm/(\d+\.\d+)\%/; print "$1\n"' | awk '{s+=$1} END {print s/NR}'
 ```
 
-## 15. VAMB
+## 15. PHROGs
+
+We can use the mmseqs analysis to find PHROGs. We have a mapping between the UniProt IDs and the PHOG IDs which we use to map
+similarities.
+
+First, we create a new mmseqs-derived output file with the PHROG IDs, and then we count the PHROG IDs in each sample. The output is in the `phrogs` directory.
+
+```
+PHROGJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_R1_READS:1 $PAWSEY_SRC/mmseqs_add_phrog_function.slurm)
+sbatch --parsable --dependency=afterok:$PHROGJOB $PAWSEY_SRC/count_phrog_functions.slurm
+```
+
+## 16. VAMB
 
 Please note: this section of the README needs some improvement, because I have not used the different pieces in a while.
 

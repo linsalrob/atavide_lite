@@ -32,6 +32,17 @@ source DEFINITIONS.sh
 : "${HOSTREMOVED:?HOSTREMOVED must be defined in DEFINITIONS.sh}"
 : "${SLURM_ARRAY_TASK_ID:?Submit this script as a SLURM array job}"
 : "${SLURM_CPUS_PER_TASK:?SLURM_CPUS_PER_TASK is not set}"
+if (( SLURM_CPUS_PER_TASK < 5 )); then
+	echo "This job requires at least 5 CPUs, but SLURM_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK" >&2
+	exit 2
+fi
+
+# The mapper, view, and sort stages run concurrently. Account for each
+# samtools process's main thread as well as its additional -@ threads.
+MAP_THREADS=$((SLURM_CPUS_PER_TASK - 4))
+VIEW_THREADS=1
+SORT_THREADS=1
+INDEX_THREADS=$((SLURM_CPUS_PER_TASK - 1))
 
 R1=$(sed -n "${SLURM_ARRAY_TASK_ID}p" R1_reads.txt)
 if [[ -z "$R1" ]]; then
@@ -58,8 +69,10 @@ for INPUT in "$HOSTREMOVED/$R1" "$HOSTREMOVED/$R2" "$REFERENCE"; do
 	fi
 done
 
-if [[ -s "$BAM" && -s "$BAM.bai" ]] && samtools quickcheck "$BAM"; then
-	echo "$BAM and its index already exist and passed samtools quickcheck. Nothing to do." >&2
+if [[ -s "$BAM" && -s "$BAM.bai" ]] \
+	&& samtools quickcheck "$BAM" \
+	&& samtools idxstats "$BAM" >/dev/null; then
+	echo "$BAM and its index already exist and passed validation. Nothing to do." >&2
 	exit 0
 fi
 if [[ -e "$BAM" || -e "$BAM.bai" ]]; then
@@ -75,13 +88,14 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Mapping $HOSTREMOVED/$R1 and $HOSTREMOVED/$R2 to $REFERENCE" >&2
-minimap2 -t "$SLURM_CPUS_PER_TASK" --secondary=no -ax sr \
+minimap2 -t "$MAP_THREADS" --secondary=no -ax sr \
 	--split-prefix "$TMP_PREFIX" "$REFERENCE" "$HOSTREMOVED/$R1" "$HOSTREMOVED/$R2" \
-	| samtools view -@ "$SLURM_CPUS_PER_TASK" -b -F 4 - \
-	| samtools sort -@ "$SLURM_CPUS_PER_TASK" -o "$TMP_BAM" -
+	| samtools view -@ "$VIEW_THREADS" -b -F 4 - \
+	| samtools sort -@ "$SORT_THREADS" -T "${TMP_PREFIX}.sort" -o "$TMP_BAM" -
 
-samtools index -@ "$SLURM_CPUS_PER_TASK" "$TMP_BAM"
+samtools index -@ "$INDEX_THREADS" "$TMP_BAM"
 samtools quickcheck "$TMP_BAM"
+samtools idxstats "$TMP_BAM" >/dev/null
 mv -- "$TMP_BAM" "$BAM"
 mv -- "$TMP_BAM.bai" "$BAM.bai"
 

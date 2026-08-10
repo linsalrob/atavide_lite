@@ -146,6 +146,11 @@ First, do the assemblies separately:
 MEGAHITJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$HOSTJOB $PAWSEY_SRC/megahit.slurm)
 ```
 
+Next, map the R1/R2 reads back to those contigs:
+
+```
+MEGAMAP=$(sbatch --parsable  --array=1-$NUM_R1_READS:1 --dependency=afterok:MEGAHITJOB $PAWSEY_SRC/megahit_map_reads.slurm)
+
 Then, merge the assemblies with contigger:
 
 ```

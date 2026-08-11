@@ -19,7 +19,9 @@ if [[ ! -e "$VENV_DIR" ]]; then
 fi
 
 module load rocm/6.2.4
-source "$VENV_DIR/bin/activate"
+# source "$VENV_DIR/bin/activate"
+eval "$(conda shell.bash hook)"
+conda activate $VENV_DIR
 
 if [[ ! -e R1_reads.txt ]]; then 
 	echo "Please make a file with the R1 reads using this command:" >&2

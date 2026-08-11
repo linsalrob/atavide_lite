@@ -17,7 +17,9 @@ if [[ ! -e "$VENV_DIR" ]]; then
 fi
 
 module load rocm/6.2.4
-source "$VENV_DIR/bin/activate"
+# source "$VENV_DIR/bin/activate"
+eval "$(conda shell.bash hook)"
+conda activate $VENV_DIR
 
 mkdir -p vamb
 python ~/atavide_lite/bin/vamb_concatenate.py -m 300 vamb/contigs.fna.gz megahit/*/final.contigs.fa

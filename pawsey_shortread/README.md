@@ -288,9 +288,7 @@ category should be one word, no spaces, and should provide a single grep. We wil
 and not continue. sample should be unique in the R1 file.
 
 ```
-# VCRJOB=$(sbatch --parsable $PAWSEY_SRC/vamb_concat_crass.slurm samples.tsv)
 VCRJOB=$(sbatch --parsable $PAWSEY_SRC/vamb_concat_all.slurm)
-
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCRJOB --array=1-$NUM_R1_READS:1 $PAWSEY_SRC/vamb_minimap_crass.slurm samples.tsv)
 ```
 
@@ -306,7 +304,7 @@ Then run the rest of vamb:
 
 ```
 VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $PAWSEY_SRC/vamb_crass.slurm)
-sbatch  --dependency=afterok:$VAMBJOB  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm samples.tsv
+sbatch  --dependency=afterok:$VAMBJOB  $PAWSEY_SRC/vamb_mags_group.slurm samples.tsv
 CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $PAWSEY_SRC/checkm.slurm vamb/bins/ vamb/checkm)
 ```
 

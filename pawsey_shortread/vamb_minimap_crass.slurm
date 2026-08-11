@@ -94,12 +94,10 @@ fi
 # use minimap to make the bam files in that directory.
 #
 
-
 LN=$(head -n $SLURM_ARRAY_TASK_ID $SAMPLES | tail -n 1)
+IFS=$'\t' read -r GRP R1 <<< "$LN"
+echo -e "GROUP IS '$GRP'\nR1 IS '$R1'"
 
-
-GRP=$(echo $LN | cut -d$'\t' -f 1)
-SMP=$(echo $LN | cut -d$'\t' -f 2)
 OUTDIR=$VAMBDIR/$GRP
 R2=${R1/_R1/_R2}
 BAM=${R1/$FILEEND/.bam}
@@ -107,8 +105,13 @@ BAM=${R1/$FILEEND/.bam}
 if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 	mkdir --parents $OUTDIR/mapped_reads
 
-	minimap2 -t 32 -N 5 -ax sr $VAMBDIR/contigs.mmi --split-prefix mmsplit$$ $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 \
-		| samtools view -b -F 3584 --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
+	echo "Running:
+	minimap2 -t 32 -N 5 -ax sr $VAMBDIR/contigs.mmi --split-prefix mmsplit$$ $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 | \
+		samtools view -b -F 3584 --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
+	samtools index $OUTDIR/mapped_reads/$BAM"
+
+	minimap2 -t 32 -N 5 -ax sr $VAMBDIR/contigs.mmi --split-prefix mmsplit$$ $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 | \
+		samtools view -b -F 3584 --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
 	samtools index $OUTDIR/mapped_reads/$BAM
 else
 	echo "Skipped $OUTDIR/mapped_reads/$BAM as it already exists" >&2;

@@ -37,37 +37,40 @@
 
 
 set -euo pipefail
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
 # ---- 1) Get the right module here!
 module load rocm/6.2.4
 
 # ---- 2) Create and load the virtual environment 
-VENV_DIR="/scratch/$PAWSEY_ACCOUNT/$USER/software/pip/vamb"
-if [[ -e "$VENV_DIR" ]]; then 
-	rm -rf "$VENV_DIR"
+
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
+
+eval "$(/home/edwa0468/software/miniforge3/bin/mamba shell hook --shell bash)"
+
+if [[ -e "$VENV_DIR" ]]; then
+	mamba env remove --yes --prefix "$VENV_DIR"
 fi
 
-mkdir -p "$VENV_DIR"
-python3.12 -m venv "$VENV_DIR"
-source "$VENV_DIR/bin/activate"
+mamba create --yes --prefix "$VENV_DIR" python=3.12 pip
 
-# Upgrade packaging tooling
-pip install --upgrade pip setuptools wheel
+PYTHON="$VENV_DIR/bin/python"
+"$PYTHON" -m pip install --upgrade pip setuptools wheel
 
 # ---- 3) Install pytorch and then vamb
 # The pytorch module already provides torch/ROCm; avoid pip installing another torch build.
 # This requires pip > 23.2
-pip --version
+"$PYTHON" -m pip --version
 ## pip install vamb --exclude torch
-pip install --index-url https://download.pytorch.org/whl/rocm6.2.4 "torch == 2.6.0" torchvision torchaudio
-pip install --no-deps  vamb "vambcore == 0.1.2" "numpy == 1.26.4" "pycoverm == 0.6.2" "networkx == 3.4.2" "scikit-learn == 1.6.1" "dadaptation == 3.2" "loguru == 0.7.3" "pyhmmer == 0.10.15" "pyrodigal == 3.6.3" joblib scipy threadpoolctl archspec psutil~=5.8
+"$PYTHON" -m pip install --index-url https://download.pytorch.org/whl/rocm6.2.4 "torch == 2.6.0" torchvision torchaudio
+"$PYTHON" -m pip install --no-deps  vamb "vambcore == 0.1.2" "numpy == 1.26.4" "pycoverm == 0.6.2" "networkx == 3.4.2" "scikit-learn == 1.6.1" "dadaptation == 3.2" "loguru == 0.7.3" "pyhmmer == 0.10.15" "pyrodigal == 3.6.3" joblib "scipy == 1.15.3" threadpoolctl archspec psutil~=5.8
 
 echo "Running pip check"
-pip check
+"$PYTHON" -m pip check
 
 echo "Sane?"
 # ---- Sanity checks ----
-python - <<'PY'
+"$PYTHON" - <<'PY'
 import sys
 print("Python:", sys.version)
 try:
@@ -85,6 +88,7 @@ try:
 except Exception as e:
     print("VAMB import failed:", e)
 PY
+
 
 echo "Done. Virtual env at: $VENV_DIR"
 

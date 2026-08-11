@@ -20,7 +20,8 @@ eval "$(conda shell.bash hook)"
 ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
-VENV_DIR="/scratch/$PAWSEY_ACCOUNT/$USER/software/pip/vamb"
+#VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/pip/vamb"
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 if [[ ! -e "$VENV_DIR" ]]; then 
 	echo "Please run vamb_install.slurm to create the vamb virtual environment" >&2
 	exit 1;

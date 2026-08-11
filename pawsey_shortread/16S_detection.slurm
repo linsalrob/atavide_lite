@@ -32,7 +32,7 @@ source DEFINITIONS.sh
 
 # copy the 16S partie database
 
-DBDIR=/scratch/$PAWSEY_ACCOUNT/$USER/Databases/partie
+DBDIR=/scratch/$PAWSEY_PROJECT/$USER/Databases/partie
 if [[ $SLURM_ARRAY_TASK_ID == 1 ]]; then
 	if [ ! -e $DBDIR/copying_done ]; then
 		mkdir -p $DBDIR

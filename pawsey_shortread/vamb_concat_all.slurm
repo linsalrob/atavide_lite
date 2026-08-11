@@ -3,7 +3,7 @@
 #SBATCH --time=0-1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=32G
+#SBATCH --mem=64G
 #SBATCH -o slurm_output/vamb_slurm/vamb_concat-%j.out
 #SBATCH -e slurm_output/vamb_slurm/vamb_concat-%j.err
 
@@ -19,6 +19,6 @@ fi
 module load rocm/6.2.4
 source "$VENV_DIR/bin/activate"
 
-mkdir -p vamb
-python ~/atavide_lite/bin/vamb_concatenate.py -m 300 vamb/contigs.fna.gz megahit/*/final.contigs.fa
+mkdir -p vamb_crass
+python ~/atavide_lite/bin/vamb_concatenate.py -m 300 vamb_crass/contigs.fna.gz megahit_all_reads/final.contigs.fa
 

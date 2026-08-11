@@ -34,7 +34,7 @@ source DEFINITIONS.sh
 
 # copy the 16S partie database
 
-DBDIR=/scratch/$PAWSEY_ACCOUNT/$USER/Databases/partie
+DBDIR=/scratch/$PAWSEY_PROJECT/$USER/Databases/partie
 SIXS=$DBDIR/16SMicrobial.fasta.gz
 if [ ! -e $SIXS ]; then
 	mkdir -p $DBDIR

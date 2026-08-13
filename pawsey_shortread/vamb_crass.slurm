@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH -o slurm_output/vamb_slurm/%x-%A_%a.out
-#SBATCH -e slurm_output/vamb_slurm/%x-%$_%a.err
+#SBATCH -e slurm_output/vamb_slurm/%x-%A_%a.err
 #SBATCH --gres=gpu:8
 #SBATCH --partition=gpu
 
@@ -17,14 +17,15 @@ set -uo pipefail
 # Please submit this script as an array job with the number of samples in the vamb_crass directory.
 # sbatch --array=1-$(find vamb_crass -maxdepth 1 -mindepth 1 -type d | wc -l) --account=${PAWSEY_PROJECT}-gpu $PAWSEY_SRC/vamb_crass.slurm
 
-VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/pip/vamb"
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 if [[ ! -e "$VENV_DIR" ]]; then 
 	echo "Please run vamb_install.slurm to create the vamb virtual environment" >&2
 	exit 1;
 fi
 
 module load rocm/6.2.4
-source "$VENV_DIR/bin/activate"
+eval "$(conda shell.bash hook)"
+conda activate $VENV_DIR
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2

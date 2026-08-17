@@ -2,10 +2,9 @@
 #SBATCH --job-name=fastp
 #SBATCH --time=0-1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=16
 #SBATCH --mem=32G
-#SBATCH -o slurm_output/fastp_slurm/fastp-%A_%a.out
-#SBATCH -e slurm_output/fastp_slurm/fastp-%A_%a.err
+
 
 set -euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
@@ -33,7 +32,17 @@ source DEFINITIONS.sh
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 R2=${R1/_R1/_R2}
 
+
 mkdir -p fastq_fastp fastp_output
-echo "fastp -n 1 -l 100 -i fastq/$R1 -I fastq/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R2 --adapter_fasta $HOME/atavide_lite/adapters//IlluminaAdapters.fa --thread 16" >&2
-fastp -n 1 -l 100 -i fastq/$R1 -I fastq/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R2 -j fastp_output/$R1.json -h fastp_output/$R1.html --adapter_fasta $HOME/atavide_lite/adapters/IlluminaAdapters.fa --thread 16
+
+if [[ -s "fastq_fastp/$R1" && \
+      -s "fastq_fastp/$R2" && \
+      -s "fastp_output/$R1.json" && \
+      -s "fastp_output/$R1.html" ]]; then
+    echo "fastp outputs already exist for $R1. Skipping." >&2
+    exit 0
+fi
+
+echo "fastp -n 1 -l 100 -i $SOURCE/$R1 -I $SOURCE/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R2 --adapter_fasta $HOME/GitHubs/atavide_lite/adapters//IlluminaAdapters.fa --thread $SLURM_CPUS_PER_TASK" >&2
+fastp -n 1 -l 100 -i $SOURCE/$R1 -I $SOURCE/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R2 -j fastp_output/$R1.json -h fastp_output/$R1.html --adapter_fasta $HOME/GitHubs/atavide_lite/adapters/IlluminaAdapters.fa --thread $SLURM_CPUS_PER_TASK
 

@@ -32,6 +32,5 @@ source DEFINITIONS.sh
 READS=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)
 
 mkdir -p fastq_fastp fastp_output
-echo "fastp -n 1 -l 100 -i fastq/$READS -o output/$READS -j fastp_output/$READS.json -h fastp_output/$READS.html --adapter_fasta ~/atavide_lite/adapters/ONT_Rapid_Barcodes.fna " >&2
-fastp -n 2 -l 50 -i fastq/$READS -o fastq_fastp/$READS -j fastp_output/$READS.json -h fastp_output/$READS.html --adapter_fasta ~/atavide_lite/adapters/ONT_RPB114.24.fna
-
+echo "fastp -n 1 -l 100 -i fastq/$READS -o output/$READS -j fastp_output/$READS.json -h fastp_output/$READS.html --adapter_fasta $HOME/GitHubs/atavide_lite/adapters/ONT_Rapid_Barcodes.fna " >&2
+fastp -n 2 -l 50 -i fastq/$READS -o fastq_fastp/$READS -j fastp_output/$READS.json -h fastp_output/$READS.html --adapter_fasta "$HOME/GitHubs/atavide_lite/adapters/ONT_RPB114.24.fna"

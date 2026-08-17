@@ -24,17 +24,16 @@ fi
 source DEFINITIONS.sh
 
 
-# this requires ~/atavide_lite/bin/fastq2fasta.c be compiled with make, and it has built in reading gzip support
+# this requires ~/GitHubs/atavide_lite/bin/fastq2fasta.c be compiled with make, and it has built in reading gzip support
 
 extract_R1 () {
 	FQ=$1;
 	FB=`basename $FQ .gz`;
 	FA=${FB/fastq/fasta}
-	~/atavide_lite/bin/fastq2fasta -n 1 $FQ - | gzip -c > fasta/$FA.gz;
+	"$HOME/GitHubs/atavide_lite/bin/fastq2fasta" -n 1 "$FQ" - | gzip -c > "fasta/$FA.gz";
 }
 
 export -f extract_R1
 mkdir -p fasta
 
 find -L $HOSTREMOVED -type f -name *fastq.gz | parallel -j 16 extract_R1
-

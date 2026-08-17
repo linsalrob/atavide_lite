@@ -10,5 +10,4 @@
 set -euo pipefail
 
 export PYTHONPATH=$PYTHONPATH:~/GitHubs/atavide_lite
-python ~/GitHubs/atavide_lite/bin/sankey_plot.py -r reads.txt  -v
-
+python ~/GitHubs/atavide_lite/bin/sankey_plot.py -r reads.txt -t "$SLURM_CPUS_PER_TASK" -v

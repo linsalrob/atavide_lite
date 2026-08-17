@@ -213,7 +213,7 @@ find fastq -type f -printf "%f\n" > reads.txt
 export NUM_READS=$(wc -l reads.txt | cut -f 1 -d ' ')
 echo $NUM_READS
 
-SRC=~/atavide_lite/pawsey_minion
+SRC=~/GitHubs/atavide_lite/pawsey_minion
 cp $SRC/DEFINITIONS.sh .
 
 # edit the DEFINITIONS file to change the sample name
@@ -235,4 +235,3 @@ VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB $SRC/vamb.slurm)
 CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/bins/ vamb/checkm)
 
 ```
-

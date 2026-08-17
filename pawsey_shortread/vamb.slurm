@@ -1,16 +1,19 @@
 #!/bin/bash
 #SBATCH --job-name=VAMB
-#SBATCH --time=0-4
+#SBATCH --time=1-00:00:00
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
-#SBATCH -o slurm_output/vamb_slurm/vamb-%j.out
-#SBATCH -e slurm_output/vamb_slurm/vamb-%j.err
-#SBATCH --gres=gpu:8
-#SBATCH --partition=gpu-dev
+#SBATCH --gres=gpu:4
+#SBATCH --partition=gpu
+
 
 
 set -euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+
+THREADS=${SLURM_CPUS_PER_TASK:-${SLURM_CPUS_ON_NODE:-8}}
+echo "Slurm CPUs on node: ${SLURM_CPUS_ON_NODE:-not set}" >&2
+echo "VAMB threads: $THREADS" >&2
 
 # test we have atavide_lite conda installed, and then activate it
 eval "$(conda shell.bash hook)"
@@ -42,8 +45,14 @@ source DEFINITIONS.sh
 OUTDIR=vamb
 mkdir --parents $OUTDIR
 
-if [[ ! -e $OUTDIR/contigs.fna.gz ]]; then
-	python ~/atavide_lite/bin/vamb_concatenate.py -m 300 $OUTDIR/contigs.fna.gz megahit/*/output/final.contigs.fa 
+#if [[ ! -e $OUTDIR/contigs.fna.gz ]]; then
+#	python ~/GitHubs/atavide_lite/bin/vamb_concatenate.py -m 300 $OUTDIR/contigs.fna.gz megahit/*/final.contigs.fa 
+#fi
+
+if [[ ! -s "$OUTDIR/contigs.fna.gz" ]]; then
+    echo "ERROR: $OUTDIR/contigs.fna.gz not found." >&2
+    echo "Run vamb_concat.slurm before vamb.slurm." >&2
+    exit 2
 fi
 
 mkdir --parents $OUTDIR $OUTDIR/mapped_reads  
@@ -61,8 +70,11 @@ done
 
 
 
-vamb bin default -o C -p $SLURM_CPUS_PER_TASK --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamdir $OUTDIR/mapped_reads/
-python ~/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_unsplit.tsv 20000 $OUTDIR/bins &
-python ~/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_split.tsv 20000 $OUTDIR/bins &
+#CHANGE THIS WHEN DONE WITH THE TEST RUN
+#vamb bin default -o C -p $THREADS --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamdir $OUTDIR/mapped_reads/
+vamb bin default -o C -p $THREADS --cuda --outdir $OUTDIR/vamb --composition $OUTDIR/composition.npz --bamdir $OUTDIR/mapped_reads/
+
+python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_unsplit.tsv 20000 $OUTDIR/bins &
+python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_split.tsv 20000 $OUTDIR/bins &
 wait
 

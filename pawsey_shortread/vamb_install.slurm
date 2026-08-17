@@ -42,13 +42,20 @@ set -euo pipefail
 module load rocm/6.2.4
 
 # ---- 2) Create and load the virtual environment 
-VENV_DIR="/scratch/$PAWSEY_ACCOUNT/$USER/software/pip/vamb"
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/pip/vamb"
+PYTHON="/scratch/pawsey1018/mdoane/software/miniconda3/atavide_lite_vamb/bin/python"
+
+if [[ ! -x "$PYTHON" ]]; then
+    echo "ERROR: Python executable not found: $PYTHON" >&2
+    exit 1
+fi
+
 if [[ -e "$VENV_DIR" ]]; then 
 	rm -rf "$VENV_DIR"
 fi
 
 mkdir -p "$VENV_DIR"
-python3.12 -m venv "$VENV_DIR"
+"$PYTHON" -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
 # Upgrade packaging tooling

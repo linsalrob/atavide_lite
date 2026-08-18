@@ -30,11 +30,16 @@ fi
 source DEFINITIONS.sh
 
 
-QC=fastq_fastp
+QC=${QC_DIR:-fastq_fastp}
 THREADS=${SLURM_CPUS_PER_TASK:-8}
 READS=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)
 
 echo "Processing $READS" >&2;
+
+if [[ ! -f "$QC/$READS" ]]; then
+	echo "ERROR: QC FASTQ not found: $QC/$READS" >&2;
+	exit 2;
+fi
 
 mkdir -p $HOST $HOSTREMOVED
 
@@ -44,8 +49,8 @@ if [[ $O == $READS ]]; then
 	exit 1;
 fi
 TMPDIR=$(mktemp -d -p /scratch/$PAWSEY_PROJECT/$USER/tmp)
-echo -e "minimap2 -t $THREADS --secondary=no --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -\n" >&2;
-minimap2 -t "$THREADS" --secondary=no --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -
+echo -e "minimap2 -t $THREADS --secondary=no --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE $QC/$READS | samtools view -bh | samtools sort -o $HOST/$O -\n" >&2;
+minimap2 -t "$THREADS" --secondary=no --split-prefix=$TMPDIR/tmp$$ -a -x map-ont "$HOSTFILE" "$QC/$READS" | samtools view -bh | samtools sort -o "$HOST/$O" -
 samtools index $HOST/$O
 
 

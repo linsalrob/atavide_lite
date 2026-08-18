@@ -107,7 +107,7 @@ def count_fastq(fastq_file, logger=None):
             line_number += 3
     return count
 
-def count_all_for_read(r, definitions):
+def count_all_for_read(r, definitions, qc_directory):
     """
     Given a read, count the number of sequences in the fastq files,
     but we do it in parallel
@@ -115,7 +115,7 @@ def count_all_for_read(r, definitions):
 
     return (
         count_fastq(os.path.join(definitions["SOURCE"], r), logger=logging),
-        count_fastq(os.path.join("fastq_fastp", r), logger=logging),
+        count_fastq(os.path.join(qc_directory, r), logger=logging),
         count_fastq(os.path.join(definitions["HOST"], r), logger=logging),
         count_fastq(os.path.join(definitions["HOSTREMOVED"], r), logger=logging)
     )
@@ -149,6 +149,10 @@ if __name__ == "__main__":
                         help='intermediate count data file and two backups (default: count_data.json.gz)')
     parser.add_argument('-o', '--output', help='output file', default="sankey_plot.txt")
     parser.add_argument('-j', '--json', help='json output', default='sankey_data.json')
+    parser.add_argument('-q', '--qc-directory', default='fastq_fastp',
+                        help='directory containing quality-controlled FASTQs (default: fastq_fastp)')
+    parser.add_argument('--qc-label', default='fastp',
+                        help='label for the QC stage in Sankey output (default: fastp)')
     parser.add_argument('--paired', help='Paired end reads', action='store_true')
     parser.add_argument('-t', '--threads', help='number of threads to use (default: number of CPUs)', type=int, default=os.cpu_count())
     parser.add_argument('-l', '--log', help='log file')
@@ -199,7 +203,10 @@ if __name__ == "__main__":
     no_host = 0
     logging.info(f"Using {args.threads} processes")
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
-        futures = {executor.submit(count_all_for_read, r, definitions): r for r in unprocessed_reads}
+        futures = {
+            executor.submit(count_all_for_read, r, definitions, args.qc_directory): r
+            for r in unprocessed_reads
+        }
 
         for future in as_completed(futures):
             r = futures[future]
@@ -264,10 +271,10 @@ if __name__ == "__main__":
 
 
     outputs = f"""
-fastq [{trimmed_fastq}] fastp
-fastq [{lowqual}] low quality
-fastp [{host}] {definitions['HOST']}
-fastp [{no_host}] not human
+fastq [{trimmed_fastq}] {args.qc_label}
+fastq [{lowqual}] not retained after {args.qc_label}
+{args.qc_label} [{host}] {definitions['HOST']}
+{args.qc_label} [{no_host}] not human
 not human [{totalsims}] sequence similarity
 not human [{sixteen_s}] 16S
 not human [{nosims}] unknown
@@ -298,7 +305,6 @@ sequence similarity [{tax['Multidomain']}] Multiclass
     with open(args.output, 'w') as out:
         print("Please go to https://sankeymatic.com/build/ and paste this data\n\n", file=out)
         print(outputs, file=out)
-
 
 
 

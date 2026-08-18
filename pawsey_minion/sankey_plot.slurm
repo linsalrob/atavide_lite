@@ -9,5 +9,8 @@
 
 set -euo pipefail
 
+QC_DIRECTORY=${QC_DIR:-fastq_fastp}
+QC_LABEL=${QC_LABEL:-fastp}
+
 export PYTHONPATH=$PYTHONPATH:~/GitHubs/atavide_lite
-python ~/GitHubs/atavide_lite/bin/sankey_plot.py -r reads.txt -t "$SLURM_CPUS_PER_TASK" -v
+python ~/GitHubs/atavide_lite/bin/sankey_plot.py -r reads.txt -q "$QC_DIRECTORY" --qc-label "$QC_LABEL" -t "$SLURM_CPUS_PER_TASK" -v

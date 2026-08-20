@@ -123,6 +123,14 @@ JOB=$(sbatch --parsable --array=1-$NUM_READS:1 $SRC/fastp.slurm)
 HOSTJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$JOB $SRC/host_removal.slurm)
 ```
 
+If `DEFINITIONS.sh` also sets `SPIKE_IN_SEQUENCE` (and optionally
+`SPIKE_IN`), `host_removal.slurm` automatically maps the host-removed reads to
+that reference, records high-confidence spike-in alignments, and removes those
+reads before any downstream analysis. The regular `$HOSTREMOVED` directory is
+therefore spike-free; the unfiltered host-removed intermediate is preserved as
+`${HOSTREMOVED}_before_${SPIKE_IN}`. This behavior is inactive when no spike-in
+reference is defined.
+
 ## 8. Assemble the host removed sequences
 
 We use these assemblies, e.g. for binning with VAMB. The assemblies are not used in the rest of the read based annotations, so you don't need to wait for this

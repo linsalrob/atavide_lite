@@ -41,7 +41,14 @@ if [[ ! -f "$QC/$READS" ]]; then
 	exit 2;
 fi
 
-mkdir -p $HOST $HOSTREMOVED
+# When a spike-in reference is configured, retain the ordinary host-removed
+# reads as an intermediate and make HOSTREMOVED the spike-free downstream
+# directory. Without a spike-in, this remains exactly the former workflow.
+PRE_SPIKE_HOSTREMOVED=$HOSTREMOVED
+if [[ -n "${SPIKE_IN_SEQUENCE:-}" ]]; then
+	PRE_SPIKE_HOSTREMOVED="${HOSTREMOVED}_before_${SPIKE_IN:-spike_in}"
+fi
+mkdir -p "$HOST" "$PRE_SPIKE_HOSTREMOVED"
 
 O=${READS/$FILEEND/.bam}
 if [[ $O == $READS ]]; then
@@ -60,4 +67,32 @@ samtools fastq -F 3588 $HOST/$O | gzip -c > $HOST/$READS
 
 # Reads that do not match the host
 
-samtools fastq -F 3584 -f 4 $HOST/$O | gzip -c > $HOSTREMOVED/$READS
+samtools fastq -F 3584 -f 4 "$HOST/$O" | gzip -c > "$PRE_SPIKE_HOSTREMOVED/$READS"
+
+if [[ -n "${SPIKE_IN_SEQUENCE:-}" ]]; then
+	if [[ ! -s "$SPIKE_IN_SEQUENCE" ]]; then
+		echo "ERROR: SPIKE_IN_SEQUENCE is missing or empty: $SPIKE_IN_SEQUENCE" >&2
+		exit 2
+	fi
+	mkdir -p "$HOSTREMOVED" spike_in/bam spike_in/removal_stats
+	SPIKE_BAM="spike_in/bam/${READS/$FILEEND/}.${SPIKE_IN:-spike_in}.bam"
+	SPIKE_STATS="spike_in/removal_stats/${READS/$FILEEND}.tsv"
+	if [[ -e "$HOSTREMOVED/$READS" || -e "$SPIKE_BAM" || -e "$SPIKE_STATS" ]]; then
+		echo "ERROR: refusing to overwrite existing spike-in outputs for $READS" >&2
+		exit 2
+	fi
+	SPIKE_TMP=$(mktemp -d -p "/scratch/$PAWSEY_PROJECT/$USER/tmp")
+	trap 'rm -rf "$SPIKE_TMP"' EXIT
+	# Keep primary, confidently mapped (MAPQ >=20) spike-in reads only. This
+	# avoids subtracting incidental low-confidence ONT alignments.
+	minimap2 -t "$THREADS" --secondary=no -a -x map-ont "$SPIKE_IN_SEQUENCE" "$PRE_SPIKE_HOSTREMOVED/$READS" \
+		| samtools view -@ "$THREADS" -bh -F 2308 -q 20 - \
+		| samtools sort -@ "$THREADS" -o "$SPIKE_BAM" -
+	samtools index "$SPIKE_BAM"
+	samtools view "$SPIKE_BAM" | cut -f1 | sort -u > "$SPIKE_TMP/spike_read_ids.txt"
+	python "$HOME/GitHubs/atavide_lite/pawsey_minion/remove_spikein_reads.py" \
+		--ids "$SPIKE_TMP/spike_read_ids.txt" \
+		--input "$PRE_SPIKE_HOSTREMOVED/$READS" \
+		--output "$HOSTREMOVED/$READS" \
+		--stats "$SPIKE_STATS"
+fi

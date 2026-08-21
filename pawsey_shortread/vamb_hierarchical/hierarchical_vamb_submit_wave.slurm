@@ -42,8 +42,11 @@ for sample in "${samples[@]}"; do
     collect_job=$(sbatch --parsable --dependency=afterok:"$local_job" \
         --export=ALL,HIERARCHICAL_SHARDS=256 \
         hierarchical_vamb_collect.slurm "$sample")
+    reconcile_job=$(sbatch --parsable --dependency=afterok:"$collect_job" \
+        hierarchical_vamb_submit_reconcile_checkm.slurm "$sample")
     collect_jobs+=("$collect_job")
-    printf '%s partition=%s local=%s collect=%s\n' "$sample" "$partition_job" "$local_job" "$collect_job"
+    printf '%s partition=%s local=%s collect=%s reconcile_submit=%s\n' \
+        "$sample" "$partition_job" "$local_job" "$collect_job" "$reconcile_job"
 done
 
 if [[ "$wave" -lt 3 ]]; then

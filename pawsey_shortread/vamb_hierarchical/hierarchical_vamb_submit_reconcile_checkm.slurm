@@ -29,7 +29,7 @@ fasta_job=$(sbatch --parsable --dependency=afterok:"$expand_job" \
     --partition=work --account=pawsey1018 \
     hierarchical_vamb_reconcile_cpu.slurm "$sample" fasta)
 checkm_job=$(sbatch --parsable --dependency=afterok:"$fasta_job" \
-    /home/edwa0468/GitHubs/atavide_lite/pawsey_shortread/checkm.slurm \
+    hierarchical_vamb_checkm.slurm \
     "vamb_crass/$sample/hierarchical_vamb/hierarchical_unsplit_bins" \
     "vamb_crass/$sample/hierarchical_vamb/checkm")
 

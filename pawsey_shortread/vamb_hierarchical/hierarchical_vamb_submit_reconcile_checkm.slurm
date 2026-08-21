@@ -32,6 +32,8 @@ checkm_job=$(sbatch --parsable --dependency=afterok:"$fasta_job" \
     hierarchical_vamb_checkm.slurm \
     "vamb_crass/$sample/hierarchical_vamb/hierarchical_unsplit_bins" \
     "vamb_crass/$sample/hierarchical_vamb/checkm")
+refinement_job=$(sbatch --parsable --dependency=afterok:"$checkm_job" \
+    hierarchical_vamb_submit_refinement.slurm "$sample")
 
-printf '%s prepare=%s global=%s expand=%s fasta=%s checkm=%s\n' \
-    "$sample" "$prepare_job" "$global_job" "$expand_job" "$fasta_job" "$checkm_job"
+printf '%s prepare=%s global=%s expand=%s fasta=%s checkm=%s refinement_submit=%s\n' \
+    "$sample" "$prepare_job" "$global_job" "$expand_job" "$fasta_job" "$checkm_job" "$refinement_job"

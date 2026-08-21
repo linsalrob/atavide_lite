@@ -48,6 +48,31 @@ VAMB-compatible output tables.
 | `hierarchical_vamb_reconcile_cpu.slurm` | Prepare global candidates, expand memberships, and write FASTAs | CPU `work` |
 | `hierarchical_vamb_reconcile_gpu.slurm` | Cluster multi-contig representatives globally | GPU |
 | `hierarchical_vamb_submit_wave.slurm` | Releases sample waves after prior collection jobs complete | CPU `work` |
+| `hierarchical_vamb_checkm.slurm` | CheckM with deep-tree recursion handling and tabular QA output | CPU `highmem` |
+| `refine_hierarchical_vamb.py` | CheckM-guided targeted refinement of contaminated bins | CPU/GPU by stage |
+| `hierarchical_vamb_refine_cpu.slurm` | Extract candidates, merge refined assignments, and write refined FASTAs | CPU `work` |
+| `hierarchical_vamb_refine_gpu.slurm` | Re-cluster one contaminated parent bin per GPU-array task | GPU |
+| `hierarchical_vamb_submit_refinement.slurm` | Derives the refinement array size from CheckM QA and submits one pass | CPU `work` |
+
+## CheckM-guided refinement
+
+The global representative reconciliation is deliberately permissive enough to
+restore bins split at shard boundaries. In some cases, that can over-merge
+several genomes. The post-CheckM refinement pass corrects only this failure
+mode without changing unaffected assignments:
+
+1. CheckM writes `checkm/qa.tsv` in tabular form.
+2. Bins with completeness at least 90% and contamination at least 5% are
+   selected as likely merged bins.
+3. Their original contigs are extracted from the complete assignment table and
+   re-clustered using the original VAMB embedding and contig lengths.
+4. The resulting sub-bins replace only those parent assignments in
+   `refinement/refined_unsplit.tsv`; every other contig is retained unchanged.
+5. Refined FASTAs are checked with CheckM again.
+
+The automatic submitter runs one GPU array task per selected parent bin and
+does not impose an artificial array throttle. If no bins meet the criteria, it
+completes without launching a GPU array.
 
 ## Example commands
 

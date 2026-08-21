@@ -42,4 +42,4 @@ export PYTHONPATH="$SITE_DIR${PYTHONPATH:+:$PYTHONPATH}"
 
 echo "Running CheckM on $SOURCE; output: $DEST; threads: $SLURM_CPUS_PER_TASK" >&2
 checkm lineage_wf -t "$SLURM_CPUS_PER_TASK" "$SOURCE" "$DEST"
-checkm qa -t "$SLURM_CPUS_PER_TASK" "$DEST/lineage.ms" "$DEST"
+checkm qa --tab_table -o 1 -f "$DEST/qa.tsv" -t "$SLURM_CPUS_PER_TASK" "$DEST/lineage.ms" "$DEST"

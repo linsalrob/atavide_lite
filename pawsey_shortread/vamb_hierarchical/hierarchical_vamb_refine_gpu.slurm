@@ -15,7 +15,8 @@ sample=${1:?Usage: hierarchical_vamb_refine_gpu.slurm SAMPLE}
 VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 SAMPLE_DIR="vamb_crass/$sample"
 OUTDIR="$SAMPLE_DIR/hierarchical_vamb"
+REFINEMENT_DIR="${REFINEMENT_DIR:-marker_refinement}"
 module load rocm/6.2.4
 eval "$(conda shell.bash hook)"
 conda activate "$VENV_DIR"
-python refine_hierarchical_vamb.py --vamb-dir "$SAMPLE_DIR/vamb" --outdir "$OUTDIR" split --task-id "$SLURM_ARRAY_TASK_ID"
+python refine_hierarchical_vamb.py --vamb-dir "$SAMPLE_DIR/vamb" --outdir "$OUTDIR" --refinement-dir "$REFINEMENT_DIR" split --task-id "$SLURM_ARRAY_TASK_ID"

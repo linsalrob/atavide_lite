@@ -65,7 +65,9 @@ mode without changing unaffected assignments:
 2. Bins with completeness at least 90% and contamination at least 5% are
    selected as likely merged bins.
 3. Their original contigs are extracted from the complete assignment table and
-   re-clustered using the original VAMB embedding and contig lengths.
+   force-partitioned by GPU spherical k-means in the original VAMB embedding.
+   CheckM's marker-copy burden calibrates the number of groups: approximately
+   `1 + contamination / completeness`, bounded between 2 and 64.
 4. The resulting sub-bins replace only those parent assignments in
    `refinement/refined_unsplit.tsv`; every other contig is retained unchanged.
 5. Refined FASTAs are checked with CheckM again.

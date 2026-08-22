@@ -33,13 +33,13 @@ if [[ "$count" -eq 0 ]]; then
     exit 0
 fi
 
-prepare=$(sbatch --parsable hierarchical_vamb_refine_cpu.slurm "$sample" prepare)
+prepare=$(sbatch --parsable --export=ALL,REFINEMENT_DIR=marker_refinement hierarchical_vamb_refine_cpu.slurm "$sample" prepare)
 split=$(sbatch --parsable --dependency=afterok:"$prepare" --array="0-$((count - 1))" \
-    hierarchical_vamb_refine_gpu.slurm "$sample")
-merge=$(sbatch --parsable --dependency=afterok:"$split" hierarchical_vamb_refine_cpu.slurm "$sample" merge)
-fasta=$(sbatch --parsable --dependency=afterok:"$merge" hierarchical_vamb_refine_cpu.slurm "$sample" fasta)
+    --export=ALL,REFINEMENT_DIR=marker_refinement hierarchical_vamb_refine_gpu.slurm "$sample")
+merge=$(sbatch --parsable --dependency=afterok:"$split" --export=ALL,REFINEMENT_DIR=marker_refinement hierarchical_vamb_refine_cpu.slurm "$sample" merge)
+fasta=$(sbatch --parsable --dependency=afterok:"$merge" --export=ALL,REFINEMENT_DIR=marker_refinement hierarchical_vamb_refine_cpu.slurm "$sample" fasta)
 checkm=$(sbatch --parsable --dependency=afterok:"$fasta" hierarchical_vamb_checkm.slurm \
-    "vamb_crass/$sample/hierarchical_vamb/refinement/refined_unsplit_bins" \
-    "vamb_crass/$sample/hierarchical_vamb/refinement/checkm")
+    "vamb_crass/$sample/hierarchical_vamb/marker_refinement/refined_unsplit_bins" \
+    "vamb_crass/$sample/hierarchical_vamb/marker_refinement/checkm")
 printf '%s candidates=%s prepare=%s split=%s merge=%s fasta=%s checkm=%s\n' \
     "$sample" "$count" "$prepare" "$split" "$merge" "$fasta" "$checkm"

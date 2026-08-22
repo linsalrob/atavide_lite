@@ -49,6 +49,7 @@ VAMB-compatible output tables.
 | `hierarchical_vamb_reconcile_gpu.slurm` | Cluster multi-contig representatives globally | GPU |
 | `hierarchical_vamb_submit_wave.slurm` | Releases sample waves after prior collection jobs complete | CPU `work` |
 | `hierarchical_vamb_checkm.slurm` | CheckM with deep-tree recursion handling and tabular QA output | CPU `highmem` |
+| `hierarchical_vamb_checkm_batch_*.slurm` | Manifest preparation, independent CheckM batches, and QA-table merge | CPU `work` / `highmem` |
 | `refine_hierarchical_vamb.py` | CheckM-guided targeted refinement of contaminated bins | CPU/GPU by stage |
 | `hierarchical_vamb_refine_cpu.slurm` | Extract candidates, merge refined assignments, and write refined FASTAs | CPU `work` |
 | `hierarchical_vamb_refine_gpu.slurm` | Re-cluster one contaminated parent bin per GPU-array task | GPU |
@@ -80,6 +81,12 @@ CheckM runs use node-local temporary storage for their per-bin HMM
 intermediates and retain only `qa.tsv` in the project directory. This avoids
 exhausting the Lustre per-user file-count quota for samples with thousands of
 bins.
+
+For exceptionally large bin sets such as Whaleshark, use the batch launchers
+to validate independent groups of roughly 1,000 bins per high-memory array
+task. Their QA tables are merged into the same `checkm/qa.tsv` consumed by the
+refinement workflow, so batching changes the scheduling and failure domain,
+not the downstream interface.
 
 ## Example commands
 

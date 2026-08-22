@@ -3,7 +3,7 @@
 # placement tree deeper than Python's default recursion limit.
 
 #SBATCH --job-name=checkm
-#SBATCH --time=1-0
+#SBATCH --time=2-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=128GB
@@ -33,13 +33,19 @@ if [[ $# -lt 2 ]]; then
 fi
 
 SOURCE=${1%/}
-DEST=${2%/}
+REPORT_DIR=${2%/}
 SITE_DIR="${SLURM_TMPDIR:-/tmp}/checkm-sitecustomize-${SLURM_JOB_ID}"
 mkdir -p "$SITE_DIR"
 printf '%s\n' 'import sys' 'sys.setrecursionlimit(max(sys.getrecursionlimit(), 50000))' \
     > "$SITE_DIR/sitecustomize.py"
 export PYTHONPATH="$SITE_DIR${PYTHONPATH:+:$PYTHONPATH}"
+WORK_DIR="${SLURM_TMPDIR:-/tmp}/checkm-${SLURM_JOB_ID}"
+mkdir -p "$WORK_DIR/tmp" "$REPORT_DIR"
+threads=16
 
-echo "Running CheckM on $SOURCE; output: $DEST; threads: $SLURM_CPUS_PER_TASK" >&2
-checkm lineage_wf -t "$SLURM_CPUS_PER_TASK" "$SOURCE" "$DEST"
-checkm qa --tab_table -o 1 -f "$DEST/qa.tsv" -t "$SLURM_CPUS_PER_TASK" "$DEST/lineage.ms" "$DEST"
+echo "Running CheckM on $SOURCE; local work: $WORK_DIR; report: $REPORT_DIR; threads: $threads" >&2
+# CheckM writes many per-bin HMM files. Keep them on node-local storage so
+# Lustre's per-user inode quota is not consumed; retain only the final QA TSV.
+checkm lineage_wf --tmpdir "$WORK_DIR/tmp" -t "$threads" "$SOURCE" "$WORK_DIR"
+checkm qa --tab_table -o 1 -f "$REPORT_DIR/qa.tsv" --tmpdir "$WORK_DIR/tmp" \
+    -t "$threads" "$WORK_DIR/lineage.ms" "$WORK_DIR"

@@ -76,6 +76,11 @@ The automatic submitter runs one GPU array task per selected parent bin and
 does not impose an artificial array throttle. If no bins meet the criteria, it
 completes without launching a GPU array.
 
+CheckM runs use node-local temporary storage for their per-bin HMM
+intermediates and retain only `qa.tsv` in the project directory. This avoids
+exhausting the Lustre per-user file-count quota for samples with thousands of
+bins.
+
 ## Example commands
 
 Use a completed VAMB directory at `vamb_crass/SAMPLE/vamb`.

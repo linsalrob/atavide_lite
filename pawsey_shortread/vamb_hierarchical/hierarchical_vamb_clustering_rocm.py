@@ -133,8 +133,14 @@ def local(args: argparse.Namespace) -> None:
         raise FileNotFoundError(latent_path)
     output = shard_dir / "local_clusters.tsv"
     reps = shard_dir / "representatives.npz"
-    if (output.exists() or reps.exists()) and not args.force:
+    if output.exists() and reps.exists() and not args.force:
         raise FileExistsError(f"Refusing to overwrite {shard_dir}; use --force")
+    if output.exists() != reps.exists():
+        log(f"shard {args.shard}: recovering incomplete local output")
+    temporary_output = shard_dir / "local_clusters.tmp.tsv"
+    temporary_reps = shard_dir / "representatives.tmp.npz"
+    temporary_output.unlink(missing_ok=True)
+    temporary_reps.unlink(missing_ok=True)
     latent = vamb.vambtools.read_npz(latent_path)
     with np.load(metadata_path, allow_pickle=True) as metadata:
         identifiers = metadata["identifiers"]
@@ -149,7 +155,7 @@ def local(args: argparse.Namespace) -> None:
         names: list[str] = []
         weights: list[int] = []
         vectors: list[np.ndarray] = []
-        with output.open("w") as handle:
+        with temporary_output.open("w") as handle:
             print("clustername\tcontigname", file=handle)
             for number, cluster in enumerate(generator, start=1):
                 member_indices = cluster.members.astype(np.int64, copy=False)
@@ -162,7 +168,9 @@ def local(args: argparse.Namespace) -> None:
                 names.append(cluster_name)
                 weights.append(int(lengths[member_indices].sum()))
                 vectors.append(centroid.astype(np.float32, copy=False))
-        np.savez_compressed(reps, names=np.array(names, dtype=object), weights=np.array(weights, dtype=np.int64), latent=np.stack(vectors))
+        np.savez_compressed(temporary_reps, names=np.array(names, dtype=object), weights=np.array(weights, dtype=np.int64), latent=np.stack(vectors))
+        temporary_output.replace(output)
+        temporary_reps.replace(reps)
         log(f"shard {args.shard}: clustered {len(latent):,} contigs into {len(names):,} local bins")
     finally:
         vamb.cluster._calc_distances = original

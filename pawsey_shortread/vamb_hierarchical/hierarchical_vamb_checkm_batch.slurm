@@ -22,13 +22,26 @@ work_dir="${SLURM_TMPDIR:-/tmp}/checkm-${SLURM_JOB_ID}"
 input_dir="$work_dir/input"
 output_dir="$work_dir/output"
 mkdir -p "$input_dir" "$output_dir/tmp"
-sed -n "${start},${end}p" "$manifest" | while IFS= read -r fasta; do
-    ln -s "$fasta" "$input_dir/$(basename "$fasta")"
-done
-[[ -n $(find "$input_dir" -maxdepth 1 -type l -print -quit) ]] || {
+mapfile -t bin_paths < <(sed -n "${start},${end}p" "$manifest")
+[[ "${#bin_paths[@]}" -gt 0 ]] || {
     echo "No bins assigned to task $SLURM_ARRAY_TASK_ID" >&2
     exit 2
 }
+for fasta in "${bin_paths[@]}"; do
+    [[ -r "$fasta" ]] || { echo "Unreadable manifest bin: $fasta" >&2; exit 3; }
+    fasta=$(realpath "$fasta")
+    link="$input_dir/$(basename "$fasta")"
+    [[ ! -e "$link" && ! -L "$link" ]] || {
+        echo "Duplicate bin basename in task input: $(basename "$fasta")" >&2
+        exit 4
+    }
+    ln -s "$fasta" "$link"
+    [[ -e "$link" && -r "$link" ]] || {
+        echo "Unresolved node-local symlink: $link -> $fasta" >&2
+        exit 5
+    }
+done
+printf 'task=%s bins=%s input=%s\n' "$SLURM_ARRAY_TASK_ID" "${#bin_paths[@]}" "$input_dir"
 
 eval "$(conda shell.bash hook)"
 "$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"

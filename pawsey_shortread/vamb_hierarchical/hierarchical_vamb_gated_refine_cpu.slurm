@@ -13,7 +13,7 @@
 set -euo pipefail
 sample=${1:?Usage: hierarchical_vamb_gated_refine_cpu.slurm SAMPLE [prepare|summarize]}
 stage=${2:?Specify prepare or summarize}
-script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+script_dir=${HIERARCHICAL_SCRIPT_DIR:-"/home/$USER/GitHubs/atavide_lite/pawsey_shortread/vamb_hierarchical"}
 VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 sample_dir="vamb_crass/$sample"
 outdir="$sample_dir/hierarchical_vamb"

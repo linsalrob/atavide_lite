@@ -12,7 +12,7 @@
 set -euo pipefail
 sample=${1:?Usage: hierarchical_vamb_submit_gated_refinement_after_prepare.slurm SAMPLE}
 cd "${SLURM_SUBMIT_DIR:?SLURM_SUBMIT_DIR is required}"
-script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+script_dir=${HIERARCHICAL_SCRIPT_DIR:-"/home/$USER/GitHubs/atavide_lite/pawsey_shortread/vamb_hierarchical"}
 tasks="vamb_crass/$sample/hierarchical_vamb/gated_refinement_evaluation/tasks.tsv"
 [[ -s "$tasks" ]] || { echo "Missing proposal task manifest: $tasks" >&2; exit 2; }
 count=$(tail -n +2 "$tasks" | wc -l)

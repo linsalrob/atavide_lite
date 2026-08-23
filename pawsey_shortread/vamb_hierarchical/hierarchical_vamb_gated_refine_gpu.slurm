@@ -12,7 +12,7 @@
 set -euo pipefail
 sample=${1:?Usage: hierarchical_vamb_gated_refine_gpu.slurm SAMPLE}
 : "${SLURM_ARRAY_TASK_ID:?Requires an array task id}"
-script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+script_dir=${HIERARCHICAL_SCRIPT_DIR:-"/home/$USER/GitHubs/atavide_lite/pawsey_shortread/vamb_hierarchical"}
 VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 sample_dir="vamb_crass/$sample"
 module load rocm/6.2.4

@@ -2,6 +2,8 @@
 # Submit the deterministic post-collection workflow for one sample. This
 # lightweight CPU job lets the GPU reconciliation request be made only after
 # representative collection has succeeded, then chains export and CheckM.
+# CheckM-guided split evaluation is opt-in because its output is a proposal
+# requiring independent quality control, not an automatically accepted result.
 
 #SBATCH --job-name=hierVAMBpost
 #SBATCH --partition=work
@@ -32,8 +34,13 @@ checkm_job=$(sbatch --parsable --dependency=afterok:"$fasta_job" \
     hierarchical_vamb_checkm.slurm \
     "vamb_crass/$sample/hierarchical_vamb/hierarchical_unsplit_bins" \
     "vamb_crass/$sample/hierarchical_vamb/checkm")
-refinement_job=$(sbatch --parsable --dependency=afterok:"$checkm_job" \
-    hierarchical_vamb_submit_refinement.slurm "$sample")
+printf '%s prepare=%s global=%s expand=%s fasta=%s checkm=%s' \
+    "$sample" "$prepare_job" "$global_job" "$expand_job" "$fasta_job" "$checkm_job"
 
-printf '%s prepare=%s global=%s expand=%s fasta=%s checkm=%s refinement_submit=%s\n' \
-    "$sample" "$prepare_job" "$global_job" "$expand_job" "$fasta_job" "$checkm_job" "$refinement_job"
+if [[ ${HIERARCHICAL_SUBMIT_GATED_EVALUATION:-0} == 1 ]]; then
+    gated_job=$(sbatch --parsable --dependency=afterok:"$checkm_job" \
+        hierarchical_vamb_submit_gated_refinement.slurm "$sample")
+    printf ' gated_evaluation_submit=%s' "$gated_job"
+fi
+
+printf '\n'

@@ -1,146 +1,251 @@
 # Hierarchical VAMB clustering
 
-This workflow is a scalable, stand-alone continuation from a VAMB feature
-checkpoint. It requires only these files from a VAMB directory:
+This directory contains a scalable, stand-alone continuation of VAMB from its
+feature checkpoint. It is intended for datasets where conventional global
+VAMB clustering cannot finish within the scheduler walltime or where writing a
+very large number of bins makes one monolithic job difficult to recover.
+
+The workflow starts from a completed VAMB feature directory containing:
 
 - `composition.npz`
 - `abundance.npz`
 - `latent.npz`
 
-It does not use partial cluster tables or modify the standard VAMB resume
-workflow.
+It does not modify VAMB itself or the original feature files. Its primary
+product is a conventional `clustername<TAB>contigname` assignment table, from
+which normal FASTA-bin and quality-control tools can continue.
 
-## Why use a hierarchy?
+## Why a hierarchy?
 
-VAMB's `ClusterGenerator` is a destructive, greedy medoid algorithm: each
-accepted bin changes the set of contigs available to the next decision. Its
-global clustering loop is therefore serial. For a 22-million-contig latent
-matrix, a normal ROCm-resumed run made too little progress to fit a 24-hour
-walltime. Splitting matrix-vector distance calculations across GPUs did not
-help: GPU-to-GPU transfers outweighed the small parallel kernels.
+VAMB's `ClusterGenerator` is a destructive, greedy medoid algorithm. Every
+accepted bin changes the set of contigs available to the next decision, so its
+global clustering loop is inherently serial. On very large latent matrices,
+moving that loop to a GPU is not enough to guarantee completion inside a fixed
+walltime. Splitting each individual distance calculation across GPUs can also
+cost more in device transfers and coordination than it saves.
 
-The hierarchy makes the expensive clustering local while preserving a
-statistical reconciliation path:
+This workflow instead changes the unit of parallelism:
 
-1. GPU spherical k-means partitions the 32-dimensional VAMB latent space into
-   256 deterministic, spatially coherent shards.
-2. An unthrottled Slurm array runs normal VAMB clustering inside each shard.
-3. Each local bin is represented by its latent centroid, total bases, and
-   number of contigs.
-4. Multi-contig local bins are globally reconciled with VAMB. Local singleton
-   bins are retained explicitly, matching VAMB loner semantics rather than
-   silently dropping contigs.
-5. The global mapping is expanded back to a standard
-   `clustername<TAB>contigname` table, then the existing
-   `vamb_create_fasta.py` helper writes FASTA bins.
+```text
+VAMB feature checkpoint
+        |
+        v
+GPU partition of latent space into S spatially coherent shards
+        |
+        v
+S independent local VAMB jobs (Slurm GPU array)
+        |
+        v
+CPU collection of local-bin representatives
+        |
+        v
+global VAMB reconciliation of multi-contig representatives (GPU)
+        |
+        v
+expand to contig assignments -> FASTA bins -> CheckM
+        |
+        v
+optional stability-gated split proposals for suspicious bins
+```
 
-This is an approximation to a monolithic VAMB clustering. It is designed to
-make the trade-off explicit, preserve every contig, and retain conventional
-VAMB-compatible output tables.
+The number of shards is configurable; it is not tied to the number of GPUs.
+Slurm schedules one GPU per local array task and runs as many tasks
+concurrently as the account and cluster can support. More shards make the
+local problems smaller and easier to recover, but increase scheduling,
+filesystem, and boundary-reconciliation overhead. A value such as 256 is a
+reasonable starting point for a very large dataset, not a universal default.
 
-## Scripts
+This method is an approximation to monolithic VAMB clustering. The hierarchy
+makes the approximation explicit, retains provenance through every stage, and
+adds a global reconciliation step to repair likely shard-boundary splits.
 
-| File | Purpose | Queue |
+## The clustering stages
+
+### 1. Partition the VAMB embedding
+
+`hierarchical_vamb_clustering_rocm.py partition` applies spherical k-means to
+the normalized VAMB latent coordinates on one GPU. The deterministic partition
+creates balanced-enough, spatially coherent shard membership files. Shards
+describe work units, not biological bins.
+
+### 2. Cluster shards independently
+
+A Slurm array runs the normal VAMB clustering algorithm within every shard.
+Each task requests one GPU; no fixed GPU count is assumed. The array is left
+unthrottled by default so Slurm and the account limits determine safe
+concurrency.
+
+Local tasks are restartable. A shard is complete only when both
+`local_clusters.tsv` and `representatives.npz` exist. Outputs are first written
+to temporary files and atomically renamed, so a timeout or filesystem problem
+cannot leave a one-sided partial result that is mistaken for success. Failed
+array elements can therefore be resubmitted independently.
+
+### 3. Represent local bins
+
+The CPU collection stage replaces each local bin with a compact record: its
+latent centroid, total assembled bases, contig count, and mapping back to the
+local members. This greatly reduces the number of objects presented to the
+global stage.
+
+Local singleton bins are kept explicitly. Only multi-contig representatives
+need global clustering; preserving singletons separately matches VAMB's loner
+semantics and prevents contigs from disappearing during reconciliation.
+
+### 4. Reconcile across shard boundaries
+
+The CPU prepare step builds the candidate representative matrix. A GPU job then
+runs VAMB over the multi-contig representatives, allowing compatible local bins
+from different shards to merge. The CPU expansion step translates those
+representative clusters back to original contigs and combines them with the
+retained singleton representatives.
+
+The canonical result is:
+
+```text
+vamb_crass/SAMPLE/hierarchical_vamb/hierarchical_unsplit.tsv
+```
+
+FASTA export creates:
+
+```text
+vamb_crass/SAMPLE/hierarchical_vamb/hierarchical_unsplit_bins/
+```
+
+The exporter uses the same minimum-bin-size convention as a normal VAMB
+workflow. The assignment table remains the authoritative complete mapping;
+the FASTA directory may omit bins below the export threshold.
+
+### 5. CheckM and optional refinement proposals
+
+CheckM runs on CPU and does not require a GPU. The supplied launchers put its
+large per-bin intermediates on node-local temporary storage and retain the
+tabular `checkm/qa.tsv` result. This avoids exhausting a shared filesystem's
+file-count quota.
+
+For very large bin collections, the batch workflow prepares an absolute-path
+manifest, runs independent CheckM array batches, and merges their QA tables.
+Batching changes scheduling and the failure domain, not the biological
+analysis. Individual failed batches can be retried without repeating all bins.
+
+CheckM can identify bins that may have been over-merged, but contamination
+alone is not sufficient evidence to split a bin. The current gated evaluation
+therefore treats refinement as a proposal:
+
+1. Flag parents with at least 90% estimated completeness and at least 5%
+   contamination.
+2. Estimate a centre value
+   `k0 = ceil(1 + contamination / completeness)`.
+3. Evaluate `k0 - 1`, `k0`, and `k0 + 1`, bounded to `k >= 2` and routinely to
+   `k <= 8`.
+4. Repeat each candidate with five deterministic seeds and measure pairwise
+   adjusted Rand index (ARI).
+5. Mark a proposal stable only when median ARI is at least 0.9. Candidates
+   implying more than eight genomes are routed to manual `MEGABIN_REVIEW`.
+
+A stable result is recorded as `PENDING_QC`; it does **not** automatically
+replace the parent bin. Acceptance should additionally show that marker-gene
+conflicts are reduced and that splits have biologically coherent independent
+support, for example taxonomy or GUNC. Composition and abundance are useful
+diagnostics but are not independent evidence because VAMB already used them.
+
+Marker-position conflict testing, GUNC integration, and a final reviewed merge
+of accepted proposals are still development work. The older forced-refinement
+scripts remain here for reproducibility and experimentation, but they are not
+the recommended automatic production path.
+
+## Script map
+
+| File | Purpose | Resource |
 | --- | --- | --- |
-| `hierarchical_vamb_clustering_rocm.py` | Partitioning, local clustering, representative collection, global reconciliation, and expansion | GPU for `partition`, `local`, and `cluster-global`; CPU otherwise |
-| `hierarchical_vamb.slurm` | Feature-checkpoint partition and local-array launcher | GPU |
-| `hierarchical_vamb_collect.slurm` | Collect local representatives and member counts | CPU `work` |
-| `hierarchical_vamb_reconcile_cpu.slurm` | Prepare global candidates, expand memberships, and write FASTAs | CPU `work` |
-| `hierarchical_vamb_reconcile_gpu.slurm` | Cluster multi-contig representatives globally | GPU |
-| `hierarchical_vamb_submit_wave.slurm` | Releases sample waves after prior collection jobs complete | CPU `work` |
-| `hierarchical_vamb_checkm.slurm` | CheckM with deep-tree recursion handling and tabular QA output | CPU `highmem` |
-| `hierarchical_vamb_checkm_batch_*.slurm` | Manifest preparation, independent CheckM batches, and QA-table merge | CPU `work` / `highmem` |
-| `refine_hierarchical_vamb.py` | CheckM-guided targeted refinement of contaminated bins | CPU/GPU by stage |
-| `hierarchical_vamb_refine_cpu.slurm` | Extract candidates, merge refined assignments, and write refined FASTAs | CPU `work` |
-| `hierarchical_vamb_refine_gpu.slurm` | Re-cluster one contaminated parent bin per GPU-array task | GPU |
-| `hierarchical_vamb_submit_refinement.slurm` | Derives the refinement array size from CheckM QA and submits one pass | CPU `work` |
+| `hierarchical_vamb_clustering_rocm.py` | Partition, local clustering, representative collection, global reconciliation, and expansion | GPU for `partition`, `local`, and `cluster-global`; CPU otherwise |
+| `hierarchical_vamb.slurm` | Partition or run one local-array task | GPU |
+| `hierarchical_vamb_collect.slurm` | Collect local representatives | CPU |
+| `hierarchical_vamb_reconcile_cpu.slurm` | Prepare candidates, expand assignments, and export FASTAs | CPU |
+| `hierarchical_vamb_reconcile_gpu.slurm` | Reconcile multi-contig representatives | GPU |
+| `hierarchical_vamb_submit_sample.slurm` | Submit one complete sample as a dependency graph | CPU submitter |
+| `hierarchical_vamb_submit_reconcile_checkm.slurm` | Submit reconciliation, export, and CheckM after collection | CPU submitter |
+| `hierarchical_vamb_submit_wave.slurm` | Project-specific example for releasing several samples in waves | CPU submitter |
+| `hierarchical_vamb_checkm.slurm` | Run CheckM with node-local intermediates | CPU/high-memory |
+| `hierarchical_vamb_checkm_batch_prepare.slurm` | Create manifests for batched CheckM | CPU |
+| `hierarchical_vamb_checkm_batch.slurm` | Run one CheckM batch per array task | CPU/high-memory |
+| `hierarchical_vamb_checkm_batch_collect.slurm` | Validate and merge batch QA tables | CPU |
+| `evaluate_hierarchical_vamb_refinement.py` | Generate and evaluate multi-seed, multi-k split proposals | CPU/GPU by subcommand |
+| `hierarchical_vamb_gated_refine_cpu.slurm` | Prepare or collect gated proposals | CPU |
+| `hierarchical_vamb_gated_refine_gpu.slurm` | Evaluate one candidate parent per GPU-array task | GPU |
+| `hierarchical_vamb_submit_gated_refinement.slurm` | Submit gated evaluation after CheckM | CPU submitter |
+| `hierarchical_vamb_submit_gated_refinement_after_prepare.slurm` | Size and submit the gated GPU array after candidate preparation | CPU submitter |
+| `refine_hierarchical_vamb.py` and `hierarchical_vamb_refine_*.slurm` | Legacy forced-refinement implementation | Experimental |
+| `hierarchical_vamb_submit_refinement.slurm` | Legacy forced-refinement submitter | Experimental |
 
-## CheckM-guided refinement
+## Running one sample
 
-The global representative reconciliation is deliberately permissive enough to
-restore bins split at shard boundaries. In some cases, that can over-merge
-several genomes. The post-CheckM refinement pass corrects only this failure
-mode without changing unaffected assignments:
+The current launchers expect this layout relative to the directory from which
+`sbatch` is called:
 
-1. CheckM writes `checkm/qa.tsv` in tabular form.
-2. Bins with completeness at least 90% and contamination at least 5% are
-   selected as likely merged bins.
-3. Their original contigs are extracted from the complete assignment table and
-   force-partitioned by GPU spherical k-means in the original VAMB embedding.
-   CheckM's marker-copy burden calibrates the number of groups: approximately
-   `1 + contamination / completeness`, bounded between 2 and 64.
-4. The resulting sub-bins replace only those parent assignments in
-   `refinement/refined_unsplit.tsv`; every other contig is retained unchanged.
-5. Refined FASTAs are checked with CheckM again.
-
-The automatic submitter runs one GPU array task per selected parent bin and
-does not impose an artificial array throttle. If no bins meet the criteria, it
-completes without launching a GPU array.
-
-CheckM runs use node-local temporary storage for their per-bin HMM
-intermediates and retain only `qa.tsv` in the project directory. This avoids
-exhausting the Lustre per-user file-count quota for samples with thousands of
-bins.
-
-For exceptionally large bin sets such as Whaleshark, use the batch launchers
-to validate independent groups of roughly 1,000 bins per high-memory array
-task. Their QA tables are merged into the same `checkm/qa.tsv` consumed by the
-refinement workflow, so batching changes the scheduling and failure domain,
-not the downstream interface.
-
-## Example commands
-
-Use a completed VAMB directory at `vamb_crass/SAMPLE/vamb`.
-
-```bash
-# 1. Partition the latent space.
-sbatch --partition=gpu-dev --gres=gpu:1 --time=04:00:00 \
-  --export=ALL,HIERARCHICAL_STAGE=partition,HIERARCHICAL_SHARDS=256 \
-  hierarchical_vamb.slurm SAMPLE
-
-# 2. After partitioning, cluster every shard. Do not add an artificial %N
-# array throttle; Slurm/account policy controls concurrency.
-sbatch --array=0-255 --partition=gpu --gres=gpu:1 --time=1-00:00:00 \
-  --export=ALL,HIERARCHICAL_STAGE=local,HIERARCHICAL_SHARDS=256 \
-  hierarchical_vamb.slurm SAMPLE
-
-# 3. Collect representatives without consuming a GPU.
-sbatch hierarchical_vamb_collect.slurm SAMPLE
-
-# 4. Reconcile multi-contig representatives, expand the final table, and
-# write FASTA bins.
-sbatch hierarchical_vamb_reconcile_cpu.slurm SAMPLE prepare
-sbatch hierarchical_vamb_reconcile_gpu.slurm SAMPLE
-sbatch hierarchical_vamb_reconcile_cpu.slurm SAMPLE expand
-sbatch hierarchical_vamb_reconcile_cpu.slurm SAMPLE fasta
+```text
+vamb_crass/
+  contigs.fna.gz
+  SAMPLE/
+    vamb/
+      composition.npz
+      abundance.npz
+      latent.npz
 ```
 
-For production, connect these commands with `--dependency=afterok:JOBID`.
-
-## Whaleshark example results
-
-The initial Whaleshark run used 22,193,255 contigs and completed the first
-two hierarchy stages successfully:
-
-| Measurement | Result |
-| --- | ---: |
-| Latent-space shards | 256 |
-| Shard size (min / median / max) | 32,051 / 84,817 / 168,297 contigs |
-| Partition walltime | 48m 57s on one MI250X GPU |
-| Local array result | 256 / 256 shards completed; no failures |
-| Local representatives | 15,351,451 |
-| Multi-contig representatives | 238,852 (1.56%) |
-| Singleton representatives | 15,112,599 |
-| Representative collection walltime | 12m 52s on CPU |
-
-The global multi-contig reconciliation and final FASTA-generation stages are
-submitted as dependent jobs. Final FASTA output follows the established VAMB
-pattern:
+Copy or symlink the Python and Slurm files from this directory into that
+analysis directory. Then submit the dependency graph with any positive shard
+count:
 
 ```bash
-python ~/atavide_lite/bin/vamb_create_fasta.py \
-  vamb_crass/contigs.fna.gz \
-  vamb_crass/Whaleshark/hierarchical_vamb/hierarchical_unsplit.tsv \
-  20000 \
-  vamb_crass/Whaleshark/hierarchical_vamb/hierarchical_unsplit_bins
+sbatch hierarchical_vamb_submit_sample.slurm SAMPLE 256
 ```
+
+The lightweight submitter returns immediately after creating this dependency
+chain:
+
+```text
+partition -> local array -> collect -> prepare -> global -> expand -> FASTA -> CheckM
+```
+
+The default workflow stops after CheckM. To also create stability-gated
+refinement proposals after CheckM:
+
+```bash
+sbatch --export=ALL,HIERARCHICAL_SUBMIT_GATED_EVALUATION=1 \
+  hierarchical_vamb_submit_sample.slurm SAMPLE 256
+```
+
+To submit stages manually, capture job IDs with `sbatch --parsable` and connect
+deterministic stages with `--dependency=afterok:JOBID`. Do not run the local
+tasks directly on a login node.
+
+## Adapting the launchers to another system
+
+The algorithms are dataset-independent, but the supplied Slurm wrappers record
+the Pawsey environment in which they were developed. Before using them
+elsewhere, review:
+
+- Slurm account, partition, time, CPU, memory, and GPU directives;
+- module names and the VAMB/CheckM environment paths;
+- the `vamb_crass/SAMPLE/vamb` input convention;
+- the contig FASTA path and minimum exported bin size;
+- local scratch variables and filesystem quota policy.
+
+Use scheduler allocations to determine concurrency. The workflow needs one GPU
+per active partition/local/global task, not a particular total number of GPUs.
+CPU-only collection, export, CheckM, and submitter jobs should remain on CPU
+partitions.
+
+## Current status
+
+The implemented production path covers checkpoint validation, deterministic
+sharding, restartable local clustering, representative collection, global
+reconciliation, complete contig assignment expansion, FASTA export, and both
+single-job and batched CheckM. It has been exercised on datasets large enough
+to expose walltime and filesystem-file-count failure modes.
+
+The statistical refinement layer now generates conservative, reproducible
+split proposals and rejects unstable solutions. It should be considered a QA
+and review layer until independent biological validation and explicit
+acceptance logic are complete.

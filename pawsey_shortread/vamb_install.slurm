@@ -43,7 +43,6 @@ trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 module load rocm/6.2.4
 
 # ---- 2) Create and load the virtual environment 
-
 VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 
 eval "$(/home/edwa0468/software/miniforge3/bin/mamba shell hook --shell bash)"
@@ -91,4 +90,3 @@ PY
 
 
 echo "Done. Virtual env at: $VENV_DIR"
-

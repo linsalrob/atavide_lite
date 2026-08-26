@@ -2,11 +2,10 @@
 #SBATCH --job-name=checkm
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=16
 #SBATCH --mem=128GB
 #SBATCH --partition=highmem
-#SBATCH -o slurm_output/checkm-%j.out
-#SBATCH -e slurm_output/checkm-%j.err
+
 
 
 set -euo pipefail

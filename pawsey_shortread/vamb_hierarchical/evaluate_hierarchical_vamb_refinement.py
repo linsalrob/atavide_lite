@@ -127,18 +127,96 @@ def summarize(args: argparse.Namespace) -> None:
     for record in records:
         parent = str(record["bin"])
         if record["status"] != "PROPOSED":
-            rows.append({"bin": parent, "k": "", "median_ari": "", "stability": "NOT_EVALUATED", "decision": "MEGABIN_REVIEW", "reason": "k0 exceeds bounded evaluation range"})
+            rows.append({
+                "bin": parent, "k": "", "median_ari": "", "stability": "NOT_EVALUATED",
+                "decision": "MEGABIN_REVIEW", "median_ari_ge5kb": "", "ge5kb_contigs": "",
+                "medoid_seed": "", "proposal_dir": "", "reason": "k0 exceeds bounded evaluation range",
+            })
             continue
         for k_dir in sorted((output / "splits" / parent).glob("k*")):
-            arrays = [np.load(path)["labels"] for path in sorted(k_dir.glob("seed*.npz"))]
+            paths = sorted(k_dir.glob("seed*.npz"), key=lambda path: int(path.stem.removeprefix("seed")))
+            loaded = [np.load(path) for path in paths]
+            arrays = [archive["labels"] for archive in loaded]
             if len(arrays) != args.seeds:
                 raise ValueError(f"{parent}/{k_dir.name}: expected {args.seeds} seeds, found {len(arrays)}")
             scores = [ari(first, second) for first, second in itertools.combinations(arrays, 2)]
             median = float(np.median(scores))
-            stable = median >= args.min_median_ari
-            rows.append({"bin": parent, "k": int(k_dir.name[1:]), "median_ari": f"{median:.6f}", "stability": "STABLE" if stable else "UNSTABLE", "decision": "PENDING_QC" if stable else "RETAIN_PARENT", "reason": "Requires marker segregation and child-quality evidence" if stable else "Split is not reproducible across seeds"})
+            names = loaded[0]["names"]
+            lengths = loaded[0]["lengths"]
+            long_mask = lengths >= args.long_contig_min_length
+            long_count = int(long_mask.sum())
+            if long_count >= 2:
+                long_scores = [
+                    ari(first[long_mask], second[long_mask])
+                    for first, second in itertools.combinations(arrays, 2)
+                ]
+                long_median: float | None = float(np.median(long_scores))
+            else:
+                long_median = None
+
+            mean_agreement = []
+            for index, labels in enumerate(arrays):
+                agreements = [ari(labels, other) for other_index, other in enumerate(arrays) if other_index != index]
+                mean_agreement.append(float(np.mean(agreements)))
+            medoid_index = max(range(len(paths)), key=lambda index: (mean_agreement[index], -index))
+            medoid_seed = int(paths[medoid_index].stem.removeprefix("seed"))
+            stable = (
+                median >= args.min_median_ari
+                and long_median is not None
+                and long_median >= args.min_median_ari
+            )
+            proposal_dir = ""
+            if stable:
+                proposal = output / "proposals" / parent / k_dir.name
+                proposal.mkdir(parents=True, exist_ok=True)
+                labels = arrays[medoid_index]
+                with (proposal / "candidate_children.tsv").open("w", newline="") as handle:
+                    writer = csv.writer(handle, delimiter="\t")
+                    writer.writerow(["clustername", "contigname"])
+                    for name, label in zip(names, labels, strict=True):
+                        writer.writerow([f"{parent}__{k_dir.name}__child{int(label) + 1}", str(name)])
+                child_bases = np.bincount(labels, weights=lengths, minlength=int(k_dir.name[1:])).astype(np.int64)
+                child_contigs = np.bincount(labels, minlength=int(k_dir.name[1:])).astype(np.int64)
+                with (proposal / "proposal.json").open("w") as handle:
+                    json.dump({
+                        "parent": parent,
+                        "k": int(k_dir.name[1:]),
+                        "medoid_seed": medoid_seed,
+                        "median_ari_all": median,
+                        "median_ari_ge5kb": long_median,
+                        "ge5kb_contigs": long_count,
+                        "child_contigs": child_contigs.tolist(),
+                        "child_bases": child_bases.tolist(),
+                        "decision": "PENDING_QC",
+                    }, handle, indent=2)
+                    handle.write("\n")
+                proposal_dir = str(proposal)
+            reason = (
+                "Requires marker-conflict resolution, improved child quality, and complementary QC"
+                if stable else
+                "Insufficient contigs >=5 kb for the long-contig stability gate"
+                if long_median is None else
+                "Split is not reproducible across both all-contig and >=5 kb views"
+            )
+            rows.append({
+                "bin": parent,
+                "k": int(k_dir.name[1:]),
+                "median_ari": f"{median:.6f}",
+                "stability": "STABLE" if stable else "UNSTABLE",
+                "decision": "PENDING_QC" if stable else "RETAIN_PARENT",
+                "median_ari_ge5kb": "" if long_median is None else f"{long_median:.6f}",
+                "ge5kb_contigs": long_count,
+                "medoid_seed": medoid_seed,
+                "proposal_dir": proposal_dir,
+                "reason": reason,
+            })
+            for archive in loaded:
+                archive.close()
     with (output / "split_decisions.tsv").open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=["bin", "k", "median_ari", "stability", "decision", "reason"], delimiter="\t")
+        writer = csv.DictWriter(handle, fieldnames=[
+            "bin", "k", "median_ari", "stability", "decision", "median_ari_ge5kb",
+            "ge5kb_contigs", "medoid_seed", "proposal_dir", "reason",
+        ], delimiter="\t")
         writer.writeheader()
         writer.writerows(rows)
     print(f"wrote {output / 'split_decisions.tsv'}")
@@ -167,6 +245,7 @@ def parse_args() -> argparse.Namespace:
     summary_parser = subparsers.add_parser("summarize")
     summary_parser.add_argument("--seeds", type=int, default=5)
     summary_parser.add_argument("--min-median-ari", type=float, default=0.9)
+    summary_parser.add_argument("--long-contig-min-length", type=int, default=5000)
     return parser.parse_args()
 
 

@@ -139,9 +139,12 @@ therefore treats refinement as a proposal:
 3. Evaluate `k0 - 1`, `k0`, and `k0 + 1`, bounded to `k >= 2` and routinely to
    `k <= 8`.
 4. Repeat each candidate with five deterministic seeds and measure pairwise
-   adjusted Rand index (ARI).
-5. Mark a proposal stable only when median ARI is at least 0.9. Candidates
-   implying more than eight genomes are routed to manual `MEGABIN_REVIEW`.
+   adjusted Rand index (ARI), both across all contigs and across contigs at
+   least 5 kb long.
+5. Mark a proposal stable only when median ARI is at least 0.9 in both views,
+   and select the seed with the highest mean agreement to the other seeds as
+   the medoid realization. Candidates implying more than eight genomes are
+   routed to manual `MEGABIN_REVIEW`.
 
 A stable result is recorded as `PENDING_QC`; it does **not** automatically
 replace the parent bin. Acceptance should additionally show that marker-gene
@@ -149,10 +152,20 @@ conflicts are reduced and that splits have biologically coherent independent
 support, for example taxonomy or GUNC. Composition and abundance are useful
 diagnostics but are not independent evidence because VAMB already used them.
 
-Marker-position conflict testing, GUNC integration, and a final reviewed merge
-of accepted proposals are still development work. The older forced-refinement
-scripts remain here for reproducibility and experimentation, but they are not
-the recommended automatic production path.
+Stable medoid proposals can be materialized in a separate validation directory.
+The marker-validation stage first derives a CheckM lineage marker set for the
+original parent, then applies that exact marker set to the parent and every
+candidate child. It retains marker IDs, gene IDs, and contig locations. A
+duplicated parent marker is provisionally resolved only when all of its copies
+are conserved across the children and no child retains more than one copy.
+This avoids comparing contamination estimates based on different child marker
+sets.
+
+Even complete marker segregation advances a proposal only to
+`PENDING_COMPLEMENTARY_QC`. Explicit child-quality thresholds, GUNC/taxonomic
+coherence, controls, and a final reviewed merge remain development work. The
+older forced-refinement scripts remain here for reproducibility and
+experimentation, but they are not the recommended automatic production path.
 
 ## Script map
 
@@ -170,11 +183,16 @@ the recommended automatic production path.
 | `hierarchical_vamb_checkm_batch_prepare.slurm` | Create manifests for batched CheckM | CPU |
 | `hierarchical_vamb_checkm_batch.slurm` | Run one CheckM batch per array task | CPU/high-memory |
 | `hierarchical_vamb_checkm_batch_collect.slurm` | Validate and merge batch QA tables | CPU |
+| `hierarchical_vamb_checkm_subbatch_prepare.slurm` | Extract one failed batch for smaller targeted retries | CPU |
+| `hierarchical_vamb_checkm_subbatch_collect.slurm` | Reconstruct a parent QA batch from successful subbatches | CPU |
 | `evaluate_hierarchical_vamb_refinement.py` | Generate and evaluate multi-seed, multi-k split proposals | CPU/GPU by subcommand |
 | `hierarchical_vamb_gated_refine_cpu.slurm` | Prepare or collect gated proposals | CPU |
 | `hierarchical_vamb_gated_refine_gpu.slurm` | Evaluate one candidate parent per GPU-array task | GPU |
 | `hierarchical_vamb_submit_gated_refinement.slurm` | Submit gated evaluation after CheckM | CPU submitter |
 | `hierarchical_vamb_submit_gated_refinement_after_prepare.slurm` | Size and submit the gated GPU array after candidate preparation | CPU submitter |
+| `validate_hierarchical_vamb_proposals.py` | Materialize stable medoid proposals and report parent-matched marker conflicts | CPU |
+| `hierarchical_vamb_marker_materialize.slurm` | Write stable candidate children without altering canonical bins | CPU |
+| `hierarchical_vamb_marker_validate.slurm` | Run parent-matched CheckM and retain marker IDs/copy locations | CPU/high-memory |
 | `refine_hierarchical_vamb.py` and `hierarchical_vamb_refine_*.slurm` | Legacy forced-refinement implementation | Experimental |
 | `hierarchical_vamb_submit_refinement.slurm` | Legacy forced-refinement submitter | Experimental |
 
@@ -246,6 +264,7 @@ single-job and batched CheckM. It has been exercised on datasets large enough
 to expose walltime and filesystem-file-count failure modes.
 
 The statistical refinement layer now generates conservative, reproducible
-split proposals and rejects unstable solutions. It should be considered a QA
-and review layer until independent biological validation and explicit
-acceptance logic are complete.
+split proposals, rejects solutions that are unstable in either contig-length
+view, selects a medoid seed, and tests duplicated-marker segregation under the
+same parent-derived marker set. It remains a QA and review layer: complementary
+biological validation and explicit acceptance logic are not yet complete.

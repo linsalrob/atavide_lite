@@ -14,7 +14,7 @@ eval "$(conda shell.bash hook)"
 ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
-VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/pip/vamb"
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 
 if [[ ! -e "$VENV_DIR" ]]; then
     echo "Please run vamb_install.slurm to create the VAMB virtual environment" >&2
@@ -22,7 +22,6 @@ if [[ ! -e "$VENV_DIR" ]]; then
 fi
 
 module load rocm/6.2.4
-source "$VENV_DIR/bin/activate"
 
 OUTDIR="vamb"
 mkdir -p "$OUTDIR"
@@ -30,7 +29,7 @@ mkdir -p "$OUTDIR"
 if [[ -s "$OUTDIR/contigs.fna.gz" ]]; then
     echo "$OUTDIR/contigs.fna.gz already exists. Skipping VAMB concatenation." >&2
 else
-    python "$HOME/GitHubs/atavide_lite/bin/vamb_concatenate.py" \
+    "$VENV_DIR/bin/python" "$HOME/GitHubs/atavide_lite/bin/vamb_concatenate.py" \
         -m 2000 \
         "$OUTDIR/contigs.fna.gz" \
         megahit/*/final.contigs.fa

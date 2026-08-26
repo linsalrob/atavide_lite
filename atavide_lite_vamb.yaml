@@ -2,7 +2,6 @@ name: atavide_lite_vamb
 channels:
    - conda-forge
    - bioconda
-   - defaults
 dependencies:
    - rsync
    - samtools>=1.20

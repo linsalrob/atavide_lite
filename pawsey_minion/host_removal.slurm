@@ -30,12 +30,25 @@ fi
 source DEFINITIONS.sh
 
 
-QC=fastq_fastp
+QC=${QC_DIR:-fastq_fastp}
+THREADS=${SLURM_CPUS_PER_TASK:-8}
 READS=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)
 
 echo "Processing $READS" >&2;
 
-mkdir -p $HOST $HOSTREMOVED
+if [[ ! -f "$QC/$READS" ]]; then
+	echo "ERROR: QC FASTQ not found: $QC/$READS" >&2;
+	exit 2;
+fi
+
+# When a spike-in reference is configured, retain the ordinary host-removed
+# reads as an intermediate and make HOSTREMOVED the spike-free downstream
+# directory. Without a spike-in, this remains exactly the former workflow.
+PRE_SPIKE_HOSTREMOVED=$HOSTREMOVED
+if [[ -n "${SPIKE_IN_SEQUENCE:-}" ]]; then
+	PRE_SPIKE_HOSTREMOVED="${HOSTREMOVED}_before_${SPIKE_IN:-spike_in}"
+fi
+mkdir -p "$HOST" "$PRE_SPIKE_HOSTREMOVED"
 
 O=${READS/$FILEEND/.bam}
 if [[ $O == $READS ]]; then
@@ -43,8 +56,8 @@ if [[ $O == $READS ]]; then
 	exit 1;
 fi
 TMPDIR=$(mktemp -d -p /scratch/$PAWSEY_PROJECT/$USER/tmp)
-echo -e "minimap2 -t 16 --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -\n" >&2;
-minimap2 -t 64 --secondary=no --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE fastq_fastp/$READS | samtools view -bh | samtools sort -o $HOST/$O -
+echo -e "minimap2 -t $THREADS --secondary=no --split-prefix=$TMPDIR/tmp$$ -a -x map-ont $HOSTFILE $QC/$READS | samtools view -bh | samtools sort -o $HOST/$O -\n" >&2;
+minimap2 -t "$THREADS" --secondary=no --split-prefix=$TMPDIR/tmp$$ -a -x map-ont "$HOSTFILE" "$QC/$READS" | samtools view -bh | samtools sort -o "$HOST/$O" -
 samtools index $HOST/$O
 
 
@@ -54,5 +67,32 @@ samtools fastq -F 3588 $HOST/$O | gzip -c > $HOST/$READS
 
 # Reads that do not match the host
 
-samtools fastq -F 3584 -f 4 $HOST/$O | gzip -c > $HOSTREMOVED/$READS
+samtools fastq -F 3584 -f 4 "$HOST/$O" | gzip -c > "$PRE_SPIKE_HOSTREMOVED/$READS"
 
+if [[ -n "${SPIKE_IN_SEQUENCE:-}" ]]; then
+	if [[ ! -s "$SPIKE_IN_SEQUENCE" ]]; then
+		echo "ERROR: SPIKE_IN_SEQUENCE is missing or empty: $SPIKE_IN_SEQUENCE" >&2
+		exit 2
+	fi
+	mkdir -p "$HOSTREMOVED" spike_in/bam spike_in/removal_stats
+	SPIKE_BAM="spike_in/bam/${READS/$FILEEND/}.${SPIKE_IN:-spike_in}.bam"
+	SPIKE_STATS="spike_in/removal_stats/${READS/$FILEEND}.tsv"
+	if [[ -e "$HOSTREMOVED/$READS" || -e "$SPIKE_BAM" || -e "$SPIKE_STATS" ]]; then
+		echo "ERROR: refusing to overwrite existing spike-in outputs for $READS" >&2
+		exit 2
+	fi
+	SPIKE_TMP=$(mktemp -d -p "/scratch/$PAWSEY_PROJECT/$USER/tmp")
+	trap 'rm -rf "$SPIKE_TMP"' EXIT
+	# Keep primary, confidently mapped (MAPQ >=20) spike-in reads only. This
+	# avoids subtracting incidental low-confidence ONT alignments.
+	minimap2 -t "$THREADS" --secondary=no -a -x map-ont "$SPIKE_IN_SEQUENCE" "$PRE_SPIKE_HOSTREMOVED/$READS" \
+		| samtools view -@ "$THREADS" -bh -F 2308 -q 20 - \
+		| samtools sort -@ "$THREADS" -o "$SPIKE_BAM" -
+	samtools index "$SPIKE_BAM"
+	samtools view "$SPIKE_BAM" | cut -f1 | sort -u > "$SPIKE_TMP/spike_read_ids.txt"
+	python "$HOME/GitHubs/atavide_lite/pawsey_minion/remove_spikein_reads.py" \
+		--ids "$SPIKE_TMP/spike_read_ids.txt" \
+		--input "$PRE_SPIKE_HOSTREMOVED/$READS" \
+		--output "$HOSTREMOVED/$READS" \
+		--stats "$SPIKE_STATS"
+fi

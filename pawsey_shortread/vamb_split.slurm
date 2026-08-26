@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-VENV_DIR="/scratch/$PAWSEY_ACCOUNT/$USER/software/pip/vamb"
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/pip/vamb"
 if [[ ! -e "$VENV_DIR" ]]; then 
 	echo "Please run vamb_install.slurm to create the vamb virtual environment" >&2
 	exit 1;

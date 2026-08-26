@@ -39,6 +39,5 @@ echo "Using $HOSTREMOVED/$READS for the assembly" >&2;
 megahit -r $HOSTREMOVED/$READS -o megahit/$OUTPUT -t 8
 
 megahit_toolkit contig2fastg 119 megahit/$OUTPUT/final.contigs.fa > megahit/$OUTPUT/final.graph.fastg; 
-~/atavide_lite/bin/fastg2gfa megahit/$OUTPUT/final.graph.fastg > megahit/$OUTPUT/final.gfa
-
+"$HOME/GitHubs/atavide_lite/bin/fastg2gfa" megahit/$OUTPUT/final.graph.fastg > megahit/$OUTPUT/final.gfa
 

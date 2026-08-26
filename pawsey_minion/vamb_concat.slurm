@@ -17,5 +17,4 @@ ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_v
 conda activate $ATAVIDE_CONDA
 
 mkdir -p vamb
-python ~/atavide_lite/bin/vamb_concatenate.py -m 300 vamb/contigs.fna.gz megahit/*/final.contigs.fa
-
+python "$HOME/GitHubs/atavide_lite/bin/vamb_concatenate.py" -m 300 vamb/contigs.fna.gz megahit/*/final.contigs.fa

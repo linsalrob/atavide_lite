@@ -13,6 +13,7 @@ $HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh 2> /dev/null  &&
     mamba env remove --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb
 mamba env create --yes --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite --file ../atavide_lite.yaml
 mamba env create --yes --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb --file ../atavide_lite_vamb.yaml
+sbatch --account=${PAWSEY_PROJECT}-gpu vamb_install.slurm
 ```
 
 This creates an `atavide_lite` and `atavide_lite_vamb` conda environments for us to use.
@@ -146,6 +147,11 @@ First, do the assemblies separately:
 MEGAHITJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$HOSTJOB $PAWSEY_SRC/megahit.slurm)
 ```
 
+Next, map the R1/R2 reads back to those contigs:
+
+```
+MEGAMAP=$(sbatch --parsable  --array=1-$NUM_R1_READS:1 --dependency=afterok:MEGAHITJOB $PAWSEY_SRC/megahit_map_reads.slurm)
+
 Then, merge the assemblies with contigger:
 
 ```
@@ -277,8 +283,12 @@ Then we use the usual VAMB approach to bin the contigs.
 Assemble using the `megahit_allreads.slurm` script above. This will take a while to run, so do it early! Also note that `megahit` can continue if it is interuppted. Make sure the `--continue` flag is active 
 in the `megahit_allreads.slurm` script.
 
+Then we make a samples.tsv file that has the [category] [sample]
+category should be one word, no spaces, and should provide a single grep. We will test this
+and not continue. sample should be unique in the R1 file.
+
 ```
-VCRJOB=$(sbatch --parsable $PAWSEY_SRC/vamb_concat_crass.slurm samples.tsv)
+VCRJOB=$(sbatch --parsable $PAWSEY_SRC/vamb_concat_all.slurm)
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCRJOB --array=1-$NUM_R1_READS:1 $PAWSEY_SRC/vamb_minimap_crass.slurm samples.tsv)
 ```
 
@@ -294,7 +304,7 @@ Then run the rest of vamb:
 
 ```
 VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $PAWSEY_SRC/vamb_crass.slurm)
-sbatch  --dependency=afterok:$VAMBJOB  ~/GitHubs/atavide_lite/pawsey_shortread/vamb_mags_group.slurm samples.tsv
+sbatch  --dependency=afterok:$VAMBJOB  $PAWSEY_SRC/vamb_mags_group.slurm samples.tsv
 CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $PAWSEY_SRC/checkm.slurm vamb/bins/ vamb/checkm)
 ```
 

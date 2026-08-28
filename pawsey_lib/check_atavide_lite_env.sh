@@ -46,6 +46,19 @@ if ! conda run -p "$ENV" --no-capture-output python -c 'import sys; print("Conda
     exit 1
 fi
 
+# The subsystem annotation stage imports pytaxonkit, which imports pandas at
+# module load.  A scratch-cleanup or interrupted package transaction can leave
+# a directory behind while deleting pandas' Python files, so an executable
+# Python alone is not sufficient validation.
+if ! conda run -p "$ENV" --no-capture-output python -c 'import pandas; from pandas import UInt32Dtype, StringDtype; import pytaxonkit; print("pandas:", pandas.__version__)'; then
+    echo "ERROR: pandas/pytaxonkit import validation failed in $ENV" >&2
+    echo "Repair the existing environment with:" >&2
+    echo "mamba install --yes --force-reinstall --prefix $ENV --file ../atavide_lite.yaml" >&2
+    echo "If repair fails, recreate it with:" >&2
+    echo "mamba env remove --prefix $ENV && mamba env create --yes --prefix $ENV --file ../atavide_lite.yaml" >&2
+    exit 1
+fi
+
 for exe in samtools fastp minimap2 mmseqs megahit rclone rsync parallel pigz snakemake fasterq-dump taxonkit; do
     if [[ ! -x "$ENV/bin/$exe" ]]; then
         echo "ERROR: missing executable in environment: $exe" >&2

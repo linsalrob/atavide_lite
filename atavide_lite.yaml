@@ -7,17 +7,21 @@ dependencies:
    - fastp
    - minimap2>=2.29
    - checkm-genome
+   - agtools
+   - fonttools
    - mmseqs2
+   - matplotlib
    - megahit
+   - metacoag
    - minimap2
    - rclone
    - rsync
    - parallel
    - pigz
    - pip
+   - pandas
    - pytaxonkit
    - snakemake
    - sra-tools
    - snakemake-executor-plugin-cluster-generic
    - taxonkit
-

@@ -23,5 +23,6 @@ dependencies:
    - pytaxonkit
    - snakemake
    - sra-tools
+   - scipy
    - snakemake-executor-plugin-cluster-generic
    - taxonkit

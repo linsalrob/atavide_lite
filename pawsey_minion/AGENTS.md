@@ -230,6 +230,26 @@ Chain deterministic stages with dependencies rather than polling. Record job IDs
   on a shared login node degrades it for every other user and will likely be OOM-killed anyway.
 - **Don't re-run into populated output directories.** Use a fresh analysis directory (or a new
   output namespace) so a comparison run cannot clobber or half-overwrite prior results.
+- **`mmseqs_easy_taxonomy.slurm` skips a sample whose output directory already exists**
+  (`"$OUTPUT exists. Nothing to do"`, then `exit 0`). This is a **silent** failure mode after a
+  cancelled or failed run: the previous attempt leaves behind an empty `mmseqs/<sample>/`
+  directory, the rerun sees it, skips the sample, and **reports success**. Any `afterok`
+  dependency is satisfied and the pipeline proceeds with that sample missing entirely.
+
+  Observed in practice: a cancelled task left an empty output directory; on resubmission the
+  task "COMPLETED 0:0" in seconds and one of sixteen samples had no taxonomy at all.
+
+  **After cancelling any stage, delete the output directories of the affected tasks before
+  resubmitting**, and sanity-check that each task actually produced output rather than trusting
+  its exit code:
+
+  ```bash
+  # a task that really ran leaves files; a skipped one leaves an empty directory
+  find mmseqs -mindepth 1 -maxdepth 1 -type d -empty
+  ```
+
+  More generally on this pipeline: **exit code 0 is not proof a stage did the work.** Always
+  confirm the expected outputs exist and are non-empty.
 
 ## 8. Validation before submitting
 

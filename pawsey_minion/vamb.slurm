@@ -17,6 +17,9 @@ eval "$(conda shell.bash hook)"
 ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb"
 conda activate $ATAVIDE_CONDA
 
+# Derive thread count from the Slurm allocation rather than hardcoding it.
+THREADS=${SLURM_CPUS_PER_TASK:-16}
+
 # module load pytorch/2.2.0-rocm5.7.3
 module load pytorch/2.7.1-rocm6.3.3
 
@@ -44,11 +47,11 @@ for READS in $(sort -R reads.txt); do
 	if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 		echo "Bam file: '$OUTDIR/mapped_reads/$BAM' not found. Data generated" >&2;
 		mkdir -p $OUTDIR/mapped_reads
-		minimap2 -t 16 -N 5 -ax map-ont $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$READS | samtools view -F 3584 -b --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -
+		minimap2 -t "$THREADS" -N 5 -ax map-ont $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$READS | samtools view -F 3584 -b --threads "$THREADS"  | samtools sort -@ "$THREADS" -o $OUTDIR/mapped_reads/$BAM -
 	fi
 done
 
 
-vamb -o C -p 16 --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamfiles $OUTDIR/mapped_reads/*bam 
+vamb -o C -p "$THREADS" --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamfiles $OUTDIR/mapped_reads/*bam
 
 python "$HOME/GitHubs/atavide_lite/bin/vamb_create_fasta.py" $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters.tsv 20000 $OUTDIR/bins

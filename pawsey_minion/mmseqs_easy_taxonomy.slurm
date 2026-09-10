@@ -16,9 +16,15 @@
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
-#SBATCH --mem=200G
+#SBATCH --mem-per-cpu=7000M
 #SBATCH -o slurm_output/mmseqs_slurm/mmseqsET-%A_%a.out
 #SBATCH -e slurm_output/mmseqs_slurm/mmseqsET-%A_%a.err
+#SBATCH --partition=highmem
+
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem
+# larger than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the
+# CPU count to cover it, so the job queues for far more CPUs than it uses. Request
+# memory with --mem-per-cpu so the two can never disagree.
 
 set -euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
@@ -29,9 +35,14 @@ eval "$(conda shell.bash hook)"
 ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
+# Derive thread count from the Slurm allocation rather than hardcoding it.
+THREADS=${SLURM_CPUS_PER_TASK:-32}
+
 echo "Start " `date` >&2;
 
-DB=UniRef100
+# Which MMseqs database to search. Override with e.g. MMSEQS_DB=UniRef50 (smaller and
+# faster, so more samples run in parallel). Default is unchanged.
+DB="${MMSEQS_DB:-UniRef100}"
 DBSOURCE=/scratch/$PAWSEY_PROJECT/$USER/Databases/$DB
 
 if [[ ! -e $DBSOURCE ]]; then
@@ -65,8 +76,8 @@ fi
 mkdir -p $OUTPUT
 
 TPD=$(mktemp -d -p /scratch/$PAWSEY_PROJECT/$USER/tmp)
-echo "Running mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads 32" 2>&1;
-mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads 32
+echo "Running mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads $THREADS" 2>&1;
+mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads "$THREADS"
 rm -rf $TPD
 
 find $OUTPUT/ -type f  | parallel -j 32 gzip

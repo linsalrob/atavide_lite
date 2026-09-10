@@ -5,6 +5,7 @@ channels:
 dependencies:
    - samtools>=1.20
    - fastp
+   - fastplong
    - minimap2>=2.29
    - checkm-genome
    - agtools

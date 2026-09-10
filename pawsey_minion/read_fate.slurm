@@ -24,4 +24,7 @@ conda activate $ATAVIDE_CONDA
 mkdir -p Unknowns
 
 export PYTHONPATH=$PYTHONPATH:$HOME/GitHubs/atavide_lite
-python "$HOME/GitHubs/atavide_lite/bin/read_fate.py" -r reads.txt -u Unknowns/unknowns.fastq -v
+QC_DIRECTORY=${QC_DIR:-fastq_fastp}
+QC_LABEL=${QC_LABEL:-fastp}
+
+python "$HOME/GitHubs/atavide_lite/bin/read_fate.py" -r reads.txt -q "$QC_DIRECTORY" --qc-label "$QC_LABEL" -u Unknowns/unknowns.fastq -v

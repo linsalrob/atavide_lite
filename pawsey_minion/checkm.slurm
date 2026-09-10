@@ -17,7 +17,7 @@ eval "$(conda shell.bash hook)"
 ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
-if [[ -z $CHECKM_DATA_PATH ]]; then 
+if [[ -z "${CHECKM_DATA_PATH:-}" ]]; then 
 	echo "Please define CHECKM_DATA_PATH with your databases" >&2; 
 	exit 1;
 fi
@@ -31,9 +31,10 @@ fi
 SOURCE=${1%/}
 DEST=${2%/}
 LOCALSOURCE=`basename $SOURCE`
+THREADS=${SLURM_CPUS_PER_TASK:-16}
 
 
 echo "Running checkm on $LOCALSOURCE and output in $DEST"  >&2;
-checkm lineage_wf -t 16 $LOCALSOURCE $DEST/checkm
-checkm qa -t 16 $DEST/checkm/lineage.ms $DEST/checkm
+checkm lineage_wf -t "$THREADS" "$SOURCE" "$DEST/checkm"
+checkm qa -t "$THREADS" "$DEST/checkm/lineage.ms" "$DEST/checkm"
 

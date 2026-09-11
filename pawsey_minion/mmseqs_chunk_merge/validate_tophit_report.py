@@ -53,6 +53,8 @@ def main() -> None:
     for row in read_rows(args.merged_report):
         target, count = row[0], int(row[1])
         merged_targets.add(target)
+        if count < 0:
+            raise ValueError(f"negative merged count for {target}")
         if count != chunk_counts.get(target):
             raise ValueError(f"merged count differs for {target}")
         if tuple(row[5:8]) != chunk_taxonomy[target]:

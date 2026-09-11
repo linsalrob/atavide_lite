@@ -44,4 +44,4 @@ extract_R1 () {
 export -f extract_R1
 mkdir -p fasta
 
-find -L $HOSTREMOVED -type f -name *fastq.gz | parallel -j "$THREADS" extract_R1
+find -L "$HOSTREMOVED" -type f -name "*fastq.gz" | parallel -j "$THREADS" extract_R1

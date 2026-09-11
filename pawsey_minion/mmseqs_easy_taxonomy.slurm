@@ -116,7 +116,7 @@ mkdir -p $OUTPUT
 echo "$DB" > "$OUTPUT/.mmseqs_db"
 
 TPD=$(mktemp -d -p /scratch/$PAWSEY_PROJECT/$USER/tmp)
-echo "Running mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads $THREADS ${SPLIT_MEM_ARG[*]}" 2>&1;
+echo "Running mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads $THREADS ${SPLIT_MEM_ARG[*]}" >&2;
 mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads "$THREADS" "${SPLIT_MEM_ARG[@]}"
 rm -rf $TPD
 

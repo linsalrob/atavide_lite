@@ -28,8 +28,10 @@ fi
 
 source DEFINITIONS.sh
 
-ASSDIR=megahit_all_reads
-KMER=141
+# Allow DEFINITIONS.sh (sourced above) or the environment to override these; the defaults
+# preserve the previous hardcoded behaviour.
+ASSDIR=${ASSDIR:-megahit_all_reads}
+KMER=${KMER:-141}
 
 echo "Converting fa to fastg"
 megahit_toolkit contig2fastg $KMER $ASSDIR/intermediate_contigs/k$KMER.contigs.fa> $ASSDIR/k$KMER.fastg

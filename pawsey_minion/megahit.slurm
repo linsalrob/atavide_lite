@@ -2,10 +2,14 @@
 #SBATCH --job-name=MegaHit
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
+#SBATCH --cpus-per-task=18
+#SBATCH --mem-per-cpu=1800M
 #SBATCH -o slurm_output/megahit_slurm/megahit-%A_%a.out
 #SBATCH -e slurm_output/megahit_slurm/megahit-%A_%a.err
+
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M). A bare --mem larger than
+# cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the CPU count to
+# cover it, which also changes $SLURM_CPUS_PER_TASK and therefore THREADS below.
 
 set -euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
@@ -36,7 +40,8 @@ fi
 echo "Using $HOSTREMOVED/$READS for the assembly" >&2;
 
 
-megahit -r $HOSTREMOVED/$READS -o megahit/$OUTPUT -t 8
+THREADS=${SLURM_CPUS_PER_TASK:-8}
+megahit -r $HOSTREMOVED/$READS -o megahit/$OUTPUT -t "$THREADS"
 
 megahit_toolkit contig2fastg 119 megahit/$OUTPUT/final.contigs.fa > megahit/$OUTPUT/final.graph.fastg; 
 "$HOME/GitHubs/atavide_lite/bin/fastg2gfa" megahit/$OUTPUT/final.graph.fastg > megahit/$OUTPUT/final.gfa

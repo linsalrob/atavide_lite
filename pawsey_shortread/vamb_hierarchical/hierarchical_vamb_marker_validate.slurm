@@ -7,12 +7,19 @@
 #SBATCH --time=1-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=128G
+#SBATCH --cpus-per-task=20
+#SBATCH --mem-per-cpu=7000M
 #SBATCH --output=slurm_output/vamb_slurm/%x-%j.out
 #SBATCH --error=slurm_output/vamb_slurm/%x-%j.err
 
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem larger
+# than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the CPU count
+# to cover it. Request memory with --mem-per-cpu so the two can never disagree.
+
 set -euo pipefail
+
+# Derive CheckM threads from the Slurm allocation rather than hardcoding.
+THREADS=${SLURM_CPUS_PER_TASK:-16}
 sample=${1:?Usage: hierarchical_vamb_marker_validate.slurm SAMPLE}
 cd "${SLURM_SUBMIT_DIR:?SLURM_SUBMIT_DIR is required}"
 script_dir=${HIERARCHICAL_SCRIPT_DIR:-"/home/$USER/GitHubs/atavide_lite/pawsey_shortread/vamb_hierarchical"}
@@ -40,7 +47,7 @@ mkdir -p "$site_dir" "$MPLCONFIGDIR"
 printf '%s\n' 'import sys' 'sys.setrecursionlimit(max(sys.getrecursionlimit(), 50000))' > "$site_dir/sitecustomize.py"
 export PYTHONPATH="$site_dir${PYTHONPATH:+:$PYTHONPATH}"
 
-checkm lineage_wf --tmpdir "$work/tmp" -t 16 "$root/parents" "$parent_work"
+checkm lineage_wf --tmpdir "$work/tmp" -t "$THREADS" "$root/parents" "$parent_work"
 cp "$parent_work/lineage.ms" "$report/parent_lineage.ms"
 
 conda activate "/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
@@ -50,8 +57,8 @@ python "$script_dir/validate_hierarchical_vamb_proposals.py" build-marker-file \
     --output "$report/parent_matched.ms"
 
 conda activate "$ATAVIDE_CONDA"
-checkm analyze --tmpdir "$work/tmp" -t 16 "$report/parent_matched.ms" "$root/bins" "$matched_work"
-checkm qa --tab_table -o 1 -f "$report/qa.tsv" --tmpdir "$work/tmp" -t 16 \
+checkm analyze --tmpdir "$work/tmp" -t "$THREADS" "$report/parent_matched.ms" "$root/bins" "$matched_work"
+checkm qa --tab_table -o 1 -f "$report/qa.tsv" --tmpdir "$work/tmp" -t "$THREADS" \
     "$report/parent_matched.ms" "$matched_work"
 cp "$matched_work/storage/marker_gene_stats.tsv" "$report/marker_gene_stats.tsv"
 cp "$matched_work/storage/bin_stats_ext.tsv" "$report/bin_stats_ext.tsv"

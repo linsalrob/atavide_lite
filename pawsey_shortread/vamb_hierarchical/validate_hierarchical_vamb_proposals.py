@@ -43,7 +43,7 @@ def materialize(args: argparse.Namespace) -> None:
             raise FileNotFoundError(f"Missing canonical parent FASTA: {parent_fasta}")
         parent_ids: set[str] = set()
         with vamb.vambtools.Reader(parent_fasta) as reader:
-            for entry in vamb.vambtools.byte_iterfasta(reader, str(parent_fasta)):
+            for entry in vamb.vambtools.byte_iterfasta(reader):
                 parent_ids.add(entry.identifier)
         original_id = f"{parent}__original"
         original_fasta = bins_dir / f"{original_id}.fna"
@@ -178,10 +178,27 @@ def report(args: argparse.Namespace) -> None:
                     f"{child}:{','.join(contig for _, contig in hits)}" for child, hits in child_locations.items() if hits
                 ),
             })
+        missing_qa = [b for b in [parent_id, *child_ids] if b not in qa]
+        if missing_qa:
+            raise ValueError(
+                f"{parent}/k{k}: these bins are absent from the CheckM QA table: "
+                + ", ".join(sorted(missing_qa))
+                + ". Check that CheckM completed for every bin before running validation."
+            )
         parent_qa = qa[parent_id]
         child_qa = [qa[child] for child in child_ids]
-        all_resolved = bool(duplicate_markers) and unresolved == 0 and discordant == 0
-        decision = "PENDING_COMPLEMENTARY_QC" if all_resolved else "RETAIN_PARENT_MARKER_GATE"
+
+        # Distinguish "nothing to resolve" from "failed to resolve". A parent with no
+        # duplicated markers has no marker conflict for the split to fix, so the gate is
+        # simply not informative - it must not veto the proposal. Keeping it as its own
+        # decision value preserves that distinction in the output table.
+        conflicts_clean = unresolved == 0 and discordant == 0
+        if not duplicate_markers:
+            decision = "NO_MARKER_CONFLICT"
+        elif conflicts_clean:
+            decision = "PENDING_COMPLEMENTARY_QC"
+        else:
+            decision = "RETAIN_PARENT_MARKER_GATE"
         proposal_rows.append({
             "parent": parent,
             "k": k,
@@ -196,8 +213,10 @@ def report(args: argparse.Namespace) -> None:
             "discordant_copy_counts": discordant,
             "decision": decision,
             "reason": (
+                "Parent has no duplicated markers, so the marker gate does not apply; requires child-quality and complementary GUNC/taxonomic QC"
+                if decision == "NO_MARKER_CONFLICT" else
                 "Marker conflicts resolve under the parent marker set; requires child-quality and complementary GUNC/taxonomic QC"
-                if all_resolved else
+                if decision == "PENDING_COMPLEMENTARY_QC" else
                 "Parent duplicated-marker conflicts do not resolve cleanly under this split"
             ),
         })

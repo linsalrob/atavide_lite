@@ -59,7 +59,7 @@ if ! conda run -p "$ENV" --no-capture-output python -c 'import pandas; from pand
     exit 1
 fi
 
-for exe in samtools fastp minimap2 mmseqs megahit rclone rsync parallel pigz snakemake fasterq-dump taxonkit; do
+for exe in samtools fastp fastplong minimap2 mmseqs megahit agtools rclone rsync parallel pigz snakemake fasterq-dump taxonkit; do
     if [[ ! -x "$ENV/bin/$exe" ]]; then
         echo "ERROR: missing executable in environment: $exe" >&2
         echo "Expected to find: $ENV/bin/$exe" >&2

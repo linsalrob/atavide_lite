@@ -6,10 +6,14 @@
 #SBATCH --time=00:10:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=2G
+#SBATCH --cpus-per-task=2
+#SBATCH --mem-per-cpu=1800M
 #SBATCH --output=slurm_output/checkm-subbatch-prep-%j.out
 #SBATCH --error=slurm_output/checkm-subbatch-prep-%j.err
+
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem larger
+# than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the CPU count
+# to cover it. Request memory with --mem-per-cpu so the two can never disagree.
 
 set -euo pipefail
 parent_report=${1:?Usage: hierarchical_vamb_checkm_subbatch_prepare.slurm PARENT_REPORT PARENT_INDEX PARENT_BATCH_SIZE SUB_REPORT}

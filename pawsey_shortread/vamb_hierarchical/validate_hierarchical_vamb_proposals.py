@@ -59,7 +59,12 @@ def materialize(args: argparse.Namespace) -> None:
                     "empty proposal_dir. Older decision files predate proposal materialisation - "
                     "re-run evaluate_hierarchical_vamb_refinement.py to regenerate them."
                 )
-            assignment_path = Path(proposal_dir) / "candidate_children.tsv"
+            # proposal_dir is usually relative to wherever evaluation was run, so anchor it
+            # to the decisions file rather than the current working directory.
+            proposal_path = Path(proposal_dir)
+            if not proposal_path.is_absolute():
+                proposal_path = (args.decisions.parent / proposal_path).resolve()
+            assignment_path = proposal_path / "candidate_children.tsv"
             if not assignment_path.is_file():
                 raise ValueError(
                     f"{parent}/k{proposal['k']}: expected candidate assignments at {assignment_path}, "

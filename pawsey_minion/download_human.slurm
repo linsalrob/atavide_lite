@@ -2,10 +2,15 @@
 #SBATCH --job-name=human_download
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=32G
+#SBATCH --cpus-per-task=8
+#SBATCH --mem-per-cpu=1800M
 #SBATCH -o %x-%j.out
 #SBATCH -e %x-%j.err
+
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem
+# larger than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the
+# CPU count to cover it, so the job queues for far more CPUs than it uses. Request
+# memory with --mem-per-cpu so the two can never disagree.
 
 DEST=/scratch/$PAWSEY_PROJECT/$USER/Databases/human
 

@@ -7,7 +7,9 @@ These scripts are adapted to run on Flinder's deepthought computer. They are des
 The differences between this version and others are:
 
 1. Since we don't have R1 and R2 files, things are simpler. We only need a `reads.txt` file with the read names.
-2. We use slightly different `fastp` parameters.
+2. We use **`fastplong`**, not `fastp`. `fastplong` is purpose-built for long reads;
+   `fastp` is a short-read QC tool and its defaults are not appropriate for ONT data.
+   `fastp.slurm` is retained only for backwards compatibility - **use `fastplong.slurm`.**
 3. The download scripts will touch the files if they are already present
 4. As noted elsewhere, deepthought uses a fast local file system called `$BGFS` that we copy data on and off.
 
@@ -85,7 +87,7 @@ echo "There are $NUM_READS samples to process"
 This just keeps the output tidy!
 
 ```
-mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm slurm_output/fastp_slurm
+mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm slurm_output/fastplong_slurm
 ```
 
 ## 5. Download some databases
@@ -107,21 +109,41 @@ If you are using a different host genome, of course omit the human genome downlo
 
 
 
-## 6. Quailty control of the data
+## 6. Quality control of the data
 
-We use `fastp` for quality control of the data:
+Use **`fastplong`** for long-read QC. This is the correct tool for ONT data:
 
 ```
-JOB=$(sbatch --parsable --array=1-$NUM_READS:1 $SRC/fastp.slurm)
+mkdir -p slurm_output/fastplong_slurm
+JOB=$(sbatch --parsable --array=1-$NUM_READS:1 $SRC/fastplong.slurm)
 ```
+
+`fastplong.slurm` writes to `fastq_fastplong/`, deliberately kept separate from
+`fastq_fastp/` so a re-run cannot clobber earlier results.
+
+> **Do not use `fastp.slurm` for ONT reads.** It is a short-read tool and remains here
+> only for backwards compatibility. If you use it, its output lands in `fastq_fastp/`,
+> which is the default `host_removal.slurm` reads from - so mixing the two silently
+> analyses the wrong FASTQs.
 
 ## 7. Remove the host DNA
 
 `host_removal` uses whatever is defined in the DEFINITIONS.sh file, be it human, mouse, shark, or ...
 
 ```
-HOSTJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$JOB $SRC/host_removal.slurm)
+HOSTJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$JOB \
+    --export=ALL,QC_DIR=fastq_fastplong $SRC/host_removal.slurm)
 ```
+
+**`QC_DIR=fastq_fastplong` is required** when you QC'd with `fastplong`.
+`host_removal.slurm` defaults to `QC_DIR=fastq_fastp`, so without it the job either
+fails (no such file) or, worse, silently uses stale `fastp` output.
+
+**The same applies to the reporting stages.** `read_fate.slurm` and `sankey_plot.slurm`
+also default to `fastq_fastp`, so both need `--export=ALL,QC_DIR=fastq_fastplong,QC_LABEL=fastplong`.
+Omit it and the read-fate table either fails or reports the QC column from a stale
+`fastq_fastp/` directory while every other column describes the fastplong data - a silent
+wrong answer rather than an error.
 
 If `DEFINITIONS.sh` also sets `SPIKE_IN_SEQUENCE` (and optionally
 `SPIKE_IN`), `host_removal.slurm` automatically maps the host-removed reads to
@@ -158,11 +180,24 @@ FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 
 Note, that we are using the UniRef 100 which gives more hits than UniRef50. Please read [this comparison of UniRef50 vs UniRef100](https://fame.flinders.edu.au/blog/2026/05/24/uniprot)
 
-For UniRef100:
+`mmseqs_easy_taxonomy.slurm` defaults to UniRef100, and you can select a different
+database with `MMSEQS_DB`.
+
+For UniRef100 (the default):
 
 ```
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)
 ```
+
+For UniRef50 - a much smaller database, so it loads faster and more samples run
+concurrently. Prefer this for a fast first-pass analysis:
+
+```
+MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$FAJOB \
+    --export=ALL,MMSEQS_DB=UniRef50 $SRC/mmseqs_easy_taxonomy.slurm)
+```
+
+Pass the same `--export=ALL,MMSEQS_DB=UniRef50` to `mmseqs_summarise_taxonomy.slurm`.
 
 ## 11. Summarise the taxonomy from the mmseqs output files
 
@@ -187,7 +222,8 @@ I like the Sankey plots to visualise where the data went, and also to check that
 created by this command for directions on how to make the figure.
 
 ```
-SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $SRC/sankey_plot.slurm)
+SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB \
+    --export=ALL,QC_DIR=fastq_fastplong,QC_LABEL=fastplong $SRC/sankey_plot.slurm)
 ```
 
 ## VAMB for binning
@@ -215,7 +251,7 @@ export ATAVIDE_CONDA=atavide_lite
 ## Run commands
 
 ```
-mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm slurm_output/fastp_slurm
+mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseqs_slurm  slurm_output/vamb_slurm slurm_output/fastplong_slurm
 find fastq -type f -printf "%f\n" > reads.txt
 
 export NUM_READS=$(wc -l reads.txt | cut -f 1 -d ' ')
@@ -226,15 +262,16 @@ cp $SRC/DEFINITIONS.sh .
 
 # edit the DEFINITIONS file to change the sample name
 
-JOB=$(sbatch --parsable --array=1-$NUM_READS:1 $SRC/fastp.slurm)
-HOSTJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$JOB $SRC/host_removal.slurm)
+JOB=$(sbatch --parsable --array=1-$NUM_READS:1 $SRC/fastplong.slurm)
+HOSTJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$JOB --export=ALL,QC_DIR=fastq_fastplong $SRC/host_removal.slurm)
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)
 sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_summarise_taxonomy.slurm
-sbatch --dependency=afterok:$MMSEQSJOB $SRC/read_fate.slurm
+sbatch --dependency=afterok:$MMSEQSJOB --export=ALL,QC_DIR=fastq_fastplong,QC_LABEL=fastplong $SRC/read_fate.slurm
 SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_READS:1 $SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
 COUNTSSJOB=$(sbatch --parsable --dependency=afterok:$SSJOB $SRC/count_subsystems.slurm)
-SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $SRC/sankey_plot.slurm)
+SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB \
+    --export=ALL,QC_DIR=fastq_fastplong,QC_LABEL=fastplong $SRC/sankey_plot.slurm)
 
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_READS:1 $SRC/megahit.slurm)
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB $SRC/vamb_concat.slurm)
@@ -243,3 +280,29 @@ VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB $SRC/vamb.slurm)
 CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/bins/ vamb/checkm)
 
 ```
+
+
+## Slurm resource requests on Setonix
+
+Setonix enforces `MaxMemPerCPU`: **1840 MB on `work`, 7900 MB on `highmem`**. A bare
+`--mem` larger than `cpus-per-task * MaxMemPerCPU` does **not** produce an error -
+Slurm silently raises the allocated CPU count to cover the memory. A script asking for
+`--cpus-per-task=1 --mem=128G` therefore queues for **72 CPUs**, which can mean hours of
+extra wait for a job that uses one core.
+
+These scripts request memory with `--mem-per-cpu` so the two figures can never disagree.
+If you change a memory request, change `--cpus-per-task` with it, and check the result:
+
+```
+scontrol show job <jobid> | grep -E 'NumCPUs|ReqTRES'
+```
+
+`download_uniref100.slurm` needs more memory per core than `work` can supply, so it sets
+`--partition=highmem` explicitly.
+
+`mmseqs_easy_taxonomy.slurm` deliberately does **not**. It caps MMseqs'
+`--split-memory-limit` to the memory actually allocated, which lets it run inside a normal
+`work` allocation instead. That matters for throughput as well as memory: the `highmem`
+association limit is **`MaxJobs=2` per user**, which would serialise a 16-sample array, and
+whole-node `--exclusive` requests on `work` were observed queuing ~10 hours out. With the
+split limit set correctly, all 16 samples start immediately on `work`.

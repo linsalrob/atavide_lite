@@ -2,10 +2,15 @@
 #SBATCH --job-name=MMSeqsDld
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=128G
+#SBATCH --cpus-per-task=24
+#SBATCH --mem-per-cpu=1800M
 #SBATCH -o %x-%j.out
 #SBATCH -e %x-%j.err
+
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem
+# larger than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the
+# CPU count to cover it, so the job queues for far more CPUs than it uses. Request
+# memory with --mem-per-cpu so the two can never disagree.
 
 # Use `mmseqs databases` to find information about the preformatted databases
 # NOTE: Do not download the NT database unless you _really_ need it. The database is huge!
@@ -20,6 +25,9 @@ eval "$(conda shell.bash hook)"
 "$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
 ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
+
+# Derive thread count from the Slurm allocation rather than hardcoding it.
+THREADS=${SLURM_CPUS_PER_TASK:-24}
 
 CWD=`pwd`
 
@@ -61,7 +69,7 @@ cd $CWD
 rm -rf $DESTINATION && mkdir -p $DESTINATION
 TPD=$(mktemp -d -p $TMP)
 echo -e "Downloading to $DESTINATION/$DB and using temp location $TPD.\nNote we download the tarball and then uncompress, so there is usually nothing in the output for a while!" >&2
-mmseqs databases --threads 8 $DB $DESTINATION/$DB $TPD
+mmseqs databases --threads "$THREADS" $DB $DESTINATION/$DB $TPD
 
 
 

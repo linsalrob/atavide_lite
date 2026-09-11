@@ -140,6 +140,8 @@ def summarize(args: argparse.Namespace) -> None:
             loaded = [np.load(path, allow_pickle=True) for path in paths]
             arrays = [archive["labels"] for archive in loaded]
             if len(arrays) != args.seeds:
+                for archive in loaded:
+                    archive.close()
                 raise ValueError(f"{parent}/{k_dir.name}: expected {args.seeds} seeds, found {len(arrays)}")
             scores = [ari(first, second) for first, second in itertools.combinations(arrays, 2)]
             median = float(np.median(scores))

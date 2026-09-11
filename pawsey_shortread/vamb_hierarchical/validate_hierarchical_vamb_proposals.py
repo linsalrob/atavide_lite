@@ -12,7 +12,6 @@ from __future__ import annotations
 import argparse
 import ast
 import csv
-import json
 import shutil
 from collections import defaultdict
 from pathlib import Path

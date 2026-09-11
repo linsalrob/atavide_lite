@@ -1,5 +1,9 @@
 #!/bin/bash
 
+
+# Remediation messages are copy-pasted from arbitrary working directories, so point at
+# the yaml by absolute path derived from this script rather than a relative ../ path.
+ATAVIDE_YAML="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/atavide_lite.yaml"
 set -euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
@@ -10,7 +14,7 @@ ENV="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 if [[ ! -d "$ENV" ]]; then
     echo "ERROR: We could not find a conda environment at: $ENV" >&2
     echo "Please switch to the atavide lite directory and create the environment with:" >&2
-    echo "mamba env create --yes --prefix $ENV --file ../atavide_lite.yaml " >&2
+    echo "mamba env create --yes --prefix $ENV --file $ATAVIDE_YAML " >&2
     exit 1
 fi
 
@@ -18,7 +22,7 @@ if [[ ! -x "$ENV/bin/python" ]]; then
     echo "ERROR: $ENV does not look like a valid conda env: missing bin/python" >&2
     echo "Please switch to the atavide lite directory, remove $ENV, and recreate the environment with:" >&2
     echo "mamba env remove --prefix $ENV" >&2
-    echo "mamba env create --yes --prefix $ENV --file ../atavide_lite.yaml " >&2
+    echo "mamba env create --yes --prefix $ENV --file $ATAVIDE_YAML " >&2
     exit 1
 fi
 
@@ -26,7 +30,7 @@ if [[ ! -d "$ENV/conda-meta" ]]; then
     echo "ERROR: $ENV does not look like a valid conda env: missing conda-meta/" >&2
     echo "Please switch to the atavide lite directory, remove $ENV, and recreate the environment with:" >&2
     echo "mamba env remove --prefix $ENV" >&2
-    echo "mamba env create --yes --prefix $ENV --file ../atavide_lite.yaml " >&2
+    echo "mamba env create --yes --prefix $ENV --file $ATAVIDE_YAML " >&2
     exit 1
 fi
 
@@ -34,7 +38,7 @@ if ! command -v conda >/dev/null 2>&1; then
     echo "ERROR: conda is not available on PATH" >&2
     echo "Please switch to the atavide lite directory, remove $ENV, and recreate the environment with:" >&2
     echo "mamba env remove --prefix $ENV" >&2
-    echo "mamba env create --yes --prefix $ENV --file ../atavide_lite.yaml " >&2
+    echo "mamba env create --yes --prefix $ENV --file $ATAVIDE_YAML " >&2
     exit 1
 fi
 
@@ -42,7 +46,7 @@ if ! conda run -p "$ENV" --no-capture-output python -c 'import sys; print("Conda
     echo "ERROR: conda cannot run commands inside $ENV" >&2
     echo "Please switch to the atavide lite directory, remove $ENV, and recreate the environment with:" >&2
     echo "mamba env remove --prefix $ENV" >&2
-    echo "mamba env create --yes --prefix $ENV --file ../atavide_lite.yaml " >&2
+    echo "mamba env create --yes --prefix $ENV --file $ATAVIDE_YAML " >&2
     exit 1
 fi
 
@@ -53,9 +57,9 @@ fi
 if ! conda run -p "$ENV" --no-capture-output python -c 'import pandas; from pandas import UInt32Dtype, StringDtype; import pytaxonkit; print("pandas:", pandas.__version__)'; then
     echo "ERROR: pandas/pytaxonkit import validation failed in $ENV" >&2
     echo "Repair the existing environment with:" >&2
-    echo "mamba install --yes --force-reinstall --prefix $ENV --file ../atavide_lite.yaml" >&2
+    echo "mamba install --yes --force-reinstall --prefix $ENV --file $ATAVIDE_YAML" >&2
     echo "If repair fails, recreate it with:" >&2
-    echo "mamba env remove --prefix $ENV && mamba env create --yes --prefix $ENV --file ../atavide_lite.yaml" >&2
+    echo "mamba env remove --prefix $ENV && mamba env create --yes --prefix $ENV --file $ATAVIDE_YAML" >&2
     exit 1
 fi
 
@@ -65,7 +69,7 @@ for exe in samtools fastp fastplong minimap2 mmseqs megahit agtools rclone rsync
         echo "Expected to find: $ENV/bin/$exe" >&2
         echo "Please switch to the atavide lite directory, remove $ENV, and recreate the environment with:" >&2
         echo "mamba env remove --prefix $ENV" >&2
-        echo "mamba env create --yes --prefix $ENV --file ../atavide_lite.yaml " >&2
+        echo "mamba env create --yes --prefix $ENV --file $ATAVIDE_YAML " >&2
         exit 1
     fi
 done

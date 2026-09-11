@@ -26,6 +26,12 @@ conda activate $ATAVIDE_CONDA
 # Derive thread count from the Slurm allocation rather than hardcoding it.
 THREADS=${SLURM_CPUS_PER_TASK:-16}
 
+# minimap2 -I sets how much reference goes into one index batch. The old -I100G far
+# exceeded this job's allocation and risked OOM during indexing; size it from the
+# allocation instead. The mapping step already passes --split-prefix, so a multi-part
+# index is handled correctly.
+MM_IDX_BATCH="$(( (${SLURM_MEM_PER_CPU:-1800} * ${SLURM_CPUS_PER_TASK:-16}) / 1024 / 2 ))G"
+
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
 	exit 2;
@@ -50,7 +56,7 @@ if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 	mkdir --parents $OUTDIR/mapped_reads
 
 	if [[ ! -e $OUTDIR/contigs.mmi ]]; then
-		minimap2 -I100G -d $OUTDIR/contigs.mmi $OUTDIR/contigs.fna.gz
+		minimap2 -I"$MM_IDX_BATCH" -d $OUTDIR/contigs.mmi $OUTDIR/contigs.fna.gz
 	fi
 
 	minimap2 -t "$THREADS" -N 5 -ax map-ont $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$READS | samtools view -F 3584 -b --threads "$THREADS"  | samtools sort -@ "$THREADS" -o $OUTDIR/mapped_reads/$BAM -

@@ -6,6 +6,10 @@
 #SBATCH -e slurm_output/vamb_slurm/vamb-%j.err
 #SBATCH --account=pawsey1018-gpu
 #SBATCH --gres=gpu:1
+#SBATCH --ntasks=1
+# Setonix allocates one 8-core chiplet per GPU, so 8 CPUs matches --gres=gpu:1.
+# Without this SLURM_CPUS_PER_TASK is unset and THREADS silently falls back to 16.
+#SBATCH --cpus-per-task=8
 #SBATCH --time=60:00
 
 set -euo pipefail
@@ -18,7 +22,7 @@ ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_v
 conda activate $ATAVIDE_CONDA
 
 # Derive thread count from the Slurm allocation rather than hardcoding it.
-THREADS=${SLURM_CPUS_PER_TASK:-16}
+THREADS=${SLURM_CPUS_PER_TASK:-8}
 
 # module load pytorch/2.2.0-rocm5.7.3
 module load pytorch/2.7.1-rocm6.3.3

@@ -89,8 +89,17 @@ TMPOUTPUT=${R/$FILEEND/}
 # The output directory is not namespaced by database, so a previous run with a different
 # MMSEQS_DB would otherwise be silently reused and reported as this database's result.
 # Record which database produced the directory and refuse to reuse a mismatched one.
+DEFAULT_DB=UniRef100
 if [[ -e $OUTPUT ]]; then
-	PREV_DB=$(cat "$OUTPUT/.mmseqs_db" 2>/dev/null || echo "unknown")
+	if [[ -s "$OUTPUT/.mmseqs_db" ]]; then
+		PREV_DB=$(cat "$OUTPUT/.mmseqs_db")
+	else
+		# Directories produced before this marker existed are unlabelled. Assume they came
+		# from the historical default so existing results stay reusable, but never make that
+		# assumption for a non-default database, where it could hide a real mismatch.
+		PREV_DB="$DEFAULT_DB"
+		echo "NOTE: $OUTPUT predates database labelling; assuming it was built with $DEFAULT_DB" >&2;
+	fi
 	if [[ "$PREV_DB" == "$DB" ]]; then
 		echo "$OUTPUT exists (database $DB). Nothing to do" >&2;
 		exit 0;

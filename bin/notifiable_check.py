@@ -25,13 +25,22 @@ So this tool separates three cases and never collapses them:
                       call is a different, non-notifiable species   -> record, do not alarm
 
 and it refuses to clear anything it has not seen evidence for.
+
+CALIBRATION WARNING
+-------------------
+The confidence thresholds below are NOT calibrated. They were set by eye from a single
+cohort (7 ONT sputum metagenomes) and are not derived from a labelled truth set. There is
+no sensitivity/specificity estimate behind them and the tier names imply no confidence
+interval. The SUPPORTED branch has never fired on real data, so the path that would escalate
+a genuine notifiable positive is untested. Treat every verdict as triage, not determination,
+and check positives by hand.
 """
 from __future__ import annotations
 import argparse, csv, json, re, sys
 from pathlib import Path
 from collections import defaultdict
 
-# ---------------------------------------------------------------- evidence thresholds
+# ------------------------------------------------- evidence thresholds (UNCALIBRATED)
 # Calibrated against validations run on this cohort, where a refuted call and a confirmed
 # call differed by roughly an order of magnitude on every axis:
 #   refuted   S. pneumoniae : 3.9% of reads mapped,  7.6% genome breadth, dup 4.25
@@ -312,6 +321,11 @@ def main():
     print("=" * 78)
     print("NOTIFIABLE-ORGANISM SCREEN")
     print("=" * 78)
+    print("  WARNING: confidence thresholds are NOT calibrated - set by eye from one cohort,")
+    print("  no labelled truth set, no sensitivity/specificity estimate. The SUPPORTED branch")
+    print("  has never fired on real data. Treat verdicts as TRIAGE, not determination, and")
+    print("  verify any positive by hand. See pawsey_minion/AGENTS.md section 10.")
+    print("-" * 78)
     print(f"  species-level matches to notifiable organisms : {len(esc)}")
     print(f"  unresolved calls in notifiable genera         : {len(amb)}   <- MUST resolve")
     print(f"  congeners (notifiable genus, other species)   : {len(con)}")

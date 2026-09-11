@@ -318,6 +318,32 @@ signals: KrakenUniq duplication >5 indicates smearing (*N. gonorrhoeae* scored *
 unique-k-mer genome coverage <0.01% refutes a taxon even at duplication ~1; and presence in the
 negative control is a contamination flag.
 
+> **The confidence thresholds are NOT calibrated. Treat the verdicts as triage, not
+> determination.**
+>
+> Every cutoff in `notifiable_check.py` (duplication > 5, breadth 10%/50%, identity
+> 85%/92%, mapped-fraction 50%, coverage 0.01%, the 1.2x/1.5x discrimination ratios, and the
+> score-to-tier boundaries) was set by eye from **one cohort** - 7 ONT sputum metagenomes
+> screened against Kraken2/PlusPF, KrakenUniq and UniRef50. They are not derived from a
+> labelled truth set, there is no sensitivity or specificity estimate behind them, and no
+> confidence interval is implied by the tier names.
+>
+> Three specific limits to keep in mind:
+>
+> * **The `SUPPORTED` branch has never fired on real data.** Every notifiable match in the
+>   only cohort run so far was refuted or left unresolved, so the code path that would
+>   escalate a genuine notifiable positive is **untested**. Do not assume a true positive
+>   will be scored correctly - check it by hand.
+> * **They may not transfer.** Different sample type, sequencing platform, read length or
+>   reference database will shift every one of these numbers. Short-read data in particular
+>   will behave differently on identity and breadth.
+> * **The tool is deliberately biased toward refusing to clear things**, so its errors should
+>   mostly be over-caution. That is the safe direction, but it also means a `REFUTED` verdict
+>   is evidence against reporting, not proof of absence.
+>
+> Re-derive the thresholds against a labelled set before relying on the tiers quantitatively,
+> and revisit them the first time a genuine notifiable organism is confirmed in a real sample.
+
 
 ## 8. Validation before submitting
 

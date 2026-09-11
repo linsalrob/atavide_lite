@@ -2,10 +2,14 @@
 #SBATCH --job-name=MegaHit
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
+#SBATCH --cpus-per-task=18
+#SBATCH --mem-per-cpu=1800M
 #SBATCH -o slurm_output/megahit_slurm/megahit-%A_%a.out
 #SBATCH -e slurm_output/megahit_slurm/megahit-%A_%a.err
+
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M). A bare --mem larger than
+# cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the CPU count to
+# cover it, which also changes $SLURM_CPUS_PER_TASK and therefore THREADS below.
 
 set -euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR

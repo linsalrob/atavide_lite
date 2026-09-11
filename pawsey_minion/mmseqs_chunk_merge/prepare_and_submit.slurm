@@ -26,7 +26,7 @@ SCRIPT_DIR=${MMSEQS_CHUNK_MERGE_DIR:-$HOME/GitHubs/atavide_lite/pawsey_minion/mm
     exit 2
 }
 
-/usr/bin/python3.11 "$SCRIPT_DIR/build_tasks.py" \
+python3 "$SCRIPT_DIR/build_tasks.py" \
     --split-root "$SPLIT_ROOT" --chunk-root "$CHUNK_ROOT" --output-root "$OUTPUT_ROOT" \
     --chunk-tasks "$CHUNK_TASKS" --merge-tasks "$MERGE_TASKS"
 chunk_count=$(wc -l < "$CHUNK_TASKS")

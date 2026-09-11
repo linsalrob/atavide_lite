@@ -37,5 +37,5 @@ SCRIPT_DIR=${MMSEQS_CHUNK_MERGE_DIR:-$HOME/GitHubs/atavide_lite/pawsey_minion/mm
     echo "ERROR: MMseqs chunk/merge module unavailable: $SCRIPT_DIR" >&2
     exit 2
 }
-/usr/bin/python3.11 "$SCRIPT_DIR/split_fasta_by_bases.py" \
+python3 "$SCRIPT_DIR/split_fasta_by_bases.py" \
     --input "$input" --output-dir "$output" --target-bases "$target_bases"

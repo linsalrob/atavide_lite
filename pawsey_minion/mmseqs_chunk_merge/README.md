@@ -49,7 +49,10 @@ merge an `afterok` dependency on exactly its own chunks, and records all IDs in
 completed successfully and each sample has `merged/MERGE.DONE` plus the four
 gzip-valid canonical outputs.
 
-Defaults are 32 CPUs/80 GiB/24 hours per chunk and 32 CPUs/128 GiB/24 hours per
-sample merge. Resource directives can be overridden with ordinary `sbatch`
+Defaults are 48 CPUs/~84 GiB/24 hours per chunk and 72 CPUs/~127 GiB/24 hours per
+sample merge. The CPU counts look large for the work they do: on Setonix, `MaxMemPerCPU`
+is 1840 MB on `work`, so CPUs are the only way to request memory and these counts are simply
+what that much memory costs. Requesting it via `--mem-per-cpu` means Slurm allocates exactly
+this rather than silently inflating a bare `--mem`. Resource directives can be overridden with ordinary `sbatch`
 options if a dataset needs different allocations. The MMseqs executable and
 UniRef100 database can be overridden with `MMSEQS_BIN` and `TARGET_DB`.

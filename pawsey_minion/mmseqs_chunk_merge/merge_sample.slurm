@@ -137,12 +137,12 @@ else
     pigz -p "$threads" "$work/${sample}_tophit_report"
     restore_args=(--merged-report "$work/${sample}_tophit_report.gz" --output "$work/${sample}_tophit_report.corrected.gz")
     for report in "${tophit_reports[@]}"; do restore_args+=(--chunk-report "$report"); done
-    /usr/bin/python3.11 "$SCRIPT_DIR/restore_chunk_taxonomy.py" "${restore_args[@]}"
+    python3 "$SCRIPT_DIR/restore_chunk_taxonomy.py" "${restore_args[@]}"
     mv "$work/${sample}_tophit_report.corrected.gz" "$work/${sample}_tophit_report.gz"
 fi
 validation_args=(--merged-report "$work/${sample}_tophit_report.gz" --output "$work/tophit_validation.json")
 for report in "${tophit_reports[@]}"; do validation_args+=(--chunk-report "$report"); done
-/usr/bin/python3.11 "$SCRIPT_DIR/validate_tophit_report.py" "${validation_args[@]}"
+python3 "$SCRIPT_DIR/validate_tophit_report.py" "${validation_args[@]}"
 
 for path in "$work/${sample}_lca.tsv.gz" "$work/${sample}_report.gz" \
             "$work/${sample}_tophit_aln.gz" "$work/${sample}_tophit_report.gz"; do

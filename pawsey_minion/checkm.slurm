@@ -2,10 +2,14 @@
 #SBATCH --job-name=checkm
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=128GB
+#SBATCH --cpus-per-task=72
+#SBATCH --mem-per-cpu=1800M
 #SBATCH -o slurm_output/checkm-%j.out
 #SBATCH -e slurm_output/checkm-%j.err
+
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M). A bare --mem larger than
+# cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the CPU count to
+# cover it, which also changes $SLURM_CPUS_PER_TASK and therefore THREADS below.
 
 
 set -euo pipefail

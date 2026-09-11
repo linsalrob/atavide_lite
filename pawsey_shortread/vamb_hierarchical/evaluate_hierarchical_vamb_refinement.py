@@ -135,7 +135,9 @@ def summarize(args: argparse.Namespace) -> None:
             continue
         for k_dir in sorted((output / "splits" / parent).glob("k*")):
             paths = sorted(k_dir.glob("seed*.npz"), key=lambda path: int(path.stem.removeprefix("seed")))
-            loaded = [np.load(path) for path in paths]
+            # identifiers may be an object array, which needs allow_pickle (as in the
+            # metadata loader above and in hierarchical_vamb_clustering_rocm.py)
+            loaded = [np.load(path, allow_pickle=True) for path in paths]
             arrays = [archive["labels"] for archive in loaded]
             if len(arrays) != args.seeds:
                 raise ValueError(f"{parent}/{k_dir.name}: expected {args.seeds} seeds, found {len(arrays)}")

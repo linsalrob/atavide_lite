@@ -6,10 +6,14 @@
 #SBATCH --time=08:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=96G
+#SBATCH --cpus-per-task=56
+#SBATCH --mem-per-cpu=1800M
 #SBATCH --output=slurm_output/vamb_slurm/%x-%j.out
 #SBATCH --error=slurm_output/vamb_slurm/%x-%j.err
+
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem larger
+# than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the CPU count
+# to cover it. Request memory with --mem-per-cpu so the two can never disagree.
 
 set -euo pipefail
 sample=${1:?Usage: hierarchical_vamb_marker_materialize.slurm SAMPLE}

@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem-per-cpu=1800M
-#SBATCH -o slurm_output/megahit_gfa-%j.out
-#SBATCH -e slurm_output/megahit_gfa-%j.err
+#SBATCH -o slurm_output/megahit_slurm/megahit_gfa-%j.out
+#SBATCH -e slurm_output/megahit_slurm/megahit_gfa-%j.err
 
 # NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem larger
 # than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the CPU count
@@ -22,7 +22,7 @@ ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
 if [[ ! -e DEFINITIONS.sh ]]; then
-	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
+	echo "Please create a DEFINITIONS.sh file. This script optionally reads ASSDIR and KMER from it" >&2
 	exit 2;
 fi
 

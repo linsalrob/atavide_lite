@@ -57,7 +57,7 @@ fi
 if ! conda run -p "$ENV" --no-capture-output python -c 'import pandas; from pandas import UInt32Dtype, StringDtype; import pytaxonkit; print("pandas:", pandas.__version__)'; then
     echo "ERROR: pandas/pytaxonkit import validation failed in $ENV" >&2
     echo "Repair the existing environment with:" >&2
-    echo "mamba install --yes --force-reinstall --prefix $ENV --file $ATAVIDE_YAML" >&2
+    echo "mamba env update --prefix $ENV --file $ATAVIDE_YAML" >&2
     echo "If repair fails, recreate it with:" >&2
     echo "mamba env remove --prefix $ENV && mamba env create --yes --prefix $ENV --file $ATAVIDE_YAML" >&2
     exit 1

@@ -70,13 +70,27 @@ raises the allocated CPU count until it can satisfy the memory request. `--cpus-
 --mem=128G` therefore queues for **72 CPUs** — potentially hours of extra wait for a job that
 uses one core for a couple of minutes.
 
-These scripts request memory with **`--mem-per-cpu`** so the two figures can never disagree.
-Keep it that way. If you change a memory request, change `--cpus-per-task` with it and confirm
-what you actually got:
+**The rule: request memory with `--mem-per-cpu`, never a bare `--mem`.** That way the memory
+and CPU figures cannot disagree and Slurm cannot inflate the allocation behind your back. If you
+change a memory request, change `--cpus-per-task` with it, and confirm what you were actually
+given rather than what you asked for:
 
 ```bash
 scontrol show job <jobid> | grep -E 'NumCPUs|ReqTRES'
 ```
+
+**Check before you trust it.** Conversion of the existing scripts is not complete — at the time
+of writing the `mmseqs_chunk_merge/` scripts comply, while most other `pawsey_minion/*.slurm`
+scripts are converted on a separate in-flight branch, and `pawsey_shortread/` is largely
+unconverted. Verify the script you are about to submit:
+
+```bash
+grep -rn '^#SBATCH --mem=' pawsey_minion/ pawsey_shortread/   # anything listed is still at risk
+```
+
+If a script you need is still on a bare `--mem`, either fix it or override at submission time
+with `sbatch --cpus-per-task=N --mem-per-cpu=1800M ...`, which takes precedence over the
+script's own directives.
 
 `mmseqs_easy_taxonomy.slurm` and `download_uniref100.slurm` need more memory per core than
 `work` provides, so they set `--partition=highmem` explicitly.

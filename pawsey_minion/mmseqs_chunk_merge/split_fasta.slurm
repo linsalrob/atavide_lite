@@ -5,10 +5,14 @@
 #SBATCH --partition=work
 #SBATCH --time=04:00:00
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=8G
+#SBATCH --cpus-per-task=5
+#SBATCH --mem-per-cpu=1800M
 #SBATCH --output=slurm_output/mmseqs_slurm/split-%A_%a.out
 #SBATCH --error=slurm_output/mmseqs_slurm/split-%A_%a.err
+
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem larger
+# than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the CPU count
+# to cover it. Request memory with --mem-per-cpu so the two can never disagree.
 
 set -euo pipefail
 TASKS=${SPLIT_TASKS:?Set SPLIT_TASKS to a tab-delimited task file.}

@@ -21,6 +21,9 @@ eval "$(conda shell.bash hook)"
 ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
+# Match conversion workers to allocated CPUs; each extract_R1 is single-threaded.
+THREADS=${SLURM_CPUS_PER_TASK:-8}
+
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
 	exit 2;
@@ -41,4 +44,4 @@ extract_R1 () {
 export -f extract_R1
 mkdir -p fasta
 
-find -L $HOSTREMOVED -type f -name *fastq.gz | parallel -j 16 extract_R1
+find -L $HOSTREMOVED -type f -name *fastq.gz | parallel -j "$THREADS" extract_R1

@@ -139,6 +139,12 @@ HOSTJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$JOB \
 `host_removal.slurm` defaults to `QC_DIR=fastq_fastp`, so without it the job either
 fails (no such file) or, worse, silently uses stale `fastp` output.
 
+**The same applies to the reporting stages.** `read_fate.slurm` and `sankey_plot.slurm`
+also default to `fastq_fastp`, so both need `--export=ALL,QC_DIR=fastq_fastplong,QC_LABEL=fastplong`.
+Omit it and the read-fate table either fails or reports the QC column from a stale
+`fastq_fastp/` directory while every other column describes the fastplong data - a silent
+wrong answer rather than an error.
+
 If `DEFINITIONS.sh` also sets `SPIKE_IN_SEQUENCE` (and optionally
 `SPIKE_IN`), `host_removal.slurm` automatically maps the host-removed reads to
 that reference, records high-confidence spike-in alignments, and removes those
@@ -216,7 +222,8 @@ I like the Sankey plots to visualise where the data went, and also to check that
 created by this command for directions on how to make the figure.
 
 ```
-SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $SRC/sankey_plot.slurm)
+SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB \
+    --export=ALL,QC_DIR=fastq_fastplong,QC_LABEL=fastplong $SRC/sankey_plot.slurm)
 ```
 
 ## VAMB for binning
@@ -260,10 +267,11 @@ HOSTJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$JOB --e
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)
 sbatch --dependency=afterok:$MMSEQSJOB $SRC/mmseqs_summarise_taxonomy.slurm
-sbatch --dependency=afterok:$MMSEQSJOB $SRC/read_fate.slurm
+sbatch --dependency=afterok:$MMSEQSJOB --export=ALL,QC_DIR=fastq_fastplong,QC_LABEL=fastplong $SRC/read_fate.slurm
 SSJOB=$(sbatch --parsable --dependency=afterok:$MMSEQSJOB --array=1-$NUM_READS:1 $SRC/mmseqs_add_subsystems_taxonomy_fast.slurm)
 COUNTSSJOB=$(sbatch --parsable --dependency=afterok:$SSJOB $SRC/count_subsystems.slurm)
-SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB $SRC/sankey_plot.slurm)
+SANKEYJOB=$(sbatch --parsable --dependency=afterok:$COUNTSSJOB \
+    --export=ALL,QC_DIR=fastq_fastplong,QC_LABEL=fastplong $SRC/sankey_plot.slurm)
 
 MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_READS:1 $SRC/megahit.slurm)
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB $SRC/vamb_concat.slurm)
@@ -289,5 +297,12 @@ If you change a memory request, change `--cpus-per-task` with it, and check the 
 scontrol show job <jobid> | grep -E 'NumCPUs|ReqTRES'
 ```
 
-`mmseqs_easy_taxonomy.slurm` and `download_uniref100.slurm` need more memory than `work`
-can supply per core, so they set `--partition=highmem` explicitly.
+`download_uniref100.slurm` needs more memory per core than `work` can supply, so it sets
+`--partition=highmem` explicitly.
+
+`mmseqs_easy_taxonomy.slurm` deliberately does **not**. It caps MMseqs'
+`--split-memory-limit` to the memory actually allocated, which lets it run inside a normal
+`work` allocation instead. That matters for throughput as well as memory: the `highmem`
+association limit is **`MaxJobs=2` per user**, which would serialise a 16-sample array, and
+whole-node `--exclusive` requests on `work` were observed queuing ~10 hours out. With the
+split limit set correctly, all 16 samples start immediately on `work`.

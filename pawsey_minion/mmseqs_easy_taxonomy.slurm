@@ -86,21 +86,32 @@ R1=${R/$FILEEND/$FAFILEEND}
 OUTPUT=$OUTDIR/${R/$FILEEND/}
 TMPOUTPUT=${R/$FILEEND/}
 
+# The output directory is not namespaced by database, so a previous run with a different
+# MMSEQS_DB would otherwise be silently reused and reported as this database's result.
+# Record which database produced the directory and refuse to reuse a mismatched one.
 if [[ -e $OUTPUT ]]; then
-	echo "$OUTPUT exists. Nothing to do" >&2;
-	exit 0;
+	PREV_DB=$(cat "$OUTPUT/.mmseqs_db" 2>/dev/null || echo "unknown")
+	if [[ "$PREV_DB" == "$DB" ]]; then
+		echo "$OUTPUT exists (database $DB). Nothing to do" >&2;
+		exit 0;
+	else
+		echo "ERROR: $OUTPUT already exists but was built with database '$PREV_DB', not '$DB'." >&2;
+		echo "       Remove it or choose a different output location before re-running." >&2;
+		exit 3;
+	fi
 fi
 
 
 
 mkdir -p $OUTPUT
+echo "$DB" > "$OUTPUT/.mmseqs_db"
 
 TPD=$(mktemp -d -p /scratch/$PAWSEY_PROJECT/$USER/tmp)
 echo "Running mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads $THREADS ${SPLIT_MEM_ARG[*]}" 2>&1;
 mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads "$THREADS" "${SPLIT_MEM_ARG[@]}"
 rm -rf $TPD
 
-find $OUTPUT/ -type f  | parallel -j 32 gzip
+find $OUTPUT/ -type f  | parallel -j "$THREADS" gzip
 
 echo "Fin " `date` >&2;
 

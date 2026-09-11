@@ -62,8 +62,8 @@ for R1 in $(cat reads.txt); do
 	fi
 	
 	echo "Processing $R1" >&2;
-	echo -e "minimap2 -t "$THREADS" --split-prefix=tmp$$ -a -xsr $SIXS $FQ/$R1 | samtools view -bh | samtools sort -o 16S/bam/$O -" >&2;
-	minimap2 -t "$THREADS" --split-prefix=tmp$$ -a -xsr $SIXS $FQ/$R1 | samtools view -bh | samtools sort -o 16S/bam/$O -
+	echo -e "minimap2 -t $THREADS --split-prefix=tmp$$ -a -xsr $SIXS $FQ/$R1 | samtools view -@ $THREADS -bh | samtools sort -@ $THREADS -o 16S/bam/$O -" >&2;
+	minimap2 -t "$THREADS" --split-prefix=tmp$$ -a -xsr $SIXS $FQ/$R1 | samtools view -@ "$THREADS" -bh | samtools sort -@ "$THREADS" -o 16S/bam/$O -
 	samtools index 16S/bam/$O
 
 	# make a json format output, one record per line

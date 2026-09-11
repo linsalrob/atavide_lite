@@ -85,7 +85,10 @@ scripts are converted on a separate in-flight branch, and `pawsey_shortread/` is
 unconverted. Verify the script you are about to submit:
 
 ```bash
-grep -rn '^#SBATCH --mem=' pawsey_minion/ pawsey_shortread/   # anything listed is still at risk
+# run from anywhere - the runbook assumes you are in an analysis directory, not the checkout
+grep -rn '^#SBATCH --mem=' "$HOME/GitHubs/atavide_lite/pawsey_minion/" \
+                           "$HOME/GitHubs/atavide_lite/pawsey_shortread/"
+# anything listed is still at risk of CPU inflation
 ```
 
 If a script you need is still on a bare `--mem`, either fix it or override at submission time

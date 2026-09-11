@@ -8,7 +8,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks=1
 # Setonix allocates one 8-core chiplet per GPU, so 8 CPUs matches --gres=gpu:1.
-# Without this SLURM_CPUS_PER_TASK is unset and THREADS silently falls back to 16.
+# Without this SLURM_CPUS_PER_TASK is unset and THREADS falls back to its default.
 #SBATCH --cpus-per-task=8
 #SBATCH --time=60:00
 

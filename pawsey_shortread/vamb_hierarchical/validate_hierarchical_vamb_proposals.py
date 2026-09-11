@@ -53,7 +53,19 @@ def materialize(args: argparse.Namespace) -> None:
 
         clusters: dict[str, set[str]] = {}
         for proposal in sorted(proposals, key=lambda row: int(row["k"])):
-            assignment_path = Path(proposal["proposal_dir"]) / "candidate_children.tsv"
+            proposal_dir = (proposal.get("proposal_dir") or "").strip()
+            if not proposal_dir:
+                raise ValueError(
+                    f"{parent}/k{proposal['k']}: split_decisions.tsv marks this PENDING_QC but has an "
+                    "empty proposal_dir. Older decision files predate proposal materialisation - "
+                    "re-run evaluate_hierarchical_vamb_refinement.py to regenerate them."
+                )
+            assignment_path = Path(proposal_dir) / "candidate_children.tsv"
+            if not assignment_path.is_file():
+                raise ValueError(
+                    f"{parent}/k{proposal['k']}: expected candidate assignments at {assignment_path}, "
+                    "but that file does not exist."
+                )
             proposal_clusters: dict[str, set[str]] = defaultdict(set)
             for assignment in read_tsv(assignment_path):
                 proposal_clusters[assignment["clustername"]].add(assignment["contigname"])

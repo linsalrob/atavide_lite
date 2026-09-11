@@ -5,19 +5,24 @@ channels:
 dependencies:
    - samtools>=1.20
    - fastp
+   - fastplong
    - minimap2>=2.29
    - checkm-genome
+   - agtools
+   - fonttools
    - mmseqs2
+   - matplotlib
    - megahit
-   - minimap2
+   - metacoag
    - rclone
    - rsync
    - parallel
    - pigz
    - pip
+   - pandas
    - pytaxonkit
    - snakemake
    - sra-tools
+   - scipy
    - snakemake-executor-plugin-cluster-generic
    - taxonkit
-

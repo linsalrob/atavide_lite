@@ -268,6 +268,57 @@ Chain deterministic stages with dependencies rather than polling. Record job IDs
   More generally on this pipeline: **exit code 0 is not proof a stage did the work.** Always
   confirm the expected outputs exist and are non-empty.
 
+## 10. MANDATORY: notifiable-disease organism screen before any clinical report
+
+**Do not issue a clinical or clinically-adjacent report from this pipeline without running
+`bin/notifiable_check.py` and acting on its output.**
+
+This exists because a real report named *Treponema* in a patient without stating whether
+*T. pallidum* — the notifiable species — was present. It was not; the organisms were oral
+treponemes entirely expected in a periodontal infection. The genus name implied a notifiable
+disease the data did not support.
+
+The trap is structural. The notifiable lists (AU/UK/US) contain 31 bacterial genera, and
+several are dominated by **commensals** in respiratory samples: *Streptococcus*, *Neisseria*,
+*Haemophilus*, *Campylobacter*, *Clostridium*, *Escherichia*, *Klebsiella*, *Staphylococcus*,
+*Treponema*. Flagging on genus fires on nearly every specimen; ignoring genus is what caused
+the original error. So three cases must be kept separate and never collapsed:
+
+| category | action |
+|---|---|
+| `SPECIES_NOTIFIABLE` | validate before reporting; never report on a classifier call alone |
+| `GENUS_UNRESOLVED` (e.g. `Treponema sp.`) | **must** resolve to species first - the dangerous state |
+| `GENUS_CONGENER` | report the **species**; never the bare genus |
+
+```bash
+python3 "$HOME/GitHubs/atavide_lite/bin/notifiable_check.py" \
+    -n "$HOME/GitHubs/atavide_lite/pawsey_lib/notifiable_organisms.tsv" \
+    -p <per-sample species tables> \
+    -k <krakenuniq report>  -m <mapping-breadth tsv> \
+    --negative-control <NEG species table> \
+    -o notifiable_screen.tsv
+```
+
+Four reporting requirements, all non-negotiable:
+
+1. **Never report a bare genus from a notifiable genus.** Name the species.
+2. **State absences explicitly** - "*T. pallidum* not detected (0 reads)". An unstated absence
+   is what let the original error happen; silence gets filled by the reader. The tool emits
+   these as `*.explicit_negatives.tsv`.
+3. **`UNVALIDATED` is not a negative.** It means no evidence was gathered, and must never be
+   reported as absence.
+4. **Say what a negative does not mean.** A metagenomic screen cannot exclude a paucibacillary
+   infection; culture/PCR/serology remains necessary under clinical suspicion.
+
+**The decisive test is congener discrimination.** Map the reads to the notifiable species *and
+its close relatives*. A genuine population maps markedly better to its own reference; reads
+drawn in by conserved sequence map about equally to all of them. That single test settled
+*S. pneumoniae*, *T. pallidum* and *N. meningitidis* on the Alice Springs cohort. Supporting
+signals: KrakenUniq duplication >5 indicates smearing (*N. gonorrhoeae* scored **103** there);
+unique-k-mer genome coverage <0.01% refutes a taxon even at duplication ~1; and presence in the
+negative control is a contamination flag.
+
+
 ## 8. Validation before submitting
 
 ```bash

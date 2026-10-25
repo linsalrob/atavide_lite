@@ -1,11 +1,10 @@
 #!/bin/bash
-
+set -euo pipefail
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
 # Remediation messages are copy-pasted from arbitrary working directories, so point at
 # the yaml by absolute path derived from this script rather than a relative ../ path.
 ATAVIDE_YAML="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/atavide_lite.yaml"
-set -euo pipefail
-trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
 : "${PAWSEY_PROJECT:?PAWSEY_PROJECT is not set}"
 

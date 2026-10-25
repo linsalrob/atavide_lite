@@ -30,7 +30,10 @@ fi
 
 source DEFINITIONS.sh
 
-DBDIR=~/scratch_1018/uniref
+# NCBI taxonomy dump used by taxonkit (download_taxon_db.slurm puts it here)
+export TAXONKIT_DB="${TAXONKIT_DB:-/scratch/$PAWSEY_PROJECT/$USER/Databases/NCBI/taxonomy/current}"
+
+DBDIR=/scratch/$PAWSEY_PROJECT/$USER/Databases/uniref
 
 if [[ $SLURM_ARRAY_TASK_ID == 1 ]]; then
 	if [ ! -e $DBDIR/copying_done ]; then

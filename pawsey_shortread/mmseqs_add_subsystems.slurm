@@ -34,7 +34,7 @@ source DEFINITIONS.sh
 # if we are job #1 we are going to copy the database, otherwise we
 # are going to wait for the "copying_done" flag
 
-DBDIR=~/scratch_1018/uniref
+DBDIR=/scratch/$PAWSEY_PROJECT/$USER/Databases/uniref
 
 if [[ $SLURM_ARRAY_TASK_ID == 1 ]]; then
 	if [ ! -e $DBDIR/copying_done ]; then

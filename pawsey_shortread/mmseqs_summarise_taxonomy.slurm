@@ -25,5 +25,8 @@ fi
 
 source DEFINITIONS.sh
 
+# NCBI taxonomy dump used by taxonkit (download_taxon_db.slurm puts it here)
+export TAXONKIT_DB="${TAXONKIT_DB:-/scratch/$PAWSEY_PROJECT/$USER/Databases/NCBI/taxonomy/current}"
+
 snakemake --profile slurm -s ~/GitHubs/atavide_lite/summarise_taxonomy/taxonomy.smk
 python ~/GitHubs/atavide_lite/summarise_taxonomy/scripts/join_taxonomies.py -t taxonomy -o taxonomy_summary/ -n $SAMPLENAME

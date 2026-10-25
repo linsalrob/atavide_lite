@@ -162,11 +162,20 @@ def report(args: argparse.Namespace) -> None:
     proposal_rows: list[dict[str, object]] = []
     for (parent, k), child_ids in sorted(children.items()):
         parent_id = parent_ids[parent]
-        parent_markers = marker_hits.get(parent_id, {})
+        # CheckM writes a marker_gene_stats row (possibly "{}") for every bin it analysed,
+        # so a missing row means an incomplete run, not zero marker hits.
+        missing_markers = [b for b in [parent_id, *child_ids] if b not in marker_hits]
+        if missing_markers:
+            raise ValueError(
+                f"{parent}/k{k}: these bins are absent from the CheckM marker gene stats: "
+                + ", ".join(sorted(missing_markers))
+                + ". Check that CheckM completed for every bin before running validation."
+            )
+        parent_markers = marker_hits[parent_id]
         duplicate_markers = {marker: hits for marker, hits in parent_markers.items() if len(hits) > 1}
         resolved = unresolved = discordant = 0
         for marker, parent_locations in sorted(duplicate_markers.items()):
-            child_locations = {child: marker_hits.get(child, {}).get(marker, []) for child in sorted(child_ids)}
+            child_locations = {child: marker_hits[child].get(marker, []) for child in sorted(child_ids)}
             total = sum(len(hits) for hits in child_locations.values())
             maximum = max((len(hits) for hits in child_locations.values()), default=0)
             if total != len(parent_locations):

@@ -78,7 +78,7 @@ You can ommit this if you don't want to remove host DNA.
 Examples:
 
 ```bash
-export HOSTFILE=/scratch/$PAWSEY_PROJECT/$USER/Databases/human/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
+export HOSTFILE=/scratch/references/human/GRCh38/no_alt_plus_hs38d1/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
 ```
 
 ### HOST and HOSTREMOVED

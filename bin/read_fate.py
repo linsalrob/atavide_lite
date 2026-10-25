@@ -67,6 +67,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=' ')
     parser.add_argument('-r', '--reads', help='reads file', required=True)
     parser.add_argument('-d', '--definitions', help='definitions file', default='DEFINITIONS.sh')
+    parser.add_argument('-q', '--qc-directory', default='fastq_fastp',
+                        help='directory containing quality-controlled FASTQs (default: fastq_fastp)')
+    parser.add_argument('--qc-label', default='fastp',
+                        help='column label for the QC stage (default: fastp)')
     parser.add_argument('-u', '--unknown', help='output unknown reads to this file')
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
@@ -96,7 +100,7 @@ if __name__ == "__main__":
         print(f"{colors.GREEN}Reading post qc fastq files{colors.ENDC}", file=sys.stderr)
     fastp = {}
     for n in full_names:
-        fastp[n] = fq_ids(os.path.join("fastq_fastp", n))
+        fastp[n] = fq_ids(os.path.join(args.qc_directory, n))
     
     # read the human files
     if args.verbose:
@@ -127,7 +131,7 @@ if __name__ == "__main__":
 
     # now we need to figure out where the reads are
     with open("read_fate.tsv", 'w') as out:
-        print(f"Name\tTotal\tfastp\tHuman\tNot Human\tMMseqs hits\tUnknown", file=out)
+        print(f"Name\tTotal\t{args.qc_label}\tHuman\tNot Human\tMMseqs hits\tUnknown", file=out)
         for n in full_names:
             unknown = len(not_human[n]) - len(mmseqs[n])
             print(f"{short_names[n]}\t{len(fqfiles[n])}\t{len(fastp[n])}\t{len(human[n])}\t{len(not_human[n])}\t{len(mmseqs[n])}\t{unknown}", file=out)

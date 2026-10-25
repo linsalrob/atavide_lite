@@ -2,10 +2,15 @@
 #SBATCH --job-name=mmseqs_ssf
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=128G
+#SBATCH --cpus-per-task=16
+#SBATCH --mem-per-cpu=1800M
 #SBATCH -o slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.out
 #SBATCH -e slurm_output/mmseqs_slurm/mmseqs_ss-%A_%a.err
+
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem
+# larger than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the
+# CPU count to cover it, so the job queues for far more CPUs than it uses. Request
+# memory with --mem-per-cpu so the two can never disagree.
 
 set -euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
@@ -30,7 +35,10 @@ fi
 
 source DEFINITIONS.sh
 
-DBDIR=~/scratch_1018/uniref
+# NCBI taxonomy dump used by taxonkit (download_taxon_db.slurm puts it here)
+export TAXONKIT_DB="${TAXONKIT_DB:-/scratch/$PAWSEY_PROJECT/$USER/Databases/NCBI/taxonomy/current}"
+
+DBDIR=/scratch/$PAWSEY_PROJECT/$USER/Databases/uniref
 
 if [[ $SLURM_ARRAY_TASK_ID == 1 ]]; then
 	if [ ! -e $DBDIR/copying_done ]; then

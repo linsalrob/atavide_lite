@@ -2,10 +2,15 @@
 #SBATCH --job-name=mmTax
 #SBATCH --time=0-1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=12G
+#SBATCH --cpus-per-task=8
+#SBATCH --mem-per-cpu=1800M
 #SBATCH -o slurm_output/mmtax-%j.out
 #SBATCH -e slurm_output/mmtax-%j.err
+
+# NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem
+# larger than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the
+# CPU count to cover it, so the job queues for far more CPUs than it uses. Request
+# memory with --mem-per-cpu so the two can never disagree.
 
 set -euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
@@ -22,6 +27,9 @@ if [[ ! -e DEFINITIONS.sh ]]; then
 fi
 
 source DEFINITIONS.sh
+
+# NCBI taxonomy dump used by taxonkit (download_taxon_db.slurm puts it here)
+export TAXONKIT_DB="${TAXONKIT_DB:-/scratch/$PAWSEY_PROJECT/$USER/Databases/NCBI/taxonomy/current}"
 
 snakemake -s ~/GitHubs/atavide_lite/summarise_taxonomy/taxonomy.smk --profile slurm 
 python ~/GitHubs/atavide_lite/summarise_taxonomy/scripts/join_taxonomies.py -t taxonomy -o taxonomy_summary/ -n $SAMPLENAME

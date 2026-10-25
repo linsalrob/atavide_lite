@@ -9,7 +9,8 @@
 
 # NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem
 # larger than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the
-# CPU count to cover it, so the job queues for far more CPUs than it uses. Request
+# CPU count to cover it, which also changes $SLURM_CPUS_PER_TASK and therefore THREADS below.
+# so the job queues for far more CPUs than it uses. Request
 # memory with --mem-per-cpu so the two can never disagree.
 
 set -euo pipefail
@@ -42,7 +43,6 @@ if [[ -e megahit/$OUTPUT ]]; then
 fi
 
 echo "Using $HOSTREMOVED/$READS for the assembly" >&2;
-
 
 megahit -r $HOSTREMOVED/$READS -o megahit/$OUTPUT -t "$THREADS"
 

@@ -25,7 +25,7 @@ args = parser.parse_args()
 # in memory contigs for sequences that will never get output anyway
 lens: dict[str, int] = dict()
 with vamb.vambtools.Reader(args.fastapath) as file:
-    for record in vamb.vambtools.byte_iterfasta(file, args.fastapath):
+    for record in vamb.vambtools.byte_iterfasta(file):
         lens[record.identifier] = len(record)
 
 with open(args.clusterspath) as file:
@@ -38,7 +38,7 @@ clusters = {
 }
 
 if not clusters:
-    print(f"No bins passed the minimum size threshold of {minsize}", file=sys.stderr)
+    print(f"No bins passed the minimum size threshold of {args.minsize}", file=sys.stderr)
     sys.exit(0)
 
 print(f"Writing {len(clusters)} bins to {args.outdir}", file=sys.stderr)

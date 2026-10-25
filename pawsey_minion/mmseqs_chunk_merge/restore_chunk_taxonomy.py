@@ -37,8 +37,7 @@ def main() -> None:
             taxonomy[target] = fields
 
     seen: set[str] = set()
-    with gzip.open(args.output, "wt") as output:
-        for row in read_rows(args.merged_report):
+    with open_text(args.output, "wt") as output:
             target = row[0]
             if target in seen:
                 raise ValueError(f"duplicate merged target: {target}")

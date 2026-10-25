@@ -25,7 +25,9 @@ conda activate $ATAVIDE_CONDA
 # Derive thread count from the Slurm allocation rather than hardcoding it.
 THREADS=${SLURM_CPUS_PER_TASK:-32}
 
-if [[ -z $CHECKM_DATA_PATH ]]; then 
+# CheckM 1 reference data (2015_01_16 release) from the shared Pawsey references
+export CHECKM_DATA_PATH="${CHECKM_DATA_PATH:-/scratch/references/metagenome_atlas_2.9/checkm}"
+if [[ -z $CHECKM_DATA_PATH ]] || [[ ! -e $CHECKM_DATA_PATH/taxon_marker_sets.tsv ]]; then
 	echo "Please define CHECKM_DATA_PATH with your databases" >&2; 
 	exit 1;
 fi

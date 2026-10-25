@@ -92,11 +92,28 @@ mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseq
 
 ## 5. Download some databases
 
-We are nearly ready to process the data, but we need some databases like the human genome, the UniRef100 database, and so on. We 
-can download those simultaneously using the cluster:
+We are nearly ready to process the data, but we need some databases like the human genome, the UniRef100 database, and so on.
+
+On Setonix, some of these are already in the shared, read-only reference area `/scratch/references`, and the scripts use them in place:
+
+| Database | Location | Used by |
+|---|---|---|
+| Human GRCh38 no-alt + hs38d1 analysis set | `/scratch/references/human/GRCh38/no_alt_plus_hs38d1/` | `DEFINITIONS_human.sh` (`HOSTFILE`) |
+| CheckM 1 data (2015_01_16) | `/scratch/references/metagenome_atlas_2.9/checkm` | `checkm.slurm` (override with `CHECKM_DATA_PATH`) |
+
+The rest live under `/scratch/$PAWSEY_PROJECT/$USER/Databases/`. `/scratch` is purged, so check they are still there before you start:
 
 ```
-HUMANDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_human.slurm)
+for d in UniRef50/UniRef50 UniRef100/UniRef100 NCBI/taxonomy/current/nodes.dmp uniref/uniref.sqlite \
+         partie/16SMicrobial.fasta.gz phrog/phrog_annot_v4.tsv.gz mouse/GCF_000001635.27_GRCm39_genomic.fna.gz; do
+  [ -s /scratch/$PAWSEY_PROJECT/$USER/Databases/$d ] && echo "OK      $d" || echo "MISSING $d"
+done
+```
+
+`uniref.sqlite`, the PARTIE 16S database, and the PHROG tables are copied from Acacia (`A18:dbs`) by the scripts that use them. The mouse genome is only needed with `DEFINITIONS_mouse.sh`.
+Download anything else that is missing using the cluster:
+
+```
 TAXDLDJOB=$(sbatch --parsable $PAWSEY_SRC/download_taxon_db.slurm)
 UNIREFJOB=$(sbatch --parsable $PAWSEY_SRC/download_uniref50.slurm)
 UNIREF100JOB=$(sbatch --parsable $PAWSEY_SRC/download_uniref100.slurm)
@@ -105,7 +122,7 @@ VAMB_INSTALL=$(sbatch --parsable $PAWSEY_SRC/vamb_install.slurm)
 
 I would wait until those databases have downloaded before continuing, however you can also do the first (quality control) step because it doesn't require a database.
 
-If you are using a different host genome, of course omit the human genome download (the first slurm command here), and download your genome instead.
+The human genome does not need downloading on Setonix. If you are using a different host genome, download it and point `HOSTFILE` in `DEFINITIONS.sh` at it. (`download_human.slurm` is still available for other systems.)
 
 
 

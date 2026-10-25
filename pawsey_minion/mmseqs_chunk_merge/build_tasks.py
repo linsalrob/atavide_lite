@@ -45,6 +45,7 @@ def main() -> None:
             )
 
     args.chunk_tasks.parent.mkdir(parents=True, exist_ok=True)
+    args.merge_tasks.parent.mkdir(parents=True, exist_ok=True)
     with args.chunk_tasks.open("w") as handle:
         for sample, fasta, output in rows:
             handle.write(f"{sample}__{output.name}\t{fasta}\t{output}\n")

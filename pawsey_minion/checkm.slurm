@@ -17,7 +17,9 @@ eval "$(conda shell.bash hook)"
 ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
-if [[ -z $CHECKM_DATA_PATH ]]; then 
+# CheckM 1 reference data (2015_01_16 release) from the shared Pawsey references
+export CHECKM_DATA_PATH="${CHECKM_DATA_PATH:-/scratch/references/metagenome_atlas_2.9/checkm}"
+if [[ ! -e $CHECKM_DATA_PATH/taxon_marker_sets.tsv ]]; then
 	echo "Please define CHECKM_DATA_PATH with your databases" >&2; 
 	exit 1;
 fi

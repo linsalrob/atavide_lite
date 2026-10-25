@@ -19,13 +19,11 @@ eval "$(conda shell.bash hook)"
 ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate "$ATAVIDE_CONDA"
 
-if [[ -z ${CHECKM_DATA_PATH:-} ]]; then
-    CHECKM_DATA_PATH="$ATAVIDE_CONDA/checkm_data"
-    [[ -e "$CHECKM_DATA_PATH" ]] || {
-        echo "Missing CheckM data: $CHECKM_DATA_PATH" >&2
-        exit 1
-    }
-fi
+export CHECKM_DATA_PATH="${CHECKM_DATA_PATH:-/scratch/references/metagenome_atlas_2.9/checkm}"
+[[ -e "$CHECKM_DATA_PATH/taxon_marker_sets.tsv" ]] || {
+    echo "Missing CheckM data: $CHECKM_DATA_PATH" >&2
+    exit 1
+}
 
 if [[ $# -lt 2 ]]; then
     echo "$0 <source directory> <destination directory>" >&2

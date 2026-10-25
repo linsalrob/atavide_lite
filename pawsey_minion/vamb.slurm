@@ -51,7 +51,7 @@ for READS in $(sort -R reads.txt); do
 	if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 		echo "Bam file: '$OUTDIR/mapped_reads/$BAM' not found. Data generated" >&2;
 		mkdir -p $OUTDIR/mapped_reads
-		minimap2 -t "$THREADS" -N 5 -ax map-ont $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$READS | samtools view -F 3584 -b --threads "$THREADS"  | samtools sort -@ "$THREADS" -o $OUTDIR/mapped_reads/$BAM -
+		minimap2 -t "$(( THREADS > 2 ? THREADS - 2 : 1 ))" -N 5 -ax map-ont $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$READS | samtools view -F 3584 -b --threads 1 | samtools sort -@ 1 -o $OUTDIR/mapped_reads/$BAM -
 	fi
 done
 

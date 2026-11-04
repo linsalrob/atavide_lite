@@ -113,12 +113,24 @@ def load_krakenuniq(path: Path):
     return ev
 
 
+# Mapping TSVs are written by hand, so accept the short column names too
+MAPPING_ALIASES = {'breadth': 'breadth_pct', 'identity': 'mean_identity'}
+
+
 def load_mapping(path: Path):
-    """Optional mapping-breadth evidence: taxon\treference\treads_in\treads_mapped\tpct_mapped\tidentity\tbreadth."""
+    """Optional mapping-breadth evidence:
+    taxon\treference\treads_in\treads_mapped\tpct_mapped\tmean_identity\tbreadth_pct
+    (breadth and identity are accepted for breadth_pct and mean_identity)."""
     ev = defaultdict(list)
     with path.open() as fh:
         rd = csv.DictReader(fh, delimiter='\t')
+        fields = {MAPPING_ALIASES.get(f, f) for f in rd.fieldnames or []}
+        # A missing breadth column would otherwise score every taxon as 0% breadth
+        if 'breadth_pct' not in fields:
+            sys.exit(f"{path}: mapping TSV has no breadth_pct (or breadth) column; "
+                     f"found {', '.join(rd.fieldnames or [])}")
         for r in rd:
+            r = {MAPPING_ALIASES.get(k, k): v for k, v in r.items()}
             key = norm(r.get('taxon') or r.get('sample') or '')
             ev[key].append(r)
     return ev

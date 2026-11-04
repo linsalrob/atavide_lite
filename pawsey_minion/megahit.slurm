@@ -33,7 +33,7 @@ fi
 source DEFINITIONS.sh
 
 mkdir --parents megahit
-READS=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)
+READS=$(head -n "${SLURM_ARRAY_TASK_ID:?Submit as an array.}" reads.txt | tail -n 1)
 OUTPUT=${READS/$FILEEND/};
 
 

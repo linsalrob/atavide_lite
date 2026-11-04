@@ -319,7 +319,9 @@ def main():
                             '' if f['pct'] is None else f"{f['pct']:.4f}",
                             f['confidence'],f['verdict'],'; '.join(f['diseases']),' | '.join(f['evidence'])])
     if args.output:
-        with Path(str(args.output).replace('.tsv', '') + '.explicit_negatives.tsv').open('w', newline='') as fh:
+        stem = args.output.stem if args.output.suffix == '.tsv' else args.output.name
+        negatives = args.output.with_name(stem + '.explicit_negatives.tsv')
+        with negatives.open('w', newline='') as fh:
             w = csv.writer(fh, delimiter='\t')
             w.writerow(['sample', 'genus', 'notifiable_species', 'detected', 'statement'])
             for e in explicit:

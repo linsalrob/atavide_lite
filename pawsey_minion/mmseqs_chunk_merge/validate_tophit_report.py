@@ -26,7 +26,14 @@ def read_rows(path: Path):
             if fields[0] in seen:
                 raise ValueError(f"{path}:{line_number}: duplicate target {fields[0]}")
             seen.add(fields[0])
-            yield fields
+            yield line_number, fields
+
+
+def parse_count(path: Path, line_number: int, value: str) -> int:
+    try:
+        return int(value)
+    except ValueError:
+        raise ValueError(f"{path}:{line_number}: count {value!r} is not an integer") from None
 
 
 def main() -> None:
@@ -39,8 +46,9 @@ def main() -> None:
     chunk_counts: dict[str, int] = {}
     chunk_taxonomy: dict[str, tuple[str, str, str]] = {}
     for report in args.chunk_report:
-        for row in read_rows(report):
-            target, count, taxonomy = row[0], int(row[1]), tuple(row[5:8])
+        for line_number, row in read_rows(report):
+            target, taxonomy = row[0], tuple(row[5:8])
+            count = parse_count(report, line_number, row[1])
             if count < 0:
                 raise ValueError(f"negative chunk count for {target}")
             if target in chunk_taxonomy and chunk_taxonomy[target] != taxonomy:
@@ -50,8 +58,9 @@ def main() -> None:
 
     merged_targets: set[str] = set()
     merged_count_total = 0
-    for row in read_rows(args.merged_report):
-        target, count = row[0], int(row[1])
+    for line_number, row in read_rows(args.merged_report):
+        target = row[0]
+        count = parse_count(args.merged_report, line_number, row[1])
         merged_targets.add(target)
         if count < 0:
             raise ValueError(f"negative merged count for {target}")

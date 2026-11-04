@@ -41,7 +41,7 @@ fi
 # this %/ removes the trailing / if there is one
 SOURCE=${1%/}
 DEST=${2%/}
-LOCALSOURCE=`basename $SOURCE`
+LOCALSOURCE=$(basename "$SOURCE")
 
 
 echo "Running checkm on $LOCALSOURCE and output in $DEST"  >&2;

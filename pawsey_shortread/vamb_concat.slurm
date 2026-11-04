@@ -31,11 +31,13 @@ if [[ -s "$OUTDIR/contigs.fna.gz" ]]; then
     # Older runs did not record which sample each VAMB S<n> prefix refers to
     if [[ ! -s "$OUTDIR/sample_mappings.tsv" ]]; then
         echo "Recreating $OUTDIR/sample_mappings.tsv from the existing contigs" >&2
-        python "$HOME/GitHubs/atavide_lite/bin/vamb_concatenate.py" \
+        if ! python "$HOME/GitHubs/atavide_lite/bin/vamb_concatenate.py" \
             --mapping-only \
             -m 2000 \
             "$OUTDIR/contigs.fna.gz" \
-            megahit/*/final.contigs.fa
+            megahit/*/final.contigs.fa; then
+            echo "WARNING: Failed to recreate $OUTDIR/sample_mappings.tsv; continuing without it." >&2
+        fi
     fi
 else
     "$VENV_DIR/bin/python" "$HOME/GitHubs/atavide_lite/bin/vamb_concatenate.py" \

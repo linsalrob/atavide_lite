@@ -10,7 +10,7 @@ Important utilities include:
 
 - `fastq2fasta`: compiled FASTQ-to-FASTA conversion used before MMseqs2;
 - `fastg2gfa`: converts MEGAHIT graph output;
-- `vamb_concatenate.py`: prepares uniquely named concatenated contigs for VAMB;
+- `vamb_concatenate.py`: prepares uniquely named concatenated contigs for VAMB, and writes `sample_mappings.tsv` recording which sample each VAMB `S<n>` prefix refers to;
 - `vamb_create_fasta.py` and related scripts: materialise cluster/bin FASTAs;
 - `count_subsystems.py` and selective variants: build functional count summaries;
 - `taxonomy_selected.py`: filter downstream taxonomic summaries by a selected lineage;

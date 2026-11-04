@@ -9,8 +9,9 @@
 
 # NOTE: Setonix enforces MaxMemPerCPU (work=1840M, highmem=7900M). A bare --mem
 # larger than cpus-per-task * MaxMemPerCPU does not fail - Slurm silently raises the
-# CPU count to cover it, so the job queues for far more CPUs than it uses. Request
-# memory with --mem-per-cpu so the two can never disagree.
+# CPU count to cover it, which also changes $SLURM_CPUS_PER_TASK and therefore THREADS below.
+# The job queues for far more CPUs than it uses. Request memory with --mem-per-cpu
+# so the two can never disagree.
 
 set -euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
@@ -32,7 +33,7 @@ fi
 source DEFINITIONS.sh
 
 mkdir --parents megahit
-READS=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)
+READS=$(head -n "${SLURM_ARRAY_TASK_ID:?Submit as an array.}" reads.txt | tail -n 1)
 OUTPUT=${READS/$FILEEND/};
 
 
@@ -42,7 +43,6 @@ if [[ -e megahit/$OUTPUT ]]; then
 fi
 
 echo "Using $HOSTREMOVED/$READS for the assembly" >&2;
-
 
 megahit -r $HOSTREMOVED/$READS -o megahit/$OUTPUT -t "$THREADS"
 

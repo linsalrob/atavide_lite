@@ -22,7 +22,8 @@ FAKE_VAMBTOOLS = '''
 import gzip
 
 def _records(path):
-    opener = gzip.open if open(path, "rb").read(2) == b"\\x1f\\x8b" else open
+    with open(path, "rb") as handle:
+        opener = gzip.open if handle.read(2) == b"\\x1f\\x8b" else open
     name, seq = None, []
     with opener(path, "rt") as handle:
         for line in handle:
@@ -139,6 +140,28 @@ class VambConcatenateTests(unittest.TestCase):
         result = self.run_script(str(self.mapping), *self.inputs)
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(self.mapping.exists())
+
+    def test_mapping_only_rejects_input_with_no_kept_contigs_for_used_prefix(self):
+        self.assertEqual(self.run_script(str(self.contigs), *self.inputs).returncode, 0)
+        self.mapping.unlink()
+        # S2 contigs exist, but this replacement for sample_b has nothing to check them against
+        short = self.root / "megahit" / "unrelated" / "final.contigs.fa"
+        write_fasta(short, [("k141_1", 4)], base="T")
+        result = self.run_script("--mapping-only", str(self.contigs),
+                                 self.inputs[0], str(short), self.inputs[2])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("S2 from", result.stderr)
+        self.assertFalse(self.mapping.exists())
+
+    def test_mapping_only_accepts_empty_sample_absent_from_output(self):
+        short = self.root / "megahit" / "sample_e" / "final.contigs.fa"
+        write_fasta(short, [("k141_1", 4)], base="T")
+        inputs = [self.inputs[0], str(short), self.inputs[2]]
+        self.assertEqual(self.run_script(str(self.contigs), *inputs).returncode, 0)
+        self.mapping.unlink()
+        result = self.run_script("--mapping-only", str(self.contigs), *inputs)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(read_mapping(self.mapping)[1]["sample"], "sample_e")
 
     def test_mapping_only_does_not_need_vamb(self):
         self.assertEqual(self.run_script(str(self.contigs), *self.inputs).returncode, 0)

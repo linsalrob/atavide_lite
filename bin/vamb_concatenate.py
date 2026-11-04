@@ -107,18 +107,24 @@ def check_mapping(outpath, inpaths, minlength):
     so a name alone cannot tell a reordered input list apart; the sequence can.
     """
     expected = {}
+    # An input with no kept contigs has nothing to check, so its prefix must not appear
+    empty = {}
     for number, path in enumerate(inpaths, start=1):
         contig = first_kept_contig(path, minlength)
         if contig is not None:
             expected[f"S{number}C{contig[0]}"] = (contig[1], path)
+        else:
+            empty[number] = path
     unmatched = dict(expected)
     # Scan the whole output, so an input list missing a trailing assembly (whose contigs
     # carry a prefix beyond S<len(inpaths)>) is rejected rather than mapped short
-    extra = set()
+    extra, unexpected = set(), set()
     for identifier, sequence in fasta_records(outpath):
         prefix = SAMPLE_PREFIX.match(identifier)
         if prefix is None or not 1 <= int(prefix.group(1)) <= len(inpaths):
             extra.add(f"S{prefix.group(1)}" if prefix else identifier)
+        elif int(prefix.group(1)) in empty:
+            unexpected.add(int(prefix.group(1)))
         if identifier in unmatched:
             if hashlib.md5(sequence.upper().encode()).hexdigest() == unmatched[identifier][0]:
                 del unmatched[identifier]
@@ -127,6 +133,12 @@ def check_mapping(outpath, inpaths, minlength):
             f"{outpath} has contigs from samples beyond the {len(inpaths)} inputs given, "
             "so some of the inputs used to build it are missing: "
             + ", ".join(sorted(extra, key=lambda name: (len(name), name)))
+        )
+    if unexpected:
+        raise ValueError(
+            f"{outpath} has contigs for these samples, but their inputs have none of at least "
+            "-m bases, so the inputs are not the ones (or -m) used to build it:\n"
+            + "\n".join(f"  S{number} from {empty[number]}" for number in sorted(unexpected))
         )
     if unmatched:
         raise ValueError(

@@ -38,6 +38,7 @@ def main() -> None:
 
     seen: set[str] = set()
     with open_text(args.output, "wt") as output:
+        for row in read_rows(args.merged_report):
             target = row[0]
             if target in seen:
                 raise ValueError(f"duplicate merged target: {target}")

@@ -5,11 +5,13 @@ import os
 import argparse
 import gzip
 import hashlib
+import re
 
 MAPPING_NAME = "sample_mappings.tsv"
 GENERIC_STEMS = {"final.contigs", "contigs", "assembly", "scaffolds"}
 GENERIC_DIRS = {"output", "assembly", "megahit"}
 FASTA_SUFFIXES = (".gz", ".fa", ".fasta", ".fna")
+SAMPLE_PREFIX = re.compile(r"S(\d+)C")
 
 parser = argparse.ArgumentParser(
     description="""Creates the input FASTA file for Vamb.
@@ -110,17 +112,28 @@ def check_mapping(outpath, inpaths, minlength):
         if contig is not None:
             expected[f"S{number}C{contig[0]}"] = (contig[1], path)
     unmatched = dict(expected)
+    # Scan the whole output, so an input list missing a trailing assembly (whose contigs
+    # carry a prefix beyond S<len(inpaths)>) is rejected rather than mapped short
+    extra = set()
     for identifier, sequence in fasta_records(outpath):
+        prefix = SAMPLE_PREFIX.match(identifier)
+        if prefix is None or not 1 <= int(prefix.group(1)) <= len(inpaths):
+            extra.add(f"S{prefix.group(1)}" if prefix else identifier)
         if identifier in unmatched:
             if hashlib.md5(sequence.upper().encode()).hexdigest() == unmatched[identifier][0]:
                 del unmatched[identifier]
-            if not unmatched:
-                return
-    raise ValueError(
-        f"These contigs are missing from {outpath} or have a different sequence there, so "
-        "the inputs are not in the order (or -m) used to build it:\n"
-        + "\n".join(f"  {name} from {path}" for name, (_, path) in unmatched.items())
-    )
+    if extra:
+        raise ValueError(
+            f"{outpath} has contigs from samples beyond the {len(inpaths)} inputs given, "
+            "so some of the inputs used to build it are missing: "
+            + ", ".join(sorted(extra, key=lambda name: (len(name), name)))
+        )
+    if unmatched:
+        raise ValueError(
+            f"These contigs are missing from {outpath} or have a different sequence there, so "
+            "the inputs are not in the order (or -m) used to build it:\n"
+            + "\n".join(f"  {name} from {path}" for name, (_, path) in unmatched.items())
+        )
 
 
 def write_mapping(mappath, inpaths):
@@ -145,6 +158,10 @@ if args.keepnames and (args.mapping_only or args.mapping):
     parser.error("--keepnames does not rename contigs, so there is no sample mapping")
 
 mappath = args.mapping or os.path.join(os.path.dirname(args.outpath), MAPPING_NAME)
+
+# Writing the mapping would otherwise replace the FASTA it describes
+if not args.keepnames and os.path.realpath(mappath) == os.path.realpath(args.outpath):
+    parser.error(f"the mapping and the output FASTA are the same file ({mappath}); use --mapping")
 
 if args.mapping_only:
     if not os.path.isfile(args.outpath):

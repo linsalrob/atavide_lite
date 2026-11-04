@@ -121,6 +121,25 @@ class VambConcatenateTests(unittest.TestCase):
         self.assertIn("not in the order", result.stderr)
         self.assertFalse(self.mapping.exists())
 
+    def test_mapping_only_rejects_missing_trailing_input(self):
+        self.assertEqual(self.run_script(str(self.contigs), *self.inputs).returncode, 0)
+        self.mapping.unlink()
+        # The first two inputs match, but the output also holds S3 contigs
+        result = self.run_script("--mapping-only", str(self.contigs), *self.inputs[:2])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("S3", result.stderr)
+        self.assertFalse(self.mapping.exists())
+
+    def test_rejects_mapping_path_that_is_the_output(self):
+        result = self.run_script("--mapping", str(self.contigs), str(self.contigs), *self.inputs)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(self.contigs.exists())
+
+    def test_rejects_output_named_like_the_default_mapping(self):
+        result = self.run_script(str(self.mapping), *self.inputs)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(self.mapping.exists())
+
     def test_mapping_only_does_not_need_vamb(self):
         self.assertEqual(self.run_script(str(self.contigs), *self.inputs).returncode, 0)
         self.mapping.unlink()

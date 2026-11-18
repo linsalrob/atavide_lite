@@ -68,8 +68,10 @@ fi
 
 # cp fasta/$R1 fasta/$R2 $BGFS
 
-echo "Running  mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $(mktemp -d -p $TMPDIR) --threads $SLURM_CPUS_PER_TASK" >&2;
-mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $(mktemp -d -p $TMPDIR) --threads $SLURM_CPUS_PER_TASK
+# create the temporary directory once, so the path we log is the one mmseqs uses
+TPD=$(mktemp -d -p $TMPDIR)
+echo "Running  mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $TPD --threads $SLURM_CPUS_PER_TASK" >&2;
+mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $TPD --threads $SLURM_CPUS_PER_TASK
 
 find $OUTDIR -type f  | parallel -j $SLURM_CPUS_PER_TASK gzip
 

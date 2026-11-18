@@ -67,8 +67,10 @@ fi
 
 # cp fasta/$R1 fasta/$R2 $BGFS
 
-echo "Running  mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $(mktemp -d -p $TMPDIR) --threads 64" >&2;
-mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $(mktemp -d -p $TMPDIR) --threads 64
+# create the temporary directory once, so the path we log is the one mmseqs uses
+TPD=$(mktemp -d -p $TMPDIR)
+echo "Running  mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $TPD --threads 64" >&2;
+mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $TPD --threads 64
 
 find $OUTDIR -type f  | parallel -j 32 gzip
 

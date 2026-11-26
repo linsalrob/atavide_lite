@@ -61,10 +61,18 @@ R2=${R1/_R1/_R2}
 OUTPUT=$OUTDIR/${R/$FILEEND/}
 TMPOUTPUT=${R/$FILEEND/}
 
-# A sample is done only when its gzipped tophit report exists: the gzip runs after
-# mmseqs finishes, so a cancelled or failed run never leaves one behind. Record which
-# database produced the directory and refuse to reuse results from a different one.
-if [[ -s "${OUTPUT}_tophit_report.gz" ]]; then
+# Record which database produced the directory and refuse to reuse results from a
+# different one.
+# easy-taxonomy writes these four outputs, then each is gzipped. gzip removes the original
+# only after the .gz is complete, so a sample is finished when all four .gz files exist and
+# no uncompressed original is left. A run cancelled during mmseqs or the gzip fails this.
+mmseqs_complete() {
+	local s
+	for s in _lca.tsv _report _tophit_aln _tophit_report; do
+		[[ -s "$1$s.gz" && ! -e "$1$s" ]] || return 1
+	done
+}
+if mmseqs_complete "$OUTPUT"; then
 	# directories from before the label existed were built with the old default, UniRef50
 	PREV_DB=$(cat "$OUTDIR/.mmseqs_db" 2>/dev/null || echo UniRef50)
 	if [[ "$PREV_DB" == "$DB" ]]; then

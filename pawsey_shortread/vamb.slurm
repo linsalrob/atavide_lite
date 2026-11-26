@@ -73,10 +73,10 @@ done
 
 # VAMB refuses to write into an existing --outdir. If a previous run finished, keep
 # its clusters; if it left a partial directory behind, stop rather than guess.
-if [[ -s "$OUTDIR/vamb/vae_clusters_unsplit.tsv" ]]; then
-	echo "$OUTDIR/vamb/vae_clusters_unsplit.tsv exists. Skipping VAMB binning" >&2
+if [[ -s "$OUTDIR/vamb/vae_clusters_unsplit.tsv" && -s "$OUTDIR/vamb/vae_clusters_split.tsv" ]]; then
+	echo "$OUTDIR/vamb has both cluster files. Skipping VAMB binning" >&2
 elif [[ -e "$OUTDIR/vamb" ]]; then
-	echo "ERROR: $OUTDIR/vamb exists but has no vae_clusters_unsplit.tsv (a failed run?)." >&2
+	echo "ERROR: $OUTDIR/vamb exists but is missing vae_clusters_unsplit.tsv or vae_clusters_split.tsv (a failed run?)." >&2
 	echo "       Remove it before re-running." >&2
 	exit 2
 else

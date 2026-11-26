@@ -89,11 +89,19 @@ TMPOUTPUT=${R/$FILEEND/}
 # The output directory is not namespaced by database, so a previous run with a different
 # MMSEQS_DB would otherwise be silently reused and reported as this database's result.
 # Record which database produced the directory and refuse to reuse a mismatched one.
-# A sample is done only when its gzipped tophit report exists: the gzip runs after mmseqs
-# finishes, so a cancelled or failed run (which can leave an empty directory) never
-# leaves one behind and is re-run rather than silently skipped.
+# A cancelled or failed run (which can leave an empty directory) is re-run rather than
+# silently skipped.
 DEFAULT_DB=UniRef100
-if [[ -s "$OUTPUT/${TMPOUTPUT}_tophit_report.gz" ]]; then
+# easy-taxonomy writes these four outputs, then each is gzipped. gzip removes the original
+# only after the .gz is complete, so a sample is finished when all four .gz files exist and
+# no uncompressed original is left. A run cancelled during mmseqs or the gzip fails this.
+mmseqs_complete() {
+	local s
+	for s in _lca.tsv _report _tophit_aln _tophit_report; do
+		[[ -s "$1$s.gz" && ! -e "$1$s" ]] || return 1
+	done
+}
+if mmseqs_complete "$OUTPUT/$TMPOUTPUT"; then
 	if [[ -s "$OUTPUT/.mmseqs_db" ]]; then
 		PREV_DB=$(cat "$OUTPUT/.mmseqs_db")
 	elif [[ -s "$OUTPUT/.mmseqs_db.gz" ]]; then

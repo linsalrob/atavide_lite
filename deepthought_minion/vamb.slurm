@@ -45,35 +45,33 @@ for READS in $(sort -R reads.txt); do
 done
 
 # VAMB >= 4 takes "vamb bin default"; the bare "vamb --fasta ..." form no longer parses.
-# It refuses to write into an existing --outdir, so keep a finished run and stop on a
-# partial one.
-if [[ -s "$OUTDIR/vamb/vae_clusters_unsplit.tsv" ]]; then
-	echo "$OUTDIR/vamb/vae_clusters_unsplit.tsv exists. Skipping VAMB binning" >&2
-	exit 0
+# It refuses to write into an existing --outdir, so skip a finished run (both cluster files
+# present) and stop on a partial one. Only the VAMB step is skipped: the bins below are
+# always rebuilt from the cluster files, so a run interrupted while copying back cannot
+# leave them missing.
+if [[ -s "$OUTDIR/vamb/vae_clusters_unsplit.tsv" && -s "$OUTDIR/vamb/vae_clusters_split.tsv" ]]; then
+	echo "$OUTDIR/vamb has both cluster files. Skipping VAMB binning" >&2
 elif [[ -e "$OUTDIR/vamb" ]]; then
-	echo "ERROR: $OUTDIR/vamb exists but has no vae_clusters_unsplit.tsv (a failed run?)." >&2
-	echo "       Remove it before re-running." >&2
+	echo "ERROR: $OUTDIR/vamb exists but is missing vae_clusters_unsplit.tsv or vae_clusters_split.tsv" >&2
+	echo "       (a failed or interrupted run?). Remove it before re-running." >&2
 	exit 2
+else
+	mkdir --parents $BGFS/$OUTDIR/mapped_reads
+	cp $OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/
+	cp $OUTDIR/mapped_reads/*.bam $BGFS/$OUTDIR/mapped_reads/
+
+	vamb bin default -o C -p $THREADS --cuda --outdir $BGFS/$OUTDIR/vamb --fasta $BGFS/$OUTDIR/contigs.fna.gz --bamdir $BGFS/$OUTDIR/mapped_reads/
+
+	# The BAMs are already in $OUTDIR/mapped_reads; copy back only what VAMB produced.
+	rsync -a $BGFS/$OUTDIR/vamb $OUTDIR/
 fi
-
-mkdir --parents $BGFS/$OUTDIR/mapped_reads
-cp $OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/
-cp $OUTDIR/mapped_reads/*.bam $BGFS/$OUTDIR/mapped_reads/
-
-vamb bin default -o C -p $THREADS --cuda --outdir $BGFS/$OUTDIR/vamb --fasta $BGFS/$OUTDIR/contigs.fna.gz --bamdir $BGFS/$OUTDIR/mapped_reads/
 
 # Split bins (one per sample) go to bins/, which checkm.slurm reads; unsplit bins are kept
 # apart so CheckM does not score every contig twice.
-python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/vamb/vae_clusters_unsplit.tsv 20000 $BGFS/$OUTDIR/bins_unsplit &
+python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_unsplit.tsv 20000 $OUTDIR/bins_unsplit &
 UNSPLIT_PID=$!
-python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/vamb/vae_clusters_split.tsv 20000 $BGFS/$OUTDIR/bins &
+python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_split.tsv 20000 $OUTDIR/bins &
 SPLIT_PID=$!
 # a bare "wait" returns 0 even when a job failed, so wait on each one
 wait "$UNSPLIT_PID"
 wait "$SPLIT_PID"
-
-# The BAMs are already in $OUTDIR/mapped_reads; copy back only what VAMB produced.
-rsync -a $BGFS/$OUTDIR/vamb $OUTDIR/
-for D in bins bins_unsplit; do
-	if [[ -d $BGFS/$OUTDIR/$D ]]; then rsync -a $BGFS/$OUTDIR/$D $OUTDIR/; fi
-done

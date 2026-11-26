@@ -25,9 +25,12 @@ set -euo pipefail
 eval "$(conda shell.bash hook)"
 conda activate atavide_lite
 
+THREADS=${SLURM_CPUS_PER_TASK:-32}
+
 echo "Start " `date` >&2;
 
-DB=UniRef50
+# Which MMseqs database to search. Override with e.g. MMSEQS_DB=UniRef100.
+DB="${MMSEQS_DB:-UniRef50}"
 DBSOURCE=$HOME/Databases/mmseqs/$DB
 
 if [[ ! -e $DBSOURCE ]]; then
@@ -53,20 +56,30 @@ R1=${R/$FILEEND/$FAFILEEND}
 OUTPUT=$OUTDIR/${R/$FILEEND/}
 TMPOUTPUT=${R/$FILEEND/}
 
-if [[ -e $OUTPUT ]]; then
-	echo "$OUTPUT exists. Nothing to do" >&2;
-	exit 0;
+# A sample is done only when its gzipped tophit report exists: the gzip runs after
+# mmseqs finishes, so a cancelled or failed run never leaves one behind. Record which
+# database produced the directory and refuse to reuse results from a different one.
+if [[ -s "$OUTPUT/${TMPOUTPUT}_tophit_report.gz" ]]; then
+	PREV_DB=$(cat "$OUTPUT/.mmseqs_db" 2>/dev/null || echo UniRef50)
+	if [[ "$PREV_DB" == "$DB" ]]; then
+		echo "$OUTPUT is complete (database $DB). Nothing to do" >&2;
+		exit 0;
+	fi
+	echo "ERROR: $OUTPUT was built with database '$PREV_DB', not '$DB'." >&2;
+	echo "       Remove it or choose a different output location before re-running." >&2;
+	exit 3;
 fi
 
 
 mkdir -p $BGFS/$OUTPUT 
 
 TPD=$(mktemp -d -p $BGFS)
-echo "Running mmseqs easy-taxonomy fasta/$R1 $BGFS/$DB/$DB $BGFS/$OUTPUT/$TMPOUTPUT $TPD --threads 32" 2>&1;
-mmseqs easy-taxonomy fasta/$R1 $BGFS/$DB/$DB $BGFS/$OUTPUT/$TMPOUTPUT $TPD --threads 32
+echo "Running mmseqs easy-taxonomy fasta/$R1 $BGFS/$DB/$DB $BGFS/$OUTPUT/$TMPOUTPUT $TPD --threads $THREADS" >&2;
+mmseqs easy-taxonomy fasta/$R1 $BGFS/$DB/$DB $BGFS/$OUTPUT/$TMPOUTPUT $TPD --threads $THREADS
 
-find $BGFS/$OUTPUT/ -type f  | parallel -j 32 gzip
+find $BGFS/$OUTPUT/ -type f  | parallel -j $THREADS gzip
 rsync -a $BGFS/$OUTPUT/ $OUTPUT/
+echo "$DB" > "$OUTPUT/.mmseqs_db"
 
 echo "Fin " `date` >&2;
 

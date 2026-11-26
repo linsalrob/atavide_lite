@@ -100,8 +100,8 @@ for LN in $(grep -v Sample $1); do
 	fi
 
 	mkdir -p $VAMB/$GRP
-	echo "python ~/atavide_lite/bin/vamb_concatenate.py -m 300 $VAMB/$GRP/contigs.fna.gz $MEGAHITDIR/final.contigs.fa" >&2;
-	bash -c "python ~/atavide_lite/bin/vamb_concatenate.py -m 300 $VAMB/$GRP/contigs.fna.gz $MEGAHITDIR/final.contigs.fa";
+	echo "python ~/GitHubs/atavide_lite/bin/vamb_concatenate.py -m 300 $VAMB/$GRP/contigs.fna.gz $MEGAHITDIR/final.contigs.fa" >&2;
+	bash -c "python ~/GitHubs/atavide_lite/bin/vamb_concatenate.py -m 300 $VAMB/$GRP/contigs.fna.gz $MEGAHITDIR/final.contigs.fa";
 done
 
 

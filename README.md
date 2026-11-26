@@ -131,7 +131,7 @@ Currently the pipeline depends on these software
 You can install all of these with:
 
 ```
-mamba env create -f ~/atavide_lite/atavide_lite.yaml
+mamba env create -f ~/GitHubs/atavide_lite/atavide_lite.yaml
 ```
 
 Note: if you are using an ephemeral system like Pawsey, we also have a mechanism for making temporary conda installations. See  the [pawsey shortread](pawsey_shortread/README.md) or [pawsey minion](pawsey_minion/README.md) READMEs.

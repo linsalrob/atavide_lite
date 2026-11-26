@@ -25,14 +25,15 @@ conda activate $ATAVIDE_CONDA
 # virtual environment for vamb. NOTE: Do not use conda to install vamb, because 
 # we need a rcom install, not nvidia.
 
-VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/pip/vamb"
+# vamb_install.slurm builds this environment; keep the two paths in sync.
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 if [[ ! -e "$VENV_DIR" ]]; then 
 	echo "Please run vamb_install.slurm to create the vamb virtual environment" >&2
 	exit 1;
 fi
 
 module load rocm/6.2.4
-source "$VENV_DIR/bin/activate"
+conda activate "$VENV_DIR"
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
@@ -70,11 +71,32 @@ done
 
 
 
-#CHANGE THIS WHEN DONE WITH THE TEST RUN
-#vamb bin default -o C -p $THREADS --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamdir $OUTDIR/mapped_reads/
-vamb bin default -o C -p $THREADS --cuda --outdir $OUTDIR/vamb --composition $OUTDIR/composition.npz --bamdir $OUTDIR/mapped_reads/
+# VAMB refuses to write into an existing --outdir. If a previous run finished, keep
+# its clusters; if it left a partial directory behind, stop rather than guess.
+if [[ -s "$OUTDIR/vamb/vae_clusters_unsplit.tsv" ]]; then
+	echo "$OUTDIR/vamb/vae_clusters_unsplit.tsv exists. Skipping VAMB binning" >&2
+elif [[ -e "$OUTDIR/vamb" ]]; then
+	echo "ERROR: $OUTDIR/vamb exists but has no vae_clusters_unsplit.tsv (a failed run?)." >&2
+	echo "       Remove it before re-running." >&2
+	exit 2
+else
+	# Reuse a composition.npz saved from an earlier VAMB run (copy it to $OUTDIR/) to skip
+	# recomputing tetranucleotide frequencies; otherwise compute them from the contigs.
+	if [[ -s "$OUTDIR/composition.npz" ]]; then
+		COMPOSITION=(--composition "$OUTDIR/composition.npz")
+	else
+		COMPOSITION=(--fasta "$OUTDIR/contigs.fna.gz")
+	fi
+	vamb bin default -o C -p "$THREADS" --cuda --outdir "$OUTDIR/vamb" "${COMPOSITION[@]}" --bamdir "$OUTDIR/mapped_reads/"
+fi
 
-python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_unsplit.tsv 20000 $OUTDIR/bins &
+# Split bins (one per sample) go to bins/, which checkm.slurm reads; unsplit bins are kept
+# apart so CheckM does not score every contig twice.
+python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_unsplit.tsv 20000 $OUTDIR/bins_unsplit &
+UNSPLIT_PID=$!
 python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_split.tsv 20000 $OUTDIR/bins &
-wait
+SPLIT_PID=$!
+# a bare "wait" returns 0 even when a job failed, so wait on each one
+wait "$UNSPLIT_PID"
+wait "$SPLIT_PID"
 

@@ -13,6 +13,8 @@ set -uo pipefail
 eval "$(conda shell.bash hook)"
 conda activate atavide_lite_vamb
 
+THREADS=${SLURM_CPUS_PER_TASK:-16}
+
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
 	exit 2;
@@ -40,11 +42,14 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 
 	mkdir --parents $BGFS/$OUTDIR
 	rsync $OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/contigs.fna.gz 
-	vamb -o C -p 16 --cuda --outdir $BGFS/$OUTDIR/vamb --fasta $BGFS/$OUTDIR/contigs.fna.gz --bamfiles $OUTDIR/mapped_reads/*bam 
+	# VAMB >= 4 takes "vamb bin default"; the bare "vamb --fasta ..." form no longer parses.
+	vamb bin default -o C -p $THREADS --cuda --outdir $BGFS/$OUTDIR/vamb --fasta $BGFS/$OUTDIR/contigs.fna.gz --bamdir $OUTDIR/mapped_reads/
 	if [[ $? != 0 ]]; then 
 		echo "Running VAMB on $OUTDIR failed." >&2;
 	else
-		python ~/atavide_lite/bin/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/vamb/vae_clusters.tsv 20000 $BGFS/$OUTDIR/bins
+		# split bins go to bins/ (read by checkm.slurm); unsplit bins are kept apart
+		python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/vamb/vae_clusters_split.tsv 20000 $BGFS/$OUTDIR/bins
+		python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $BGFS/$OUTDIR/contigs.fna.gz $BGFS/$OUTDIR/vamb/vae_clusters_unsplit.tsv 20000 $BGFS/$OUTDIR/bins_unsplit
 		rm -f $BGFS/$OUTDIR/contigs.fna.gz
 		rsync -a $BGFS/$OUTDIR/ $OUTDIR/
 	fi

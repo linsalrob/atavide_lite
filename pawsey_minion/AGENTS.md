@@ -247,22 +247,22 @@ Chain deterministic stages with dependencies rather than polling. Record job IDs
   on a shared login node degrades it for every other user and will likely be OOM-killed anyway.
 - **Don't re-run into populated output directories.** Use a fresh analysis directory (or a new
   output namespace) so a comparison run cannot clobber or half-overwrite prior results.
-- **`mmseqs_easy_taxonomy.slurm` skips a sample whose output directory already exists**
-  (`"$OUTPUT exists. Nothing to do"`, then `exit 0`). This is a **silent** failure mode after a
-  cancelled or failed run: the previous attempt leaves behind an empty `mmseqs/<sample>/`
-  directory, the rerun sees it, skips the sample, and **reports success**. Any `afterok`
-  dependency is satisfied and the pipeline proceeds with that sample missing entirely.
+- **`mmseqs_easy_taxonomy.slurm` used to skip a sample whose output directory merely
+  existed** (`"$OUTPUT exists. Nothing to do"`, then `exit 0`). After a cancelled or failed run
+  the empty `mmseqs/<sample>/` directory left behind made the rerun skip the sample and
+  **report success**, so `afterok` dependencies went ahead with that sample missing. (Observed:
+  a resubmitted task "COMPLETED 0:0" in seconds and one of sixteen samples had no taxonomy.)
 
-  Observed in practice: a cancelled task left an empty output directory; on resubmission the
-  task "COMPLETED 0:0" in seconds and one of sixteen samples had no taxonomy at all.
+  The script now skips only when `mmseqs/<sample>/<sample>_tophit_report.gz` exists. The gzip
+  runs after mmseqs finishes, so a partial run is redone. It also keeps the `.mmseqs_db` label
+  uncompressed. Earlier versions gzipped it to `.mmseqs_db.gz`, which the script still reads.
+  The same rule now applies in `pawsey_shortread` and both Deepthought profiles.
 
-  **After cancelling any stage, delete the output directories of the affected tasks before
-  resubmitting**, and sanity-check that each task actually produced output rather than trusting
-  its exit code:
+  Still check that each task produced output rather than trusting its exit code:
 
   ```bash
-  # a task that really ran leaves files; a skipped one leaves an empty directory
-  find mmseqs -mindepth 1 -maxdepth 1 -type d -empty
+  # every sample directory should hold a tophit report
+  for d in mmseqs/*/; do s=$(basename "$d"); [ -s "$d/${s}_tophit_report.gz" ] || echo "MISSING $s"; done
   ```
 
   More generally on this pipeline: **exit code 0 is not proof a stage did the work.** Always

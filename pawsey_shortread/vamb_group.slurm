@@ -14,14 +14,15 @@ set -uo pipefail
 # virtual environment for vamb. NOTE: Do not use conda, because 
 # we need a rcom install, not nvidia.
 
-VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/pip/vamb"
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 if [[ ! -e "$VENV_DIR" ]]; then 
 	echo "Please run vamb_install.slurm to create the vamb virtual environment" >&2
 	exit 1;
 fi
 
 module load rocm/6.2.4
-source "$VENV_DIR/bin/activate"
+eval "$(conda shell.bash hook)"
+conda activate "$VENV_DIR"
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
@@ -53,8 +54,8 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 	if [[ $? != 0 ]]; then 
 		echo "Running VAMB on $OUTDIR failed." >&2;
 	else
-		python ~/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_unsplit.tsv 1 $OUTDIR/bins &
-		python ~/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_split.tsv 1 $OUTDIR/bins &
+		python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_unsplit.tsv 1 $OUTDIR/bins &
+		python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_split.tsv 1 $OUTDIR/bins &
 		wait
 	fi
 done

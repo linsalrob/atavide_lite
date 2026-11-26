@@ -9,14 +9,15 @@
 
 set -euo pipefail
 
-VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/pip/vamb"
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 if [[ ! -e "$VENV_DIR" ]]; then 
 	echo "Please run vamb_install.slurm to create the vamb virtual environment" >&2
 	exit 1;
 fi
 
 module load rocm/6.2.4
-source "$VENV_DIR/bin/activate"
+eval "$(conda shell.bash hook)"
+conda activate "$VENV_DIR"
 
 
 if [[ $# -eq 0 ]]; then 
@@ -30,8 +31,8 @@ MINBIN=$3
 ODIR=$4
 
 
-echo "Running: ~/atavide_lite/bin/vamb_create_fasta.py $CONTIGS $CLUSTERS $MINBIN $ODIR" >&2
+echo "Running: ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $CONTIGS $CLUSTERS $MINBIN $ODIR" >&2
 
-python ~/atavide_lite/bin/vamb_create_fasta.py $CONTIGS $CLUSTERS $MINBIN $ODIR
+python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $CONTIGS $CLUSTERS $MINBIN $ODIR
 
 find $ODIR -type f -name "*.fna" -exec pigz {} \;

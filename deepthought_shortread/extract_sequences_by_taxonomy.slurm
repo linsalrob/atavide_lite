@@ -14,6 +14,6 @@ fi
 
 echo "Writing outputs to $BGFS/$2"
 
-python /home/edwa0468/GitHubs/atavide_lite/bin/extract_reads_by_taxonomy.py -t $1 -o $BGFS/$2 -v
+python $HOME/GitHubs/atavide_lite/bin/extract_reads_by_taxonomy.py -t $1 -o $BGFS/$2 -v
 cp -r $BGFS/$2 $2
 

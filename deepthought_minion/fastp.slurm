@@ -28,11 +28,9 @@ source DEFINITIONS.sh
 
 READS=$(head -n $SLURM_ARRAY_TASK_ID reads.txt | tail -n 1)
 
-mkdir -p fastq_fastp fastq_fastp_output
-echo "fastp -n 1 -l 100 -i fastq/$READS -o output/$READS --adapter_fasta ~/atavide_lite/adapters/ONT_Rapid_Barcodes.fna " >&2
-fastp -n 2 -l 50 -i fastq/$READS -o fastq_fastp/$READS -h fastq_fastp_output/${READS/$FILEEND/}.html -j fastq_fastp_output/${READS/$FILEEND/}.json --adapter_fasta ~/atavide_lite/adapters/ONT_RPB114.24.fna
-
-pigz fastq_fastp_output/${READS/$FILEEND/}.html &
-pigz fastq_fastp_output/${READS/$FILEEND/}.json &
-
-wait
+# Same outputs as pawsey_minion/fastp.slurm: trimmed reads in fastq_fastp/ and the
+# fastp JSON/HTML reports in fastp_output/.
+mkdir -p fastq_fastp fastp_output
+THREADS=${SLURM_CPUS_PER_TASK:-1}
+echo "fastp -n 2 -l 50 -i fastq/$READS -o fastq_fastp/$READS -j fastp_output/$READS.json -h fastp_output/$READS.html --adapter_fasta ~/GitHubs/atavide_lite/adapters/ONT_RPB114.24.fna --thread $THREADS" >&2
+fastp -n 2 -l 50 -i fastq/$READS -o fastq_fastp/$READS -j fastp_output/$READS.json -h fastp_output/$READS.html --adapter_fasta ~/GitHubs/atavide_lite/adapters/ONT_RPB114.24.fna --thread $THREADS

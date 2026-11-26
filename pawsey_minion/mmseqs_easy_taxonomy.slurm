@@ -89,10 +89,16 @@ TMPOUTPUT=${R/$FILEEND/}
 # The output directory is not namespaced by database, so a previous run with a different
 # MMSEQS_DB would otherwise be silently reused and reported as this database's result.
 # Record which database produced the directory and refuse to reuse a mismatched one.
+# A sample is done only when its gzipped tophit report exists: the gzip runs after mmseqs
+# finishes, so a cancelled or failed run (which can leave an empty directory) never
+# leaves one behind and is re-run rather than silently skipped.
 DEFAULT_DB=UniRef100
-if [[ -e $OUTPUT ]]; then
+if [[ -s "$OUTPUT/${TMPOUTPUT}_tophit_report.gz" ]]; then
 	if [[ -s "$OUTPUT/.mmseqs_db" ]]; then
 		PREV_DB=$(cat "$OUTPUT/.mmseqs_db")
+	elif [[ -s "$OUTPUT/.mmseqs_db.gz" ]]; then
+		# earlier versions of this script gzipped the label along with the results
+		PREV_DB=$(zcat "$OUTPUT/.mmseqs_db.gz")
 	else
 		# Directories produced before this marker existed are unlabelled. Assume they came
 		# from the historical default so existing results stay reusable, but never make that
@@ -120,7 +126,9 @@ echo "Running mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $T
 mmseqs easy-taxonomy fasta/$R1 $DBSOURCE/$DB $OUTPUT/$TMPOUTPUT $TPD --threads "$THREADS" "${SPLIT_MEM_ARG[@]}"
 rm -rf $TPD
 
-find $OUTPUT/ -type f  | parallel -j "$THREADS" gzip
+# leave the database label readable (gzipping it made the next run treat the directory
+# as unlabelled), and overwrite stale .gz files left by a cancelled attempt
+find $OUTPUT/ -type f ! -name '*.gz' ! -name .mmseqs_db | parallel -j "$THREADS" gzip -f
 
 echo "Fin " `date` >&2;
 

@@ -110,7 +110,7 @@ Clone the atavide lite repository to your home directory, and make the compiled 
 git clone https://github.com/linsalrob/atavide_lite.git
 cd atavide_lite/bin
 make
-SRC=~/atavide_lite/pawsey_shortread # change this to the most suitable source for you!
+SRC=~/GitHubs/atavide_lite/pawsey_shortread # change this to the most suitable source for you!
 ```
 
 1. Set up the conda environment
@@ -119,8 +119,8 @@ Note, if you are working on Pawsey you should check out how to set up a temporar
 installation.
 
 ```bash
-mamba env create -f ~/atavide_lite/atavide_lite.yaml
-mamba env create -f ~/atavide_lite/atavide_lite_vamb.yaml
+mamba env create -f ~/GitHubs/atavide_lite/atavide_lite.yaml
+mamba env create -f ~/GitHubs/atavide_lite/atavide_lite_vamb.yaml
 ```
 
 2. Create some directories for the slurm output
@@ -332,7 +332,7 @@ mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseq
 find fastq -name \*_R1\* -printf "%f\n" > R1_reads.txt
 
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' '); echo "There are $NUM_R1_READS reads"
-SRC=~/atavide_lite/deepthought_shortread
+SRC=~/GitHubs/atavide_lite/deepthought_shortread
 cp $SRC/DEFINITIONS.sh .
 
 # edit the DEFINITIONS file to change the sample name
@@ -349,8 +349,8 @@ MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB $SRC/vamb_concat.slurm)
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 $SRC/vamb_minimap.slurm)
 VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB $SRC/vamb.slurm)
-VAMBUNSPLIT=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/vamb_split.slurm vamb/contigs.fna.gz vamb/vae_clusters_unsplit.tsv vamb/clusters_unsplit)
-VAMBSPLIT=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/vamb_split.slurm vamb/contigs.fna.gz vamb/vae_clusters_split.tsv vamb/clusters_split)
+VAMBUNSPLIT=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/vamb_split.slurm vamb/contigs.fna.gz vamb/vamb/vae_clusters_unsplit.tsv vamb/clusters_unsplit)
+VAMBSPLIT=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/vamb_split.slurm vamb/contigs.fna.gz vamb/vamb/vae_clusters_split.tsv vamb/clusters_split)
 # CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/bins/ vamb/checkm)
 CHECKMUNSPLITJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/clusters_unsplit vamb/checkm_unsplit)
 CHECKMSPLITJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/clusters_split vamb/checkm_split)

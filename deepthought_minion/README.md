@@ -115,10 +115,21 @@ FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 
 Note, that initially I was using UniRef50, however I currently use UniRef 100 which gives more hits. Please read [this comparison of UniRef50 vs UniRef100](https://fame.flinders.edu.au/blog/2026/05/24/uniprot)
 
+`mmseqs_easy_taxonomy.slurm` defaults to UniRef50 on deepthought. Select another database in
+`$HOME/Databases/mmseqs` with `MMSEQS_DB`. The database used is recorded in
+`mmseqs/<sample>/.mmseqs_db`, and a sample is only skipped when its `_tophit_report.gz` exists.
+
 For UniRef50:
 
 ```
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)
+```
+
+For UniRef100:
+
+```
+MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_READS:1 --dependency=afterok:$FAJOB \
+    --export=ALL,MMSEQS_DB=UniRef100 $SRC/mmseqs_easy_taxonomy.slurm)
 ```
 
 ## 11. Summarise the taxonomy from the mmseqs output files
@@ -178,8 +189,8 @@ find fastq -type f -printf "%f\n" > reads.txt
 export NUM_READS=$(wc -l reads.txt | cut -f 1 -d ' ')
 echo $NUM_READS
 
-SRC=~/atavide_lite/pawsey_minion
-cp $SRC/DEFINITIONS.sh .
+SRC=~/GitHubs/atavide_lite/deepthought_minion
+cp $SRC/DEFINITIONS_human.sh DEFINITIONS.sh
 
 # edit the DEFINITIONS file to change the sample name
 

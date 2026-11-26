@@ -13,6 +13,8 @@ set -euo pipefail
 eval "$(conda shell.bash hook)"
 conda activate atavide_lite
 
+THREADS=${SLURM_CPUS_PER_TASK:-16}
+
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
 	exit 2;
@@ -21,20 +23,20 @@ fi
 source DEFINITIONS.sh
 
 
-# this requires ~/atavide_lite/bin/fastq2fasta.c be compiled with make, and it has built in reading gzip support
+# this requires ~/GitHubs/atavide_lite/bin/fastq2fasta.c be compiled with make, and it has built in reading gzip support
 
 extract_R1 () {
 	FQ=$1;
 	FB=`basename $FQ .gz`;
 	FA=${FB/fastq/fasta}
-	~/atavide_lite/bin/fastq2fasta -n 1 $FQ - | gzip -c > $BGFS/fasta/$FA.gz;
+	~/GitHubs/atavide_lite/bin/fastq2fasta -n 1 $FQ - | gzip -c > $BGFS/fasta/$FA.gz;
 }
 
 export -f extract_R1
 mkdir -p $BGFS/fasta
 echo "Extracting to $BGFS/fasta" >&2;
 
-find -L $HOSTREMOVED -type f -name *fastq.gz | parallel -j 16 extract_R1
+find -L $HOSTREMOVED -type f -name *fastq.gz | parallel -j $THREADS extract_R1
 
 rsync -a $BGFS/fasta/ fasta/
 

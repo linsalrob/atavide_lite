@@ -27,20 +27,21 @@ Change the samplename to something meaningful, and we'll use that in the final o
 
 0. Set the source of the scripts
 
-Clone the atavide lite repository to your home directory, and make the compiled code
+Clone the atavide lite repository into `~/GitHubs` (every script expects it at `$HOME/GitHubs/atavide_lite`), and make the compiled code
 
 ```
+mkdir -p ~/GitHubs && cd ~/GitHubs
 git clone https://github.com/linsalrob/atavide_lite.git
 cd atavide_lite/bin
-make
-SRC=~/atavide_lite/deepthought_shortread
+make all
+SRC=~/GitHubs/atavide_lite/deepthought_shortread
 ```
 
 0b. Set up the conda environment
 
 ```
-mamba env create -f ~/atavide_lite/atavide_lite.yaml
-mamba env create -f ~/atavide_lite/atavide_lite_vamb.yaml
+mamba env create -f ~/GitHubs/atavide_lite/atavide_lite.yaml
+mamba env create -f ~/GitHubs/atavide_lite/atavide_lite_vamb.yaml
 ```
 
 0c. Create some directories for the slurm output
@@ -85,8 +86,12 @@ FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 4. Run mmseqs taxonomy
 
 ```
-MMSEQSJOB=$(sbatch --parsable --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy_submit.slurm)
+MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)
 ```
+
+This searches UniRef50 by default. Set `MMSEQS_DB` to use another database in the same
+directory, e.g. `sbatch --export=ALL,MMSEQS_DB=UniRef100 ...`. The database used is recorded in
+`mmseqs/<sample>/.mmseqs_db`, and a sample is only skipped when its `_tophit_report.gz` exists.
 
 4a. Create a taxonomy table
 
@@ -184,7 +189,7 @@ mkdir -p slurm_output/host_slurm  slurm_output/megahit_slurm  slurm_output/mmseq
 find fastq -name \*_R1\* -printf "%f\n" > R1_reads.txt
 
 export NUM_R1_READS=$(wc -l R1_reads.txt | cut -f 1 -d ' '); echo "There are $NUM_R1_READS reads"
-SRC=~/atavide_lite/deepthought_shortread
+SRC=~/GitHubs/atavide_lite/deepthought_shortread
 cp $SRC/DEFINITIONS.sh .
 
 # edit the DEFINITIONS file to change the sample name
@@ -201,8 +206,8 @@ MEGAHITJOB=$(sbatch  --parsable --dependency=afterok:$HOSTJOB --array=1-$NUM_R1_
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB $SRC/vamb_concat.slurm)
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 $SRC/vamb_minimap.slurm)
 VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB $SRC/vamb.slurm)
-VAMBUNSPLIT=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/vamb_split.slurm vamb/contigs.fna.gz vamb/vae_clusters_unsplit.tsv vamb/clusters_unsplit)
-VAMBSPLIT=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/vamb_split.slurm vamb/contigs.fna.gz vamb/vae_clusters_split.tsv vamb/clusters_split)
+VAMBUNSPLIT=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/vamb_split.slurm vamb/contigs.fna.gz vamb/vamb/vae_clusters_unsplit.tsv vamb/clusters_unsplit)
+VAMBSPLIT=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/vamb_split.slurm vamb/contigs.fna.gz vamb/vamb/vae_clusters_split.tsv vamb/clusters_split)
 # CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/bins/ vamb/checkm)
 CHECKMUNSPLITJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/clusters_unsplit vamb/checkm_unsplit)
 CHECKMSPLITJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $SRC/checkm.slurm vamb/clusters_split vamb/checkm_split)

@@ -21,13 +21,13 @@ vamb
 # Compiled code
 
 There are two compiled applications, 
-`~/atavide_lite/bin/fastq2fasta` and 
-`~/atavide_lite/bin/fastg2gfa`
+`~/GitHubs/atavide_lite/bin/fastq2fasta` and 
+`~/GitHubs/atavide_lite/bin/fastg2gfa`
 
 You can compile that code with the makefile we've provided.
 
 ```
-cd ~/atavide_lite/bin/
+cd ~/GitHubs/atavide_lite/bin/
 make
 ```
 

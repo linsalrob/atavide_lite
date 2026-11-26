@@ -32,7 +32,8 @@ conda activate $ATAVIDE_CONDA
 
 echo "Start " `date` >&2;
 
-DB=UniRef50
+# Which MMseqs database to search. Override with e.g. MMSEQS_DB=UniRef100.
+DB="${MMSEQS_DB:-UniRef50}"
 DBSOURCE=/scratch/$PAWSEY_PROJECT/$USER/Databases/$DB
 
 if [[ ! -e $DBSOURCE ]]; then
@@ -60,10 +61,20 @@ R2=${R1/_R1/_R2}
 OUTPUT=$OUTDIR/${R/$FILEEND/}
 TMPOUTPUT=${R/$FILEEND/}
 
-if [[ -e $OUTPUT ]]; then
-	echo "$OUTPUT exists. Nothing to do" >&2;
-	exit 0;
+# A sample is done only when its gzipped tophit report exists: the gzip runs after
+# mmseqs finishes, so a cancelled or failed run never leaves one behind. Record which
+# database produced the directory and refuse to reuse results from a different one.
+if [[ -s "${OUTPUT}_tophit_report.gz" ]]; then
+	PREV_DB=$(cat "$OUTDIR/.mmseqs_db" 2>/dev/null || echo UniRef50)
+	if [[ "$PREV_DB" == "$DB" ]]; then
+		echo "$OUTPUT is complete (database $DB). Nothing to do" >&2;
+		exit 0;
+	fi
+	echo "ERROR: $OUTDIR was built with database '$PREV_DB', not '$DB'." >&2;
+	echo "       Remove it or choose a different output location before re-running." >&2;
+	exit 3;
 fi
+echo "$DB" > "$OUTDIR/.mmseqs_db"
 
 # cp fasta/$R1 fasta/$R2 $BGFS
 
@@ -72,7 +83,8 @@ TPD=$(mktemp -d -p $TMPDIR)
 echo "Running  mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $TPD --threads 64" >&2;
 mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $TPD --threads 64
 
-find $OUTDIR -type f  | parallel -j 32 gzip
+# leave the database label readable, and overwrite stale .gz files left by a cancelled attempt
+find $OUTDIR -type f ! -name '*.gz' ! -name .mmseqs_db | parallel -j 32 gzip -f
 
 echo "Fin " `date` >&2;
 

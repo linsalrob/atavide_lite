@@ -23,6 +23,8 @@ set -euo pipefail
 eval "$(conda shell.bash hook)"
 conda activate checkm
 
+THREADS=${SLURM_CPUS_PER_TASK:-16}
+
 # this %/ removes the trailing / if there is one
 SOURCE=${1%/}
 DEST=${2%/}
@@ -32,7 +34,7 @@ echo "Copying source to $BGFS" >&2
 rsync -az $SOURCE/ $BGFS/$LOCALSOURCE/
 
 echo "Running checkm on $BGFS/$LOCALSOURCE and output in $BGFS/checkm"  >&2;
-checkm lineage_wf -t 16 $BGFS/$LOCALSOURCE $BGFS/checkm
-checkm qa -t 16 $BGFS/checkm/lineage.ms $BGFS/checkm
+checkm lineage_wf -t $THREADS $BGFS/$LOCALSOURCE $BGFS/checkm
+checkm qa -t $THREADS $BGFS/checkm/lineage.ms $BGFS/checkm
 rsync -az $BGFS/checkm/ $DEST/
 

@@ -193,11 +193,16 @@ FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $PAWSEY_SRC/fastq2fasta.
 
 Note, that initially I was using UniRef50, however I currently use UniRef 100 which gives more hits. Please read [this comparison of UniRef50 vs UniRef100](https://fame.flinders.edu.au/blog/2026/05/24/uniprot) for more discussion and comparisons.
 
-For UniRef50:
+For UniRef50 (the default of `mmseqs_easy_taxonomy.slurm`):
 
 ```
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB $PAWSEY_SRC/mmseqs_easy_taxonomy.slurm)
 ```
+
+`mmseqs_easy_taxonomy.slurm` also accepts `MMSEQS_DB`, as `pawsey_minion` does
+(`--export=ALL,MMSEQS_DB=UniRef100`), and writes to `mmseqs/`. It records the database in
+`mmseqs/<sample>/.mmseqs_db`, refuses to reuse a directory built with a different one, and only
+skips a sample whose `_tophit_report.gz` exists, so a cancelled run is redone rather than skipped.
 
 For UniRef100:
 
@@ -276,7 +281,7 @@ The normal way to use vamb is these three commands:
 ```
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB $PAWSEY_SRC/vamb_concat.slurm)
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 $PAWSEY_SRC/vamb_minimap.slurm)
-VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $HOME/atavide_lite/pawsey_shortread/vamb.slurm)
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $HOME/GitHubs/atavide_lite/pawsey_shortread/vamb.slurm)
 
 CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $PAWSEY_SRC/checkm.slurm vamb/bins/ vamb/checkm)
 ```

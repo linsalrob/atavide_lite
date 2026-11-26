@@ -45,17 +45,40 @@ fi
 
 mkdir -p $OUTDIR/mapped_reads
 
+# Normally vamb_minimap.slurm has already made every BAM; this only fills gaps.
+# Map the host- (and spike-in-) removed reads: they are what megahit assembled, and
+# mapping raw reads would let host and spike-in reads inflate contig coverage.
 for READS in $(sort -R reads.txt); do
 	BAM=${READS/$FILEEND/.bam}
 	echo "READS: $READS BAM: $BAM" >&2;
 	if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 		echo "Bam file: '$OUTDIR/mapped_reads/$BAM' not found. Data generated" >&2;
-		mkdir -p $OUTDIR/mapped_reads
-		minimap2 -t "$(( THREADS > 2 ? THREADS - 2 : 1 ))" -N 5 -ax map-ont $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$READS | samtools view -F 3584 -b --threads 1 | samtools sort -@ 1 -o $OUTDIR/mapped_reads/$BAM -
+		if [[ ! -s $OUTDIR/contigs.mmi ]]; then
+			minimap2 -d $OUTDIR/contigs.mmi $OUTDIR/contigs.fna.gz
+		fi
+		minimap2 -t "$(( THREADS > 2 ? THREADS - 2 : 1 ))" -N 5 -ax map-ont $OUTDIR/contigs.mmi --split-prefix $OUTDIR/mmsplit$$ "$HOSTREMOVED/$READS" | samtools view -F 3584 -b --threads 1 | samtools sort -@ 1 -o $OUTDIR/mapped_reads/$BAM -
 	fi
 done
 
+# VAMB >= 4 takes "vamb bin default"; the bare "vamb --fasta ..." form no longer parses.
+# It refuses to write into an existing --outdir, so keep a finished run and stop on a
+# partial one.
+if [[ -s "$OUTDIR/vamb/vae_clusters_unsplit.tsv" ]]; then
+	echo "$OUTDIR/vamb/vae_clusters_unsplit.tsv exists. Skipping VAMB binning" >&2
+elif [[ -e "$OUTDIR/vamb" ]]; then
+	echo "ERROR: $OUTDIR/vamb exists but has no vae_clusters_unsplit.tsv (a failed run?)." >&2
+	echo "       Remove it before re-running." >&2
+	exit 2
+else
+	vamb bin default -o C -p "$THREADS" --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamdir $OUTDIR/mapped_reads/
+fi
 
-vamb -o C -p "$THREADS" --cuda --outdir $OUTDIR/vamb --fasta $OUTDIR/contigs.fna.gz --bamfiles $OUTDIR/mapped_reads/*bam
-
-python "$HOME/GitHubs/atavide_lite/bin/vamb_create_fasta.py" $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters.tsv 20000 $OUTDIR/bins
+# Split bins (one per sample) go to bins/, which checkm.slurm reads; unsplit bins are kept
+# apart so CheckM does not score every contig twice.
+python "$HOME/GitHubs/atavide_lite/bin/vamb_create_fasta.py" $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_unsplit.tsv 20000 $OUTDIR/bins_unsplit &
+UNSPLIT_PID=$!
+python "$HOME/GitHubs/atavide_lite/bin/vamb_create_fasta.py" $OUTDIR/contigs.fna.gz $OUTDIR/vamb/vae_clusters_split.tsv 20000 $OUTDIR/bins &
+SPLIT_PID=$!
+# a bare "wait" returns 0 even when a job failed, so wait on each one
+wait "$UNSPLIT_PID"
+wait "$SPLIT_PID"

@@ -19,7 +19,7 @@ We separate the fasta files into R1 and R2 reads using `fasta_split` which is pr
 
 ```bash
 for F in $(find fasta_unsplit/ -type f -printf "%f\n"); do 
-	$HOME/atavide_lite/bin/fasta_split fasta_unsplit/$F fasta/${F/.fasta/_R1.fasta} fasta/${F/.fasta/_R2.fasta}; 
+	$HOME/GitHubs/atavide_lite/bin/fasta_split fasta_unsplit/$F fasta/${F/.fasta/_R1.fasta} fasta/${F/.fasta/_R2.fasta};
 	pigz fasta/${F/.fasta/_R1.fasta} & pigz fasta/${F/.fasta/_R2.fasta};
 	wait
 done

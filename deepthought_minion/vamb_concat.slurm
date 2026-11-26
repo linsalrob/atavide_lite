@@ -12,5 +12,5 @@ eval "$(conda shell.bash hook)"
 conda activate atavide_lite_vamb
 
 mkdir -p $BGFS/vamb
-python ~/atavide_lite/bin/vamb_concatenate.py -m 300 $BGFS/vamb/contigs.fna.gz megahit/*/final.contigs.fa
+python ~/GitHubs/atavide_lite/bin/vamb_concatenate.py -m 300 $BGFS/vamb/contigs.fna.gz megahit/*/final.contigs.fa
 rsync -avz $BGFS/vamb vamb

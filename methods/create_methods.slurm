@@ -54,7 +54,7 @@ Each of the metagenomics sequencing runs was processed separately. In the follow
 
 The long-read data were cleaned with fastp (version $FPVER) [PMID: 30423086] using the parameters:
 
-fastp -n 2 -l 50 -i fastq/\$READ -o fastq_fastp/\$READ --adapter_fasta ~/atavide_lite/adapters/ONT_RPB114.24.fna
+fastp -n 2 -l 50 -i fastq/\$READ -o fastq_fastp/\$READ --adapter_fasta ~/GitHubs/atavide_lite/adapters/ONT_RPB114.24.fna
 
 This removes sequences with 2 or more "N" bases, removes the ONT adapters, and requires a minimum read length of 50 bp. This removes low quality Nanopore reads.
 

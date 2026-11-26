@@ -67,7 +67,7 @@ echo "We are processing fastq/$R1 and fastq/$R2"
 ##################################################################
 
 mkdir --parents fastq_fastp
-fastp -n 1 -l 100 -i fastq/$R1 -I fastq/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R2 --adapter_fasta $HOME/atavide_lite/adapters/IlluminaAdapters.fa --thread 16
+fastp -n 1 -l 100 -i fastq/$R1 -I fastq/$R2 -o fastq_fastp/$R1 -O fastq_fastp/$R2 --adapter_fasta $HOME/GitHubs/atavide_lite/adapters/IlluminaAdapters.fa --thread 16
 
 ##################################################################
 #                                                                #
@@ -105,8 +105,8 @@ samtools fastq -f 4 -F 1 human_mapped/output.bam  | gzip -c > unmapped_reads/sin
 #                                                                #
 ##################################################################
 
-~/atavide_lite/bin/fastq2fasta -n 1 $R1 - | gzip -c > fasta/${R1/fastq/fasta}
-~/atavide_lite/bin/fastq2fasta -n 2 $R2 - | gzip -c > fasta/${R2/fastq/fasta}
+~/GitHubs/atavide_lite/bin/fastq2fasta -n 1 $R1 - | gzip -c > fasta/${R1/fastq/fasta}
+~/GitHubs/atavide_lite/bin/fastq2fasta -n 2 $R2 - | gzip -c > fasta/${R2/fastq/fasta}
 
 ##################################################################
 #                                                                #
@@ -140,7 +140,7 @@ python ~/GitHubs/atavide_lite/summarise_taxonomy/scripts/join_taxonomies.py -t t
 #                                                                #
 ##################################################################
 
-python ~/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f mmseqs/atavide_tophit_report.gz -d $UNIREFUNC -o mmseqs/atavide_tophit_report_subsystems_taxa
+python ~/GitHubs/atavide_lite/bin/easy_taxonomy_to_function_taxa_fast.py -f mmseqs/atavide_tophit_report.gz -d $UNIREFUNC -o mmseqs/atavide_tophit_report_subsystems_taxa
 pigz mmseqs/atavide_tophit_report_subsystems_taxa
 
 ##################################################################
@@ -151,7 +151,7 @@ pigz mmseqs/atavide_tophit_report_subsystems_taxa
 #                                                                #
 ##################################################################
 
-python ~/atavide_lite/bin/count_subsystems.py -d mmseqs -n $SAMPLENAME
+python ~/GitHubs/atavide_lite/bin/count_subsystems.py -d mmseqs -n $SAMPLENAME
 find subsystems -type f -exec pigz {} \;
 
 ##################################################################

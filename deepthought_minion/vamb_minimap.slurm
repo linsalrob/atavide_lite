@@ -13,6 +13,8 @@ set -euo pipefail
 eval "$(conda shell.bash hook)"
 conda activate atavide_lite
 
+THREADS=${SLURM_CPUS_PER_TASK:-16}
+
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
 	exit 2;
@@ -48,8 +50,10 @@ if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 		exit 4;
 	fi
 
-	echo "minimap2 -t 16 -N 5 -ax map-ont $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$READS | samtools view -F 3584 -b --threads 16  | samtools sort -@ 16 -o $OUTDIR/mapped_reads/$BAM -" >&2
-	minimap2 -t 16 -N 5 -ax map-ont $BGFS/$OUTDIR/contigs.mmi --split-prefix $BGFS/mmsplit$$ fastq/$READS | samtools view -F 3584 -b --threads 16  | samtools sort -@ 16 -o $BGFS/$OUTDIR/mapped_reads/$BAM -
+	# Map the host-removed reads, which are what megahit assembled. Raw reads would let
+	# host reads inflate contig coverage.
+	echo "minimap2 -t $THREADS -N 5 -ax map-ont $BGFS/$OUTDIR/contigs.mmi --split-prefix $BGFS/mmsplit$$ $HOSTREMOVED/$READS | samtools view -F 3584 -b --threads $THREADS  | samtools sort -@ $THREADS -o $BGFS/$OUTDIR/mapped_reads/$BAM -" >&2
+	minimap2 -t $THREADS -N 5 -ax map-ont $BGFS/$OUTDIR/contigs.mmi --split-prefix $BGFS/mmsplit$$ "$HOSTREMOVED/$READS" | samtools view -F 3584 -b --threads $THREADS  | samtools sort -@ $THREADS -o $BGFS/$OUTDIR/mapped_reads/$BAM -
 	samtools index $BGFS/$OUTDIR/mapped_reads/$BAM
 fi
 

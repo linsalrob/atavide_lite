@@ -13,6 +13,8 @@ set -euo pipefail
 eval "$(conda shell.bash hook)"
 conda activate atavide_lite
 
+THREADS=${SLURM_CPUS_PER_TASK:-16}
+
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
 	exit 2;
@@ -42,7 +44,7 @@ for INF in $(find $VAMBDIR -name contigs.fna.gz); do
 		fi
 
 		cp $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 $BGFS/fastq
-		minimap2 -t 16 -N 5 -ax sr $BGFS/$OUTDIR/contigs.mmi --split-prefix $BGFS/mmsplit$$ $BGFS/fastq/$R1 $BGFS/fastq/$R2 | samtools view -F 3584 -b --threads 16  | samtools sort -@ 16 -o $BGFS/$OUTDIR/mapped_reads/$BAM -
+		minimap2 -t $THREADS -N 5 -ax sr $BGFS/$OUTDIR/contigs.mmi --split-prefix $BGFS/mmsplit$$ $BGFS/fastq/$R1 $BGFS/fastq/$R2 | samtools view -F 3584 -b --threads $THREADS  | samtools sort -@ $THREADS -o $BGFS/$OUTDIR/mapped_reads/$BAM -
 		rsync -a $BGFS/$OUTDIR/ $OUTDIR/
 	fi
 done

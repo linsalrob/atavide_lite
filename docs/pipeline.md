@@ -48,7 +48,7 @@ Confirm that the binary was compiled, output files are non-empty, compression is
 
 MMseqs2 `easy-taxonomy` compares reads with a UniRef database and assigns taxonomy using a lowest-common-ancestor approach after its prefiltering and alignment stages. This is commonly the most computationally demanding read-based stage because both query volume and database size are large.
 
-Current Pawsey scripts provide UniRef50 and UniRef100 variants, while the current project methods favour UniRef100 for greater coverage. The database choice affects runtime, storage, hit rate, identifiers, and interpretation. Do not mix results from different UniRef releases without recording and accounting for the difference.
+Every profile's `mmseqs_easy_taxonomy.slurm` searches UniRef100 by default for greater coverage; set `MMSEQS_DB=UniRef50` for a smaller, faster search. The database used is recorded in `mmseqs/<sample>/.mmseqs_db`, and a directory built with one database is never reused for another. The database choice affects runtime, storage, hit rate, identifiers, and interpretation. Do not mix results from different UniRef releases without recording and accounting for the difference.
 
 MMseqs2 uses substantial temporary storage. Select a long or high-memory queue only when its limits and charging model fit the job, and place temporary files on storage designed for heavy I/O.
 

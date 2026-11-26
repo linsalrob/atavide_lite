@@ -111,7 +111,8 @@ if [[ -s "$OUTPUT/${TMPOUTPUT}_tophit_report.gz" ]]; then
 		exit 0;
 	else
 		echo "ERROR: $OUTPUT already exists but was built with database '$PREV_DB', not '$DB'." >&2;
-		echo "       Remove it or choose a different output location before re-running." >&2;
+		echo "       To keep using it, resubmit with --export=ALL,MMSEQS_DB=$PREV_DB; otherwise" >&2;
+		echo "       remove it or choose a different output location before re-running." >&2;
 		exit 3;
 	fi
 fi

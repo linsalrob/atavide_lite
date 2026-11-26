@@ -2,7 +2,7 @@
 
 ###############################################################
 #                                                             #
-# mmseqs easy taxonomy against UniRef50                       #
+# mmseqs easy taxonomy against UniRef100 (MMSEQS_DB)         #
 #                                                             #
 # Note that you need a fasta file                             #
 # Also make sure that the reads are labeled /1 /2             #
@@ -34,8 +34,8 @@ THREADS=${SLURM_CPUS_PER_TASK:-32}
 
 echo "Start " `date` >&2;
 
-# Which MMseqs database to search. Override with e.g. MMSEQS_DB=UniRef100.
-DB="${MMSEQS_DB:-UniRef50}"
+# Which MMseqs database to search. Override with e.g. MMSEQS_DB=UniRef50 (smaller and faster).
+DB="${MMSEQS_DB:-UniRef100}"
 DBSOURCE=/scratch/user/$USER/Databases/mmseqs/$DB
 
 if [[ ! -e $DBSOURCE ]]; then
@@ -65,13 +65,15 @@ TMPOUTPUT=${R/$FILEEND/}
 # mmseqs finishes, so a cancelled or failed run never leaves one behind. Record which
 # database produced the directory and refuse to reuse results from a different one.
 if [[ -s "$OUTPUT/${TMPOUTPUT}_tophit_report.gz" ]]; then
+	# directories from before the label existed were built with the old default, UniRef50
 	PREV_DB=$(cat "$OUTPUT/.mmseqs_db" 2>/dev/null || echo UniRef50)
 	if [[ "$PREV_DB" == "$DB" ]]; then
 		echo "$OUTPUT is complete (database $DB). Nothing to do" >&2;
 		exit 0;
 	fi
 	echo "ERROR: $OUTPUT was built with database '$PREV_DB', not '$DB'." >&2;
-	echo "       Remove it or choose a different output location before re-running." >&2;
+	echo "       To keep using it, resubmit with --export=ALL,MMSEQS_DB=$PREV_DB; otherwise" >&2;
+	echo "       remove it or choose a different output location before re-running." >&2;
 	exit 3;
 fi
 

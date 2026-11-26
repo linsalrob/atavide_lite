@@ -2,7 +2,7 @@
 
 ###############################################################
 #                                                             #
-# mmseqs easy taxonomy against UniRef50                       #
+# mmseqs easy taxonomy against UniRef100 (MMSEQS_DB)         #
 #                                                             #
 # Note that you need a fasta file                             #
 # Also make sure that the reads are labeled /1 /2             #
@@ -32,8 +32,8 @@ conda activate $ATAVIDE_CONDA
 
 echo "Start " `date` >&2;
 
-# Which MMseqs database to search. Override with e.g. MMSEQS_DB=UniRef100.
-DB="${MMSEQS_DB:-UniRef50}"
+# Which MMseqs database to search. Override with e.g. MMSEQS_DB=UniRef50 (smaller and faster).
+DB="${MMSEQS_DB:-UniRef100}"
 DBSOURCE=/scratch/$PAWSEY_PROJECT/$USER/Databases/$DB
 
 if [[ ! -e $DBSOURCE ]]; then
@@ -65,23 +65,37 @@ TMPOUTPUT=${R/$FILEEND/}
 # mmseqs finishes, so a cancelled or failed run never leaves one behind. Record which
 # database produced the directory and refuse to reuse results from a different one.
 if [[ -s "${OUTPUT}_tophit_report.gz" ]]; then
+	# directories from before the label existed were built with the old default, UniRef50
 	PREV_DB=$(cat "$OUTDIR/.mmseqs_db" 2>/dev/null || echo UniRef50)
 	if [[ "$PREV_DB" == "$DB" ]]; then
 		echo "$OUTPUT is complete (database $DB). Nothing to do" >&2;
 		exit 0;
 	fi
 	echo "ERROR: $OUTDIR was built with database '$PREV_DB', not '$DB'." >&2;
-	echo "       Remove it or choose a different output location before re-running." >&2;
+	echo "       To keep using it, resubmit with --export=ALL,MMSEQS_DB=$PREV_DB; otherwise" >&2;
+	echo "       remove it or choose a different output location before re-running." >&2;
 	exit 3;
 fi
 echo "$DB" > "$OUTDIR/.mmseqs_db"
 
 # cp fasta/$R1 fasta/$R2 $BGFS
 
+# MMseqs defaults --split-memory-limit to all the memory in /proc/meminfo, i.e. the whole
+# node rather than this job's allocation, and can then be OOM-killed in prefilter against
+# UniRef100. Cap it at 80% of the allocation, as pawsey_minion does.
+if [[ -n "${SLURM_MEM_PER_NODE:-}" ]]; then
+	SPLIT_MEM_ARG=(--split-memory-limit "$(( SLURM_MEM_PER_NODE * 4 / 5 ))M")
+elif [[ -n "${SLURM_MEM_PER_CPU:-}" && -n "${SLURM_CPUS_PER_TASK:-}" ]]; then
+	SPLIT_MEM_ARG=(--split-memory-limit "$(( SLURM_MEM_PER_CPU * SLURM_CPUS_PER_TASK * 4 / 5 ))M")
+else
+	SPLIT_MEM_ARG=()
+	echo "WARNING: could not determine allocated memory; mmseqs will assume all node memory" >&2
+fi
+
 # create the temporary directory once, so the path we log is the one mmseqs uses
 TPD=$(mktemp -d -p $TMPDIR)
-echo "Running  mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $TPD --threads 64" >&2;
-mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $TPD --threads 64
+echo "Running  mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $TPD --threads 64 ${SPLIT_MEM_ARG[*]}" >&2;
+mmseqs easy-taxonomy fasta/$R1 fasta/$R2 $DBSOURCE/$DB $OUTPUT $TPD --threads 64 "${SPLIT_MEM_ARG[@]}"
 
 # leave the database label readable, and overwrite stale .gz files left by a cancelled attempt
 find $OUTDIR -type f ! -name '*.gz' ! -name .mmseqs_db | parallel -j 32 gzip -f

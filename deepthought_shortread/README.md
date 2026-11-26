@@ -89,9 +89,11 @@ FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)
 ```
 
-This searches UniRef50 by default. Set `MMSEQS_DB` to use another database in the same
-directory, e.g. `sbatch --export=ALL,MMSEQS_DB=UniRef100 ...`. The database used is recorded in
+This searches UniRef100 by default, from `/scratch/user/$USER/Databases/mmseqs/UniRef100`. Set
+`MMSEQS_DB` to use another database in the same directory, e.g.
+`sbatch --export=ALL,MMSEQS_DB=UniRef50 ...`. The database used is recorded in
 `mmseqs/<sample>/.mmseqs_db`, and a sample is only skipped when its `_tophit_report.gz` exists.
+Unlabelled results from earlier runs are assumed to be UniRef50, the old default.
 
 4a. Create a taxonomy table
 

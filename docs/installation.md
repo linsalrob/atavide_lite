@@ -70,7 +70,7 @@ The Pawsey scripts intentionally place environments under `/scratch/$PAWSEY_PROJ
 Pipeline stages may require:
 
 - a host reference FASTA for optional host removal;
-- an MMseqs2 UniRef database, with current profiles favouring UniRef100 where provided;
+- an MMseqs2 UniRef database: UniRef100 is the default in every profile, and UniRef50 can be selected with `MMSEQS_DB`;
 - NCBI taxonomy dumps for TaxonKit;
 - the atavide lite BV-BRC Subsystems SQLite mapping; and
 - CheckM or PHROG data when those optional stages are used.

@@ -187,11 +187,12 @@ FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 This is the most computationally demanding step of the pipeline. On some clusters you might want to run this on the 
 `long` queue or whatever the equivalent is.
 
-We use the standard `mmseqs2 easy-taxonomy` pipeline. By default we use `UniRef50` as the database, but you can change 
-that if you wish. (_Note:_ we're working on a comparison of what is missed between UniRef50 and UniRef100)
+We use the standard `mmseqs2 easy-taxonomy` pipeline. By default every profile searches `UniRef100`, which gives
+more hits than UniRef50 (see [this comparison of UniRef50 vs UniRef100](https://fame.flinders.edu.au/blog/2026/05/24/uniprot)).
+Set `MMSEQS_DB=UniRef50` for a smaller, faster search. The database used is recorded in `mmseqs/<sample>/.mmseqs_db`.
 
 ```bash
-MMSEQSJOB=$(sbatch --parsable --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy_submit.slurm)
+MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB $SRC/mmseqs_easy_taxonomy.slurm)
 ```
 
 8. Create a taxonomy table

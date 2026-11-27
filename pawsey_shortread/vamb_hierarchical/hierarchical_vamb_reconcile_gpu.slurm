@@ -14,7 +14,6 @@ sample=${1:?Usage: hierarchical_vamb_reconcile_gpu.slurm SAMPLE}
 VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 VAMBDIR="vamb_crass/$sample"
 OUTDIR="$VAMBDIR/hierarchical_vamb"
-module load rocm/6.2.4
 eval "$(conda shell.bash hook)"
 conda activate "$VENV_DIR"
 python hierarchical_vamb_clustering_rocm.py --vamb-dir "$VAMBDIR/vamb" --outdir "$OUTDIR" cluster-global

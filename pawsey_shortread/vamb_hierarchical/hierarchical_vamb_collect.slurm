@@ -26,7 +26,7 @@ VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 VAMBDIR="vamb_crass/$sample/vamb"
 OUTDIR="${HIERARCHICAL_OUTDIR:-vamb_crass/$sample/hierarchical_vamb}"
 
-[[ -d "$VENV_DIR" ]] || { echo "Missing VAMB environment: $VENV_DIR" >&2; exit 2; }
+[[ -x "$VENV_DIR/bin/vamb" ]] || { echo "Missing VAMB environment: $VENV_DIR" >&2; exit 2; }
 [[ -f "$VAMBDIR/latent.npz" ]] || { echo "Missing VAMB checkpoint: $VAMBDIR/latent.npz" >&2; exit 3; }
 
 eval "$(conda shell.bash hook)"

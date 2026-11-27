@@ -2,6 +2,7 @@
 #SBATCH --job-name=vamb_setup
 #SBATCH --partition=gpu-dev
 #SBATCH --gres=gpu:1
+#SBATCH --ntasks=1
 #SBATCH --time=1:00:00
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.err
@@ -39,16 +40,21 @@
 set -euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
-# ---- 1) Get the right module here!
-module load rocm/6.2.4
+# ---- 1) No ROCm module is needed: the ROCm torch wheels bundle the ROCm user-space
+# libraries, and only need the GPU driver on the node. (Setonix's 2026.11 software stack
+# dropped rocm/6.2.4, so loading it made this script fail.)
 
 # ---- 2) Create and load the virtual environment 
 VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 
-eval "$(/home/edwa0468/software/miniforge3/bin/mamba shell hook --shell bash)"
+eval "$("$HOME/software/miniforge3/bin/mamba" shell hook --shell bash)"
 
-if [[ -e "$VENV_DIR" ]]; then
+if [[ -d "$VENV_DIR/conda-meta" ]]; then
 	mamba env remove --yes --prefix "$VENV_DIR"
+elif [[ -e "$VENV_DIR" ]]; then
+	# Not a conda environment (e.g. a husk left by the /scratch purge, with no bin/ or
+	# conda-meta/), which "mamba env remove" refuses. Move it aside rather than delete it.
+	mv "$VENV_DIR" "$VENV_DIR.purge-broken-$(date +%Y%m%d%H%M%S)"
 fi
 
 mamba create --yes --prefix "$VENV_DIR" python=3.12 pip
@@ -62,7 +68,7 @@ PYTHON="$VENV_DIR/bin/python"
 "$PYTHON" -m pip --version
 ## pip install vamb --exclude torch
 "$PYTHON" -m pip install --index-url https://download.pytorch.org/whl/rocm6.2.4 "torch == 2.6.0" torchvision torchaudio
-"$PYTHON" -m pip install --no-deps  vamb "vambcore == 0.1.2" "numpy == 1.26.4" "pycoverm == 0.6.2" "networkx == 3.4.2" "scikit-learn == 1.6.1" "dadaptation == 3.2" "loguru == 0.7.3" "pyhmmer == 0.10.15" "pyrodigal == 3.6.3" joblib "scipy == 1.15.3" threadpoolctl archspec psutil~=5.8
+"$PYTHON" -m pip install --no-deps  vamb "vambcore == 0.1.2" "numpy == 1.26.4" "pycoverm == 0.6.2" "networkx == 3.4.2" "scikit-learn == 1.6.1" "dadaptation == 3.2" "loguru == 0.7.3" "pyhmmer == 0.10.15" "pyrodigal == 3.6.3" joblib cloudpickle "scipy == 1.15.3" threadpoolctl archspec psutil~=5.8
 
 echo "Running pip check"
 "$PYTHON" -m pip check

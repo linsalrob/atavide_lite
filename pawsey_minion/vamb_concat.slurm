@@ -18,8 +18,17 @@ trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 # test we have atavide_lite conda installed, and then activate it
 eval "$(conda shell.bash hook)"
 "$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
-ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
+
+# vamb_concatenate.py imports vamb, which lives in the environment built by
+# pawsey_shortread/vamb_install.slurm.
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
+if [[ ! -x "$VENV_DIR/bin/vamb" ]]; then
+	echo "Please run pawsey_shortread/vamb_install.slurm to create the VAMB environment at $VENV_DIR" >&2
+	exit 1
+fi
+conda activate --stack "$VENV_DIR"
 
 mkdir -p vamb
 python "$HOME/GitHubs/atavide_lite/bin/vamb_concatenate.py" -m 300 vamb/contigs.fna.gz megahit/*/final.contigs.fa

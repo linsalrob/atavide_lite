@@ -19,11 +19,14 @@ On Pawsey, its best to make the conda installation fresh to ensure all the delet
 
 ```
 $HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh 2> /dev/null  &&  \
-    mamba env remove --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite && \
-    mamba env remove --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb
+    mamba env remove --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite
 mamba env create --yes --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite --file ../atavide_lite.yaml
-mamba env create --yes --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb --file ../atavide_lite_vamb.yaml
+sbatch --account=${PAWSEY_PROJECT}-gpu ../pawsey_shortread/vamb_install.slurm
 ```
+
+VAMB runs from the ROCm environment that `pawsey_shortread/vamb_install.slurm` builds at
+`/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb`, shared with the short-read pipeline.
+The `atavide_lite_vamb` environment is no longer used on Pawsey.
 
 Make sure you build atavide_lite/bin:
 
@@ -187,9 +190,6 @@ Please switch to the `atavide_lite` directory and make the executables before yo
 pushd $HOME/GitHubs/atavide_lite/bin
 make all
 popd
-```
-
-```
 FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $SRC/fastq2fasta.slurm)
 ```
 

@@ -44,7 +44,8 @@ pushd "$HOME/GitHubs/atavide_lite/bin" && make all && popd   # builds fastq2fast
 - `DEFINITIONS.sh` must set `SAMPLENAME`, `FILEEND`, `SOURCE`, `HOSTFILE`, `HOST`, `HOSTREMOVED`.
   Optionally `SPIKE_IN` and `SPIKE_IN_SEQUENCE` (see §5).
 - Conda prefixes: `/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite` and
-  `…/atavide_lite_vamb`. `pawsey_lib/check_atavide_lite_env.sh` validates the former.
+  `…/vamb` (the ROCm VAMB environment built by `pawsey_shortread/vamb_install.slurm`;
+  `atavide_lite_vamb` is no longer used). `pawsey_lib/check_atavide_lite_env.sh` validates the former.
 
 ### Verify databases exist before submitting anything
 

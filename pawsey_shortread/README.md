@@ -9,14 +9,14 @@ Before you being, please remove any old environments, and create the `atavide_li
 
 ```
 $HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh 2> /dev/null  &&  \
-    mamba env remove --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite && \
-    mamba env remove --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb
+    mamba env remove --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite
 mamba env create --yes --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite --file ../atavide_lite.yaml
-mamba env create --yes --prefix /scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb --file ../atavide_lite_vamb.yaml
 sbatch --account=${PAWSEY_PROJECT}-gpu vamb_install.slurm
 ```
 
-This creates an `atavide_lite` and `atavide_lite_vamb` conda environments for us to use.
+This creates the `atavide_lite` conda environment, and (on a GPU node) the `vamb` environment
+at `/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb`, with a ROCm build of PyTorch.
+The `atavide_lite_vamb` environment is no longer used on Pawsey.
 
 Make sure you build atavide_lite/bin:
 

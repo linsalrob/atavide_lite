@@ -44,9 +44,8 @@ VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
 for required in "$VAMBDIR/composition.npz" "$VAMBDIR/abundance.npz" "$VAMBDIR/latent.npz"; do
     [[ -f "$required" ]] || { echo "Missing required VAMB feature input: $required" >&2; exit 3; }
 done
-[[ -d "$VENV_DIR" ]] || { echo "Missing VAMB environment: $VENV_DIR" >&2; exit 4; }
+[[ -x "$VENV_DIR/bin/vamb" ]] || { echo "Missing VAMB environment: $VENV_DIR" >&2; exit 4; }
 
-module load rocm/6.2.4
 eval "$(conda shell.bash hook)"
 conda activate "$VENV_DIR"
 

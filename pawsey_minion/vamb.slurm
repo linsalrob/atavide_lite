@@ -7,9 +7,8 @@
 #SBATCH --account=pawsey1018-gpu
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks=1
-# Setonix allocates one 8-core chiplet per GPU, so 8 CPUs matches --gres=gpu:1.
-# Without this SLURM_CPUS_PER_TASK is unset and THREADS falls back to its default.
-#SBATCH --cpus-per-task=8
+# Setonix allocates one 8-core chiplet per GPU, and its cli_filter rejects an explicit
+# --cpus-per-task on a GPU job, so THREADS comes from SLURM_CPUS_ON_NODE below.
 #SBATCH --time=60:00
 
 set -euo pipefail
@@ -18,14 +17,24 @@ trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 # test we have atavide_lite conda installed, and then activate it
 eval "$(conda shell.bash hook)"
 "$HOME/GitHubs/atavide_lite/pawsey_lib/check_atavide_lite_env.sh"
-ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite_vamb"
+ATAVIDE_CONDA="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/atavide_lite"
 conda activate $ATAVIDE_CONDA
 
-# Derive thread count from the Slurm allocation rather than hardcoding it.
-THREADS=${SLURM_CPUS_PER_TASK:-8}
+# VAMB runs from the same ROCm environment as pawsey_shortread (built by
+# pawsey_shortread/vamb_install.slurm). --stack keeps minimap2 and samtools from atavide_lite.
+VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
+if [[ ! -x "$VENV_DIR/bin/vamb" ]]; then
+	echo "Please run pawsey_shortread/vamb_install.slurm to create the VAMB environment at $VENV_DIR" >&2
+	exit 1
+fi
+conda activate --stack "$VENV_DIR"
 
-# module load pytorch/2.2.0-rocm5.7.3
-module load pytorch/2.7.1-rocm6.3.3
+# Derive thread count from the Slurm allocation rather than hardcoding it.
+THREADS=${SLURM_CPUS_PER_TASK:-${SLURM_CPUS_ON_NODE:-8}}
+
+# No pytorch or rocm module: the environment's ROCm torch wheel bundles its own ROCm
+# libraries. (pytorch/2.7.1-rocm6.3.3 is gone from Setonix's 2026.11 stack, and that module is a
+# Singularity wrapper whose torch the conda python could not import anyway.)
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2

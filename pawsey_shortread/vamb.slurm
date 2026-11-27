@@ -27,13 +27,14 @@ conda activate $ATAVIDE_CONDA
 
 # vamb_install.slurm builds this environment; keep the two paths in sync.
 VENV_DIR="/scratch/$PAWSEY_PROJECT/$USER/software/miniconda3/vamb"
-if [[ ! -e "$VENV_DIR" ]]; then 
+if [[ ! -x "$VENV_DIR/bin/vamb" ]]; then
 	echo "Please run vamb_install.slurm to create the vamb virtual environment" >&2
 	exit 1;
 fi
 
-module load rocm/6.2.4
-conda activate "$VENV_DIR"
+# The ROCm torch wheels bundle their own ROCm libraries, so no rocm module is needed
+# (Setonix's 2026.11 stack dropped rocm/6.2.4). --stack keeps atavide_lite's minimap2 on PATH.
+conda activate --stack "$VENV_DIR"
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2

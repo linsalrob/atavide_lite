@@ -13,5 +13,5 @@ conda activate atavide_lite
 
 mkdir -p Unknowns
 
-export PYTHONPATH=$PYTHONPATH:~/atavide_lite
-python ~/atavide_lite/bin/read_fate.py -r reads.txt -u Unknowns/unknowns.fastq -v
+export PYTHONPATH=$PYTHONPATH:~/GitHubs/atavide_lite
+python ~/GitHubs/atavide_lite/bin/read_fate.py -r reads.txt -u Unknowns/unknowns.fastq -v

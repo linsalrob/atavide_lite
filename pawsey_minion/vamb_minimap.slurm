@@ -59,6 +59,8 @@ if [[ ! -e $OUTDIR/mapped_reads/$BAM ]]; then
 		minimap2 -I"$MM_IDX_BATCH" -d $OUTDIR/contigs.mmi $OUTDIR/contigs.fna.gz
 	fi
 
-	minimap2 -t "$(( THREADS > 2 ? THREADS - 2 : 1 ))" -N 5 -ax map-ont $OUTDIR/contigs.mmi --split-prefix mmsplit$$ fastq/$READS | samtools view -F 3584 -b --threads 1 | samtools sort -@ 1 -o $OUTDIR/mapped_reads/$BAM -
+	# Map the host- (and spike-in-) removed reads, which are what megahit assembled. Raw
+	# reads would let host and spike-in reads inflate contig coverage.
+	minimap2 -t "$(( THREADS > 2 ? THREADS - 2 : 1 ))" -N 5 -ax map-ont $OUTDIR/contigs.mmi --split-prefix $OUTDIR/mmsplit$$ "$HOSTREMOVED/$READS" | samtools view -F 3584 -b --threads 1 | samtools sort -@ 1 -o $OUTDIR/mapped_reads/$BAM -
 	samtools index $OUTDIR/mapped_reads/$BAM
 fi

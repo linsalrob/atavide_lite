@@ -14,7 +14,7 @@ The host reference can contain any genome or multi-FASTA sequence collection tha
 
 ## Read-based taxonomic profiling
 
-Cleaned reads are converted to FASTA using the repository's compiled converter and analysed with MMseqs2 `easy-taxonomy`. Current project workflows favour UniRef100 for improved hit coverage, although UniRef50 variants remain available for comparison and lower resource demand.
+Cleaned reads are converted to FASTA using the repository's compiled converter and analysed with MMseqs2 `easy-taxonomy`. All workflows default to UniRef100 for improved hit coverage; UniRef50 can be selected with `MMSEQS_DB` for comparison or lower resource demand.
 
 MMseqs2 uses k-mer prefiltering, ungapped filtering, vectorised alignment, and a lowest-common-ancestor procedure to assign taxonomy. Results depend on the MMseqs2 and UniRef releases and any changed parameters.
 

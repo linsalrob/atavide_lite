@@ -122,7 +122,7 @@ FASTA_JOB=$(sbatch --parsable \
   "$ATAVIDE_PROFILE/fastq2fasta.slurm")
 ```
 
-Then submit the taxonomy script available in the selected profile. Pawsey paired profiles currently provide UniRef50 and UniRef100 variants; choose one deliberately and keep the resulting database identity with the analysis metadata.
+Then submit the taxonomy script available in the selected profile. Every profile searches UniRef100 by default; pass `--export=ALL,MMSEQS_DB=UniRef50` for a smaller, faster search. Choose deliberately and keep the database identity (recorded in `mmseqs/<sample>/.mmseqs_db`) with the analysis metadata.
 
 ## 10. Monitor before scaling up
 

@@ -193,21 +193,29 @@ FAJOB=$(sbatch --parsable --dependency=afterok:$HOSTJOB $PAWSEY_SRC/fastq2fasta.
 
 Note, that initially I was using UniRef50, however I currently use UniRef 100 which gives more hits. Please read [this comparison of UniRef50 vs UniRef100](https://fame.flinders.edu.au/blog/2026/05/24/uniprot) for more discussion and comparisons.
 
-For UniRef50:
+`mmseqs_easy_taxonomy.slurm` searches **UniRef100** by default and writes to `mmseqs/`:
 
 ```
 MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB $PAWSEY_SRC/mmseqs_easy_taxonomy.slurm)
 ```
 
-For UniRef100:
+For UniRef50 (smaller and faster), set `MMSEQS_DB`:
 
 ```
-MMSEQS100JOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB $PAWSEY_SRC/mmseqs_easy_taxonomy100.slurm)
+MMSEQSJOB=$(sbatch --parsable --array=1-$NUM_R1_READS:1 --dependency=afterok:$FAJOB \
+    --export=ALL,MMSEQS_DB=UniRef50 $PAWSEY_SRC/mmseqs_easy_taxonomy.slurm)
 ```
+
+The script records the database in `mmseqs/<sample>/.mmseqs_db` and refuses to reuse a
+directory built with a different one. Results from before this label existed are assumed to be
+UniRef50, the old default. To carry on with such a run, pass `MMSEQS_DB=UniRef50`. A sample is
+only skipped when its `_tophit_report.gz` exists, so a cancelled run is redone rather than
+skipped.
 
 > Note:
-> Currently the UniRef100 output is in a directory called `mmseqs_uniref100/mmseqs` so that you can run both UniRef50 and UniRef100. If you only run the UniRef100 analysis 
-> (which you probably should) then just move the `mmseqs` directory up to your working directory. e.g. `mv mmseqs_uniref100/mmseqs ./`
+> `mmseqs_easy_taxonomy100.slurm` predates the `MMSEQS_DB` option. It searches UniRef100 on
+> `highmem` and writes to `mmseqs_uniref100/mmseqs`, so you can keep a UniRef50 and a UniRef100
+> run side by side. For a single UniRef100 run, use `mmseqs_easy_taxonomy.slurm`.
 
 ## 11. Summarise the taxonomy from the mmseqs output files
 
@@ -276,7 +284,7 @@ The normal way to use vamb is these three commands:
 ```
 VCJOB=$(sbatch --parsable --dependency=afterok:$MEGAHITJOB $PAWSEY_SRC/vamb_concat.slurm)
 VMJOB=$(sbatch --parsable  --dependency=afterok:$VCJOB --array=1-$NUM_R1_READS:1 $PAWSEY_SRC/vamb_minimap.slurm)
-VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $HOME/atavide_lite/pawsey_shortread/vamb.slurm)
+VAMBJOB=$(sbatch --parsable --dependency=afterany:$VMJOB --account=${PAWSEY_PROJECT}-gpu $HOME/GitHubs/atavide_lite/pawsey_shortread/vamb.slurm)
 
 CHECKMJOB=$(sbatch --parsable --dependency=afterany:$VAMBJOB $PAWSEY_SRC/checkm.slurm vamb/bins/ vamb/checkm)
 ```

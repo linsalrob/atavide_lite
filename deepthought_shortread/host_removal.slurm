@@ -11,6 +11,8 @@ set -euo pipefail
 eval "$(conda shell.bash hook)"
 conda activate atavide_lite
 
+THREADS=${SLURM_CPUS_PER_TASK:-16}
+
 
 if [[ ! -e R1_reads.txt ]]; then
 	echo "Please make a file with the R1 reads using this command:" >&2
@@ -46,8 +48,8 @@ if [[ $O == $R1 ]]; then
 	exit 1;
 fi
 
-echo -e "minimap2 -t 16 --split-prefix=$BGFS/tmp$$ -a -xsr $BGFS/host.fna.gz $BGFS/fastq/$R1 $BGFS/fastq/$R2 | samtools view -bh | samtools sort -o $BGFS/output/$O -\n" >&2;
-minimap2 -t 16 --split-prefix=$BGFS/tmp$$ -a -xsr $BGFS/host.fna.gz $BGFS/fastq/$R1 $BGFS/fastq/$R2 | samtools view -bh | samtools sort -o $BGFS/output/$O -
+echo -e "minimap2 -t $THREADS --split-prefix=$BGFS/tmp$$ -a -xsr $BGFS/host.fna.gz $BGFS/fastq/$R1 $BGFS/fastq/$R2 | samtools view -bh | samtools sort -o $BGFS/output/$O -\n" >&2;
+minimap2 -t $THREADS --split-prefix=$BGFS/tmp$$ -a -xsr $BGFS/host.fna.gz $BGFS/fastq/$R1 $BGFS/fastq/$R2 | samtools view -bh | samtools sort -o $BGFS/output/$O -
 samtools index $BGFS/output/$O
 
 

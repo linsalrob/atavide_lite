@@ -37,6 +37,8 @@ set -euo pipefail
 eval "$(conda shell.bash hook)"
 conda activate atavide_lite
 
+THREADS=${SLURM_CPUS_PER_TASK:-8}
+
 
 if [[ ! -e DEFINITIONS.sh ]]; then
 	echo "Please create a DEFINITIONS.sh file with SOURCE, FILEEND, HOSTREMOVED" >&2
@@ -64,10 +66,10 @@ echo "Using $HOSTREMOVED/$R1 $HOSTREMOVED/$R2 for the assembly" >&2;
 cp -t $BGFS/input $HOSTREMOVED/$R1 $HOSTREMOVED/$R2
 TMPO=$BGFS/output
 
-megahit -1 $BGFS/input/$R1 -2 $BGFS/input/$R2 -o $TMPO -t 8
+megahit -1 $BGFS/input/$R1 -2 $BGFS/input/$R2 -o $TMPO -t $THREADS
 
 megahit_toolkit contig2fastg 119 $TMPO/final.contigs.fa > $TMPO/final.graph.fastg; 
-~/atavide_lite/bin/fastg2gfa $TMPO/final.graph.fastg > $TMPO/final.gfa
+~/GitHubs/atavide_lite/bin/fastg2gfa $TMPO/final.graph.fastg > $TMPO/final.gfa
 
 
 rsync -av $TMPO megahit/$O

@@ -54,5 +54,5 @@ fi
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 BASE=${R1/$FILEEND/}
 
-python ~/atavide_lite/bin/easy_taxonomy_to_function.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite  >  mmseqs/$BASE/${BASE}_tophit_report_subsystems
+python ~/GitHubs/atavide_lite/bin/easy_taxonomy_to_function.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $DBDIR/uniref.sqlite  >  mmseqs/$BASE/${BASE}_tophit_report_subsystems
 pigz mmseqs/$BASE/${BASE}_tophit_report_subsystems

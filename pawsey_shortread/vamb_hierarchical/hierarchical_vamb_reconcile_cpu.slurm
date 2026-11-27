@@ -22,6 +22,6 @@ conda activate "$VENV_DIR"
 case "$stage" in
  prepare) python hierarchical_vamb_clustering_rocm.py --vamb-dir "$SAMPLE_DIR/vamb" --outdir "$OUTDIR" prepare-global ;;
  expand) python hierarchical_vamb_clustering_rocm.py --vamb-dir "$SAMPLE_DIR/vamb" --outdir "$OUTDIR" expand-global --shards 256 ;;
- fasta) python ~/atavide_lite/bin/vamb_create_fasta.py "vamb_crass/contigs.fna.gz" "$OUTDIR/hierarchical_unsplit.tsv" 20000 "$OUTDIR/hierarchical_unsplit_bins" ;;
+ fasta) python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py "vamb_crass/contigs.fna.gz" "$OUTDIR/hierarchical_unsplit.tsv" 20000 "$OUTDIR/hierarchical_unsplit_bins" ;;
  *) echo "Unknown stage: $stage" >&2; exit 2 ;;
 esac

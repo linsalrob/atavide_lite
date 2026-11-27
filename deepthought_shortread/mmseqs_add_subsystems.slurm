@@ -26,9 +26,9 @@ fi
 source DEFINITIONS.sh
 
 
-cp /home/edwa0468/UniRef/uniref.sqlite $BGFS
+cp $HOME/UniRef/uniref.sqlite $BGFS
 
 R1=$(head -n $SLURM_ARRAY_TASK_ID R1_reads.txt | tail -n 1)
 BASE=${R1/$FILEEND/}
 
-python ~/atavide_lite/bin/easy_taxonomy_to_function.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite | gzip -c >  mmseqs/$BASE/${BASE}_tophit_report_subsystems.gz
+python ~/GitHubs/atavide_lite/bin/easy_taxonomy_to_function.py -f mmseqs/$BASE/${BASE}_tophit_report.gz -d $BGFS/uniref.sqlite | gzip -c >  mmseqs/$BASE/${BASE}_tophit_report_subsystems.gz

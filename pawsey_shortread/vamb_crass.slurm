@@ -74,7 +74,7 @@ vamb bin default -o C -p 16 --cuda --outdir $SAMPLE/vamb --fasta $VAMBDIR/contig
 if [[ $? != 0 ]]; then 
 	echo "Running VAMB on $SAMPLE failed." >&2;
 else
-	python ~/atavide_lite/bin/vamb_create_fasta.py $VAMBDIR/contigs.fna.gz $SAMPLE/vamb/vae_clusters_unsplit.tsv 20000 $SAMPLE/unsplit_bins &
-	python ~/atavide_lite/bin/vamb_create_fasta.py $VAMBDIR/contigs.fna.gz $SAMPLE/vamb/vae_clusters_split.tsv 20000 $SAMPLE/split_bins &
+	python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $VAMBDIR/contigs.fna.gz $SAMPLE/vamb/vae_clusters_unsplit.tsv 20000 $SAMPLE/unsplit_bins &
+	python ~/GitHubs/atavide_lite/bin/vamb_create_fasta.py $VAMBDIR/contigs.fna.gz $SAMPLE/vamb/vae_clusters_split.tsv 20000 $SAMPLE/split_bins &
 	wait
 fi

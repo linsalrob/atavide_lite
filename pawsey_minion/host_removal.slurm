@@ -95,7 +95,7 @@ if [[ -n "${SPIKE_IN_SEQUENCE:-}" ]]; then
 		| samtools sort -@ "$THREADS" -o "$SPIKE_BAM" -
 	samtools index "$SPIKE_BAM"
 	samtools view "$SPIKE_BAM" | cut -f1 | sort -u > "$SPIKE_TMP/spike_read_ids.txt"
-	python "$HOME/GitHubs/atavide_lite/pawsey_minion/remove_spikein_reads.py" \
+	python "$HOME/GitHubs/atavide_lite/bin/remove_spikein_reads.py" \
 		--ids "$SPIKE_TMP/spike_read_ids.txt" \
 		--input "$PRE_SPIKE_HOSTREMOVED/$READS" \
 		--output "$HOSTREMOVED/$READS" \

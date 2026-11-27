@@ -23,5 +23,5 @@ conda activate $VENV_DIR
 
 
 mkdir -p vamb_crass
-python ~/atavide_lite/bin/vamb_concatenate.py -m 300 vamb_crass/contigs.fna.gz megahit_all_reads/final.contigs.fa
+python ~/GitHubs/atavide_lite/bin/vamb_concatenate.py -m 300 vamb_crass/contigs.fna.gz megahit_all_reads/final.contigs.fa
 
